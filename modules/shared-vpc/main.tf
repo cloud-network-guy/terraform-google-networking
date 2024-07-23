@@ -21,7 +21,6 @@ data "google_compute_networks" "shared_vpc" {
   project = local.host_project_id
 }
 
-
 # Filter networks to specific scope; build active regions list from their subnet lists
 locals {
   all_networks = data.google_compute_networks.shared_vpc.networks
@@ -59,7 +58,9 @@ data "google_projects" "active_projects" {
 
 # Organize projects list by Project ID
 locals {
-  all_projects = var.projects != null ? [for _ in data.google_projects.active_projects.projects : _ if contains(var.projects, _.project_id)] : data.google_projects.active_projects.projects
+  all_projects = var.projects != null ? [
+    for project in data.google_projects.active_projects.projects : project if contains(var.projects, project.project_id)
+  ] : data.google_projects.active_projects.projects
   active_projects = {
     for project in local.all_projects :
     project.project_id => {
@@ -120,12 +121,13 @@ data "google_cloud_asset_resources_search_all" "services" {
 }
 
 locals {
+  cloud_assets = data.google_cloud_asset_resources_search_all.services
   projects = { for project_id in local.attached_projects :
     project_id => {
       number  = local.active_projects[project_id].number
       regions = local.active_projects[project_id].regions
       apis = toset(flatten([for scope in local.services_scopes :
-        [for result in data.google_cloud_asset_resources_search_all.services[scope].results : result.display_name]
+        [for result in local.cloud_assets[scope].results : result.display_name]
       ]))
     }
   }
