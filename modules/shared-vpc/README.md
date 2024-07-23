@@ -27,9 +27,9 @@ Enabled Compute Network User role for project default service accounts on one a 
 | Name            | Description                                                | Type           | Default |
 |-----------------|------------------------------------------------------------|----------------|---------|
 | host_project_id | Project ID of the Shared VPC Host Network Project          | `string`       | n/a     |
-| org_id          | Project ID of the GCP project                              | `number`       | n/a     |
-| folder_id       | Project ID of the GCP project                              | `number`       | n/a     |
-| project_ids     | Project ID of the GCP project                              | `list(string)` | n/a     |
+| org_id          | Org ID Containing Service Projects                         | `number`       | n/a     |
+| folder_id       | Folder ID Containing Service Projects                      | `number`       | n/a     |
+| project_ids     | Explicit list of Service Project IDs                       | `list(string)` | n/a     |
 | network         | Specific Network name to enable permissions on             | `string`       | n/a     |
 | regional_labels | Label keys to match regions to                             | `list(string)` | []      |
 | regions         | Specific regions list to limit all queries to              | `list(string)` | []      |
