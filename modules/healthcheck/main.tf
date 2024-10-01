@@ -14,7 +14,6 @@ locals {
   is_ssl      = local.protocol == "SSL" ? true : false
   _healthchecks = [
     {
-      create              = local.create
       project_id          = local.project_id
       region              = local.region
       name                = local.name
