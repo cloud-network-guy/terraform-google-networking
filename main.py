@@ -6,6 +6,7 @@ import platform
 import pathlib
 import tempfile
 import yaml
+import asyncio
 import git
 import google.auth
 import google.auth.transport.requests
@@ -15,7 +16,7 @@ SSH_PRIVATE_KEY_FILES = ('id_rsa', 'id_ecdsa', 'id_ed25519')
 PWD = os.path.realpath(os.path.dirname(__file__))
 
 
-async def get_gcp_access_token(key_file: str = None) -> str:
+def get_gcp_access_token(key_file: str = None) -> str:
 
     if key_file:
         key_file = os.path.join(PWD, key_file)  # Convert relative to full path
@@ -27,7 +28,7 @@ async def get_gcp_access_token(key_file: str = None) -> str:
     return credentials.token
 
 
-async def configure_git_ssh(private_key_file: str = None):
+def configure_git_ssh(private_key_file: str = None):
 
     if not (git_ssh_variant := os.environ.get('GIT_SSH_VARIANT')):
         git_ssh_variant = "ssh"
@@ -50,25 +51,25 @@ async def configure_git_ssh(private_key_file: str = None):
         os.environ.update({'GIT_SSH_COMMAND': f"ssh -i {private_key_file}"})
 
 
-async def check_file(file_name: str) -> pathlib.Path:
+def check_file(file_name: str) -> pathlib.Path:
 
     _ = pathlib.Path(os.path.join(PWD, str(file_name)))
     assert _.is_file() and _.stat().st_size > 0, f"File '{file_name}' does not exist or is empty!"
     return _
 
 
-async def check_directory(directory: str) -> bool:
+def check_directory(directory: str) -> bool:
 
     assert os.path.exists(directory), f"Directory '{directory}' does not exist"
     assert os.path.isdir(directory), f"Directory '{directory}' is not a directory"
     return True
 
 
-async def get_environment(input_file: str = "environments.yaml", environment: str = None) -> dict:
+def get_environment(input_file: str = "environments.yaml", environment: str = None) -> dict:
     """
     Get information for all environments; return specific environment information, if requested
     """
-    _ = await check_file(input_file)
+    _ = check_file(input_file)
     with open(_, mode="rb") as fp:
         _ = yaml.load(fp, Loader=yaml.FullLoader)
         if environment:
@@ -79,20 +80,20 @@ async def get_environment(input_file: str = "environments.yaml", environment: st
             return _
 
 
-async def get_directories(environment: dict, directory: str = None) -> dict:
+def get_directories(environment: dict, directory: str = None) -> dict:
     """
     Get information for all directories
     """
     if url := environment.get('git_url'):
         # If Git repo URL used, verify it exists, then find
         temp_dir = tempfile.gettempdir()
-        await check_directory(temp_dir)
+        check_directory(temp_dir)
         to_path = url.split('/')[-1]
         repo_dir = os.path.join(temp_dir, to_path)
     else:
         # Repo is already cloned as local directory
         repo_dir = environment.get('base_dir')
-        await check_directory(repo_dir)
+        check_directory(repo_dir)
 
     # Use specific sub-directory, if configured
     sub_dir = environment.get('sub_dir')
@@ -100,7 +101,7 @@ async def get_directories(environment: dict, directory: str = None) -> dict:
 
     # Use specific directory within the root, if specified
     target_dir = os.path.join(root_dir, directory) if directory else root_dir
-    #await check_directory(target_dir)
+    #check_directory(target_dir)
 
     return {
         'repo': repo_dir,
@@ -109,7 +110,7 @@ async def get_directories(environment: dict, directory: str = None) -> dict:
     }
 
 
-async def get_sub_directories(base_dir: str) -> dict:
+def get_sub_directories(base_dir: str) -> dict:
 
     sub_directories = {}
     for subdir in [_.name for _ in os.scandir(base_dir) if _.is_dir()]:
@@ -119,14 +120,14 @@ async def get_sub_directories(base_dir: str) -> dict:
     return sub_directories
 
 
-async def get_state_url(module_dir: str = "./") -> str:
+def get_state_url(module_dir: str = "./") -> str:
 
     url = None
 
     tf_files = [f.name for f in os.scandir(module_dir) if f.name.lower().endswith(".tf")]
     for tf_file in tf_files:
         print(tf_file)
-        async with open(tf_file, 'r') as fp:
+        with open(tf_file, 'r') as fp:
             for line in fp:
                 if 'terraform ' in line:
                     line = next(fp)
@@ -157,7 +158,7 @@ async def get_state_url(module_dir: str = "./") -> str:
     return url if url else "terraform.tfstate"
 
 
-async def get_workspaces(module_dir: str = "./") -> dict:
+def get_workspaces(module_dir: str = "./") -> dict:
 
     try:
         os.chdir(module_dir)
@@ -167,7 +168,7 @@ async def get_workspaces(module_dir: str = "./") -> dict:
     return _
 
 
-async def git_repo(url: str, branch: str = None) -> None:
+def git_repo(url: str, branch: str = None) -> None:
 
     temp_dir = tempfile.gettempdir()
     to_path = url.split('/')[-1]
@@ -184,37 +185,37 @@ async def git_repo(url: str, branch: str = None) -> None:
         repo = git.Repo.clone_from(url=url, to_path=to_path, branch=branch)  # Perform git clone
 
 
-async def tf_init(module_dir: str = "./", options: str = None):
+def tf_init(module_dir: str = "./", options: str = None):
 
     os.chdir(module_dir)
     options = f" {options}" if options else ""
     os.system(f"terraform init{options}")
 
 
-async def main(environment: str, directory: str = ".", workspace: str = None, action: str = "plan") -> str:
+def main(environment: str, directory: str = ".", workspace: str = None, action: str = "plan") -> str:
 
-    environments = await get_environments()
+    environments = get_environment()
     e: dict = environments.get(environment)
 
-    _ = await get_directories(e, directory)
+    _ = get_directories(e, directory)
     repo_dir = _.get('repo')
     root_dir = _.get('root')
     target_dir = _.get('target')
     branch = e.get('branch', 'master')
 
     if url := e.get('git_url'):
-        await git_repo(url=url, branch=branch)
+        git_repo(url=url, branch=branch)
 
     # Initialize
-    await tf_init(root_dir)
+    tf_init(root_dir)
 
     if workspace:
         workspaces = {'default': "terraform.tfvars"} if workspace == 'default' else {workspace: f"{workspace}.tfvars"}
     else:
-        workspaces = await get_workspaces(target_dir)
+        workspaces = get_workspaces(target_dir)
 
     if _google_adc_key := e.get('google_adc_key'):
-        google_adc_key = await check_file(_google_adc_key)
+        google_adc_key = check_file(_google_adc_key)
         os.environ.update({'GOOGLE_APPLICATION_CREDENTIALS': str(google_adc_key)})
 
     print("Root dir", root_dir)
@@ -237,20 +238,19 @@ async def main(environment: str, directory: str = ".", workspace: str = None, ac
 
 if __name__ == "__main__":
 
-    from asyncio import run
     from pprint import pprint
 
-    if len(sys.argv) < 3:
+    if len(sys.argv) <= 3:
         sys.exit("Usage: " + sys.argv[0] + " <environment> <module> <workspace>")
 
     e = sys.argv[1]
     d = sys.argv[2]
     w = sys.argv[3]
     if len(sys.argv) > 4:
-        a = sys.arg[4]
+        a = sys.argv[4]
     else:
         a = "plan"
 
-    _ = run(main(environment=e, directory=d, workspace=w, action=a))
+    _ = main(environment=e, directory=d, workspace=w, action=a)
     pprint(_)
 
