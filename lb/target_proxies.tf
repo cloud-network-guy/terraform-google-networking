@@ -53,7 +53,7 @@ resource "google_compute_target_https_proxy" "default" {
   )
   ssl_policy    = local.ssl_policy
   quic_override = local.quic_override
-  depends_on    = [google_compute_url_map.https, google_compute_ssl_certificate.default]
+  depends_on    = [google_compute_url_map.https, null_resource.global_ssl_cert]
 }
 
 # Regional HTTPS Target Proxy
@@ -67,7 +67,6 @@ resource "google_compute_region_target_https_proxy" "default" {
     [for i, v in local.certs_to_upload : google_compute_region_ssl_certificate.default[v.name].id]
   )
   ssl_policy = local.ssl_policy
-  #quic_override = local.quic_override
   region     = local.region
-  depends_on = [google_compute_region_url_map.https, google_compute_region_ssl_certificate.default]
+  depends_on = [google_compute_region_url_map.https, null_resource.regional_ssl_cert]
 }

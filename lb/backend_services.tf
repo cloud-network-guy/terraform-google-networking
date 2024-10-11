@@ -33,11 +33,19 @@ locals {
     custom_response_headers     = v.custom_response_headers
     use_iap                     = v.use_iap
   })] if contains(["igs", "rneg", "ineg"], try(local.backends[i].type, "unknown"))])
-  hc_prefix = "projects/${var.project_id}/${local.is_regional ? "regions/${local.region}" : "global"}/healthChecks"
   backend_services = [for i, v in local.backend_services_0 : merge(v, {
     healthcheck_ids = flatten(concat(
-      v.healthchecks != null ? [for hc in v.healthchecks : coalesce(hc.id, try("${local.hc_prefix}/${hc.name}", null))] : [],
-      v.healthcheck != null ? [try("${local.hc_prefix}/${v.healthcheck}", null)] : [],
+      v.healthchecks != null ? compact([for hc in v.healthchecks :
+        coalesce(
+          hc.id,
+          local.is_regional ? google_compute_region_health_check.default[hc.name].self_link : null,
+          local.is_global ? google_compute_health_check.default[hc.name].self_link : null,
+        )
+      ]) : [],
+      v.healthcheck != null ? coalesce(
+        local.is_regional ? google_compute_region_health_check.default[v.healthcheck].self_link : null,
+        local.is_global ? google_compute_health_check.default[v.healthcheck].self_link : null,
+      ) : [],
     ))
   })]
 }

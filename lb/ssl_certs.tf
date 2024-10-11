@@ -33,6 +33,10 @@ resource "tls_self_signed_cert" "default" {
 }
 
 # Upload Global SSL Certs
+resource "null_resource" "global_ssl_cert" {
+  for_each   = local.is_http && local.is_global ? { for i, v in local.certs_to_upload : v.name => v } : {}
+  depends_on = [google_compute_ssl_certificate.default]
+}
 resource "google_compute_ssl_certificate" "default" {
   for_each    = local.is_http && local.is_global ? { for i, v in local.certs_to_upload : v.name => v } : {}
   project     = var.project_id
@@ -48,6 +52,10 @@ resource "google_compute_ssl_certificate" "default" {
 }
 
 # Upload Regional SSL Certs
+resource "null_resource" "regional_ssl_cert" {
+  for_each   = local.is_http && local.is_regional ? { for i, v in local.certs_to_upload : v.name => v } : {}
+  depends_on = [google_compute_region_ssl_certificate.default]
+}
 resource "google_compute_region_ssl_certificate" "default" {
   for_each    = local.is_http && local.is_regional ? { for i, v in local.certs_to_upload : v.name => v } : {}
   project     = var.project_id
