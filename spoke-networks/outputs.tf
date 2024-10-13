@@ -5,5 +5,3 @@ output "peering_connections" { value = one(module.vpc-network.vpc_networks).peer
 output "subnets" { value = one(module.vpc-network.vpc_networks).subnets }
 output "cloud_nats" { value = one(module.vpc-network.vpc_networks).cloud_nats }
 output "spoke_vpn_tunnels" { value = module.vpn-to-hub.vpn_tunnels }
-#output "projects" { value = module.vpc-network.projects }
-#output "service_accounts" { value = module.vpc-network.service_accounts }

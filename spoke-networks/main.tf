@@ -33,8 +33,8 @@ locals {
             range = cidrsubnet(var.gke_services_cidrs[i], var.gke_services_range_length - split("/", var.gke_services_cidrs[i])[1], s)
           }] : [],
         )
-        attached_projects = toset(concat(var.subnet_attached_projects, var.attached_projects))
-        shared_accounts   = toset(concat(var.subnet_shared_accounts, var.shared_accounts))
+        attached_projects = concat(var.subnet_attached_projects, var.attached_projects)
+        shared_accounts   = concat(var.subnet_shared_accounts, var.shared_accounts)
       }
     ],
     var.create_proxy_only_subnet == true && var.proxy_only_cidr != null ? [
@@ -120,6 +120,13 @@ locals {
       {
         name      = "netapp-cv"
         service   = "cloudvolumesgcp-api-network.netapp.com"
+        ip_ranges = ["netapp-cv-${local.name}"]
+      }
+    ] : [],
+    var.enable_netapp_gcnv == true ? [
+      {
+        name      = "netapp-gcnv"
+        service   = "netapp.servicenetworking.goog"
         ip_ranges = ["netapp-cv-${local.name}"]
       }
     ] : [],
@@ -339,26 +346,47 @@ locals {
     })
   ]
   /*
+
   __psc_endpoints = [for i, v in local._psc_endpoints :
+
     merge(v, {
+
       target = {
+
         project_id = coalesce(v.target.project_id, v.target_id != null ? element(reverse(split("/", v.target_id)), 4) : v.project_id)
+
         region     = coalesce(v.target.region, v.target_id != null ? element(reverse(split("/", v.target_id)), 2) : v.region)
+
         name       = coalesce(v.target.name, v.target_id != null ? element(reverse(split("/", v.target_id)), 0) : null)
+
       }
+
     })
+
   ]
+
   ___psc_endpoints = [for i, v in local.__psc_endpoints :
+
     merge(v, {
+
       target_id = coalesce(v.target_id, "projects/${v.target.project_id}/regions/${v.target.region}/serviceAttachments/${v.target.name}")
+
     })
+
   ]
+
   psc_endpoints = [for i, v in local.___psc_endpoints :
+
     merge(v, {
+
      ip_address_name        = coalesce(v.ip_address_name, "psc-endpoint-${v.target.region}-${v.target.name}")
+
       ip_address_description = coalesce(v.ip_address_description, "PSC to ${v.target_id}")
+
     })
+
   ]
+
   */
 }
 
