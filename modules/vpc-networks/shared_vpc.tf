@@ -106,6 +106,9 @@ locals {
     merge(v, {
       role    = "roles/container.serviceAgent"
       members = toset(flatten(values(local.gke_service_accounts)))
+      members = [for i, service_project_id in v.attached_projects :
+        lookup(local.gke_service_accounts, service_project_id, [])
+      ]
     })
   ]
 }
