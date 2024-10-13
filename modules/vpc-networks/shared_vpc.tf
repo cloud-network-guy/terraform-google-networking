@@ -60,10 +60,11 @@ locals {
       subnetwork = "projects/${v.project_id}/regions/${v.region}/subnetworks/${v.name}"
       role       = "roles/compute.networkUser"
       members = toset(flatten(concat(
-        [for i, service_project_id in v.attached_projects : lookup(local.compute_service_accounts, service_project_id, [])],
-        [for i, service_project_id in v.attached_projects : lookup(local.gke_service_accounts, service_project_id, [])],
+        [for service_project_id in v.attached_projects : lookup(local.compute_service_accounts, service_project_id, [])],
+        [for service_project_id in v.attached_projects : lookup(local.gke_service_accounts, service_project_id, [])],
         v.shared_accounts
       )))
+      attached_projects = v.attached_projects
     } if v.is_private == true
   ])
   # Same for viewer
@@ -105,10 +106,9 @@ locals {
   gke_shared_subnets = [for i, v in local.shared_subnets :
     merge(v, {
       role    = "roles/container.serviceAgent"
-      members = toset(flatten(values(local.gke_service_accounts)))
-      members = [for i, service_project_id in v.attached_projects :
+      members = flatten([for service_project_id in v.attached_projects :
         lookup(local.gke_service_accounts, service_project_id, [])
-      ]
+      ])
     })
   ]
 }
