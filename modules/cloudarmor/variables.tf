@@ -24,3 +24,7 @@ variable "rules" {
   }))
   default = []
 }
+variable "layer_7_ddos" {
+  type    = bool
+  default = false
+}

@@ -65,7 +65,8 @@ resource "google_compute_security_policy" "default" {
   }
   adaptive_protection_config {
     layer_7_ddos_defense_config {
-      enable = false
+      enable          = var.layer_7_ddos
+      rule_visibility = null
     }
   } # (1 unchanged at
 }
