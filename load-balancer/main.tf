@@ -126,8 +126,8 @@ locals {
       project_id  = coalesce(v.project_id, var.project_id)
       name        = coalesce(v.name, var.name_prefix != null ? "${var.name_prefix}-${k}" : k)
       description = v.description
-      rules       = [for rule in lookup(v, "rules", []) : rule]
       l7_ddos     = coalesce(v.l7_ddos, false)
+      rules       = [for rule in lookup(v, "rules", []) : rule]
     })
   }
 }
@@ -137,6 +137,7 @@ module "cloudarmor" {
   project_id  = each.value.project_id
   name        = each.value.name
   description = each.value.description
+  l7_ddos     = each.value.l7_ddos
   rules       = each.value.rules
 }
 
