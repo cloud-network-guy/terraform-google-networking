@@ -65,6 +65,10 @@ variable "existing_ssl_policy" {
   type    = string
   default = null
 }
+variable "existing_security_policy" {
+  type    = string
+  default = null
+}
 variable "preserve_ip_addresses" {
   type    = bool
   default = null
@@ -93,32 +97,33 @@ variable "health_checks" {
 }
 variable "backends" {
   type = map(object({
-    create                = optional(bool, true)
-    project_id            = optional(string)
-    host_project_id       = optional(string)
-    name                  = optional(string)
-    description           = optional(string)
-    region                = optional(string)
-    port                  = optional(number)
-    protocol              = optional(string)
-    timeout               = optional(number)
-    logging               = optional(bool)
-    enable_cdn            = optional(bool)
-    enable_iap            = optional(bool)
-    health_check          = optional(string)
-    health_checks         = optional(list(string))
-    existing_health_check = optional(string)
-    security_policy       = optional(string)
-    session_affinity      = optional(string)
-    locality_lb_policy    = optional(string)
-    classic               = optional(bool)
-    network               = optional(string)
-    subnet                = optional(string)
-    groups                = optional(list(string))
-    ip_address            = optional(string)
-    fqdn                  = optional(string)
-    psc_target            = optional(string)
-    cloud_run_service     = optional(string)
+    create                   = optional(bool, true)
+    project_id               = optional(string)
+    host_project_id          = optional(string)
+    name                     = optional(string)
+    description              = optional(string)
+    region                   = optional(string)
+    port                     = optional(number)
+    protocol                 = optional(string)
+    timeout                  = optional(number)
+    logging                  = optional(bool)
+    enable_cdn               = optional(bool)
+    enable_iap               = optional(bool)
+    health_check             = optional(string)
+    health_checks            = optional(list(string))
+    existing_health_check    = optional(string)
+    security_policy          = optional(string)
+    existing_security_policy = optional(string)
+    session_affinity         = optional(string)
+    locality_lb_policy       = optional(string)
+    classic                  = optional(bool)
+    network                  = optional(string)
+    subnet                   = optional(string)
+    groups                   = optional(list(string))
+    ip_address               = optional(string)
+    fqdn                     = optional(string)
+    psc_target               = optional(string)
+    cloud_run_service        = optional(string)
     instance_groups = optional(list(object({
       id         = optional(string)
       project_id = optional(string)
@@ -253,9 +258,19 @@ variable "frontends" {
   default = {}
 }
 variable "security_policies" {
-  description = "List of CloudArmor Security Policies"
+  description = "CloudArmor Security Policies"
   type = map(object({
-
+    create      = optional(bool, true)
+    project_id  = optional(string)
+    name        = optional(string)
+    description = optional(string)
+    rules = list(object({
+      action      = optional(string)
+      priority    = number
+      ip_ranges   = optional(list(string))
+      expr        = optional(string)
+      description = optional(string)
+    }))
   }))
   default = {}
 }
