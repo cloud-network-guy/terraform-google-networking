@@ -210,10 +210,10 @@ locals {
           name = coalesce(cert.name, var.name_prefix != null ? "${var.name_prefix}-${cert_key}" : cert_key)
         })
       ]
-      routing_rules = [for _, rule in coalesce(v.routing_rules, {}) :
+      routing_rules = [for rule_key, rule in coalesce(v.routing_rules, {}) :
         merge(rule, {
-          name    = coalesce(rule.name, _)
-          backend = module.backends[rule.backend].name
+          name    = coalesce(rule.name, rule_key)
+          backend = rule.backend != null ? module.backends[rule.backend].name : null
         })
       ]
       network = try(coalesce(v.network, var.network), null)
