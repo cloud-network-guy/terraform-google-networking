@@ -60,7 +60,7 @@ locals {
       description    = trimspace(coalesce(local.description, "Backend Service '${v.name}'"))
       sample_rate    = v.logging ? 1.0 : 0.0
       port           = try(coalesce(v.port, local.is_application ? (v.protocol == "HTTP" ? 80 : 443) : null), null)
-      cdn_cache_mode = local.enable_cdn ? upper(coalesce(lookup(v.cdn, "cache_mode", null), "CACHE_ALL_STATIC")) : null
+      cdn_cache_mode = local.enable_cdn ? upper(var.cdn, "CACHE_ALL_STATIC") : null
     })
   ]
   backend_services = [for i, v in local.__backend_services :
