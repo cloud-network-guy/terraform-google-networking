@@ -32,12 +32,13 @@ module "healthchecks" {
 locals {
   _backends = { for k, v in var.backends :
     k => merge(v, {
-      project_id      = coalesce(v.project_id, var.project_id)
-      host_project_id = coalesce(v.host_project_id, var.host_project_id, var.project_id)
-      region          = coalesce(v.region, var.region, "global")
-      name            = coalesce(v.name, var.name_prefix != null ? "${var.name_prefix}-${k}" : k)
-      protocol        = try(coalesce(v.protocol, var.backend_protocol), null)
+      project_id               = coalesce(v.project_id, var.project_id)
+      host_project_id          = coalesce(v.host_project_id, var.host_project_id, var.project_id)
+      region                   = coalesce(v.region, var.region, "global")
+      name                     = coalesce(v.name, var.name_prefix != null ? "${var.name_prefix}-${k}" : k)
+      protocol                 = try(coalesce(v.protocol, var.backend_protocol), null)
       existing_security_policy = try(coalesce(v.existing_security_policy, var.existing_security_policy), null)
+      security_policy          = try(coalesce(v.security_policy, var.security_policy), null)
     })
   }
 }
@@ -146,11 +147,10 @@ locals {
       name_prefix = var.name_prefix
       groups      = concat(coalesce(v.groups, [for i, v in local.negs : module.negs[v.backend_key].self_link if v.backend_key == k]))
       timeout     = try(coalesce(v.timeout, var.backend_timeout), null)
-      security_policy = try(coalesce(
-        v.existing_security_policy,
-          v.security_policy != null ? module.cloudarmor[v.security_policy].self_link : null,
-        var.security_policy != null ? module.cloudarmor[var.security_policy].self_link : null,
-      ), null)
+      security_policy = one(coalescelist(
+        [v.existing_security_policy],
+        [for sp_key, sp in local.security_policies : module.cloudarmor[v.security_policy].self_link if v.security_policy == sp_key]
+      ))
       session_affinity   = try(coalesce(v.session_affinity, var.session_affinity), null)
       locality_lb_policy = try(coalesce(v.locality_lb_policy, var.locality_lb_policy), null)
       is_ig              = length(coalesce(v.instance_groups, [])) > 0 ? true : false

@@ -56,10 +56,11 @@ locals {
   ] : []
   __backend_services = [for i, v in local._backend_services :
     merge(v, {
-      name        = var.name_prefix != null ? "${var.name_prefix}-${v.name}" : v.name
-      description = trimspace(coalesce(local.description, "Backend Service '${v.name}'"))
-      sample_rate = v.logging ? 1.0 : 0.0
-      port        = try(coalesce(v.port, local.is_application ? (v.protocol == "HTTP" ? 80 : 443) : null), null)
+      name           = var.name_prefix != null ? "${var.name_prefix}-${v.name}" : v.name
+      description    = trimspace(coalesce(local.description, "Backend Service '${v.name}'"))
+      sample_rate    = v.logging ? 1.0 : 0.0
+      port           = try(coalesce(v.port, local.is_application ? (v.protocol == "HTTP" ? 80 : 443) : null), null)
+      cdn_cache_mode = local.enable_cdn ? upper(coalesce(lookup(v.cdn, "cache_mode", null), "CACHE_ALL_STATIC")) : null
     })
   ]
   backend_services = [for i, v in local.__backend_services :
@@ -82,7 +83,6 @@ locals {
       max_connections                 = v.protocol == "TCP" && !local.is_regional && !local.is_gnegs ? coalesce(var.max_connections, 8192) : null
       capacity_scaler                 = local.is_application ? coalesce(var.capacity_scaler, 1.0) : null
       max_utilization                 = local.is_application ? coalesce(var.max_utilization, 0.8) : null
-      cdn_cache_mode                  = local.enable_cdn ? upper(coalesce(lookup(v.cdn, "cache_mode", null), "CACHE_ALL_STATIC")) : null
       health_checks = local.is_gnegs || local.is_psc ? null : flatten([for _ in v.health_checks :
         [
           startswith(_, local.url_prefix) ? _ :
