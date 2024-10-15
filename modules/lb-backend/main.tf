@@ -82,7 +82,7 @@ locals {
       connection_draining_timeout_sec = coalesce(var.connection_draining_timeout, 300)
       max_connections                 = v.protocol == "TCP" && !local.is_regional && !local.is_gnegs ? coalesce(var.max_connections, 8192) : null
       capacity_scaler                 = local.is_application ? coalesce(var.capacity_scaler, 1.0) : null
-      max_utilization                 = local.is_application ? coalesce(var.max_utilization, 0.8) : null
+      max_utilization                 = local.is_application && local.is_igs ? coalesce(var.max_utilization, 0.8) : null
       health_checks = local.is_gnegs || local.is_psc ? null : flatten([for _ in v.health_checks :
         [
           startswith(_, local.url_prefix) ? _ :
