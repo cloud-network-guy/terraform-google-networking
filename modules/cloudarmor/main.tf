@@ -63,5 +63,10 @@ resource "google_compute_security_policy" "default" {
     description = "Default rule, higher priority overrides it"
     priority    = 2147483647
   }
+  adaptive_protection_config {
+    layer_7_ddos_defense_config {
+      enable = false
+    }
+  } # (1 unchanged at
 }
 
