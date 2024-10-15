@@ -127,6 +127,7 @@ locals {
       name        = coalesce(v.name, var.name_prefix != null ? "${var.name_prefix}-${k}" : k)
       description = v.description
       rules       = [for rule in lookup(v, "rules", []) : rule]
+      l7_ddos     = coalesce(v.l7_ddos, false)
     })
   }
 }

@@ -264,7 +264,7 @@ variable "security_policies" {
     project_id  = optional(string)
     name        = optional(string)
     description = optional(string)
-    l7_ddos =     optional(bool)
+    l7_ddos     = optional(bool)
     rules = list(object({
       action      = optional(string)
       priority    = number
