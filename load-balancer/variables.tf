@@ -260,11 +260,11 @@ variable "frontends" {
 variable "security_policies" {
   description = "CloudArmor Security Policies"
   type = map(object({
-    create      = optional(bool, true)
-    project_id  = optional(string)
-    name        = optional(string)
-    description = optional(string)
-    l7_ddos     = optional(bool)
+    create       = optional(bool, true)
+    project_id   = optional(string)
+    name         = optional(string)
+    description  = optional(string)
+    layer_7_ddos = optional(bool)
     rules = list(object({
       action      = optional(string)
       priority    = number
