@@ -105,7 +105,7 @@ resource "google_compute_subnetwork_iam_binding" "viewer" {
 locals {
   gke_shared_subnets = [for i, v in local.shared_subnets :
     merge(v, {
-      role    = "roles/container.serviceAgent"
+      role = "roles/container.serviceAgent"
       members = flatten([for service_project_id in v.attached_projects :
         lookup(local.gke_service_accounts, service_project_id, [])
       ])

@@ -42,7 +42,7 @@ locals {
       } if v.num_static_ips > 0
     ]
   }
-  cloud_nat_addresses = { for i, v in local.__cloud_nats :
+  _cloud_nat_addresses = { for i, v in local.__cloud_nats :
     v.index_key => [for a, nat_address in(length(v.static_ips) > 0 ? v.static_ips : local.nat_addresses[v.index_key]) :
       {
         project_id  = coalesce(v.project_id, var.project_id)
@@ -53,10 +53,11 @@ locals {
       }
     ] if length(v.static_ips) > 0 || v.num_static_ips > 0
   }
-  addresses = flatten([for k, addresses in local.cloud_nat_addresses :
+  cloud_nat_addresses = flatten([for k, addresses in local._cloud_nat_addresses :
     [for i, address in coalesce(addresses, []) :
       merge(address, {
-        index_key = "${address.project_id}/${address.region}/${address.name}"
+        cloud_nat_index_key = k
+        index_key           = "${address.project_id}/${address.region}/${address.name}"
       })
     ]
   ])
@@ -64,7 +65,7 @@ locals {
 
 # External IP Address Allocations for Cloud NATs using static IP(s)
 resource "google_compute_address" "cloud_nat" {
-  for_each     = { for i, v in local.addresses : v.index_key => v }
+  for_each     = { for i, v in local.cloud_nat_addresses : v.index_key => v }
   project      = each.value.project_id
   name         = each.value.name
   description  = each.value.description
@@ -97,13 +98,15 @@ locals {
 }
 
 resource "google_compute_router_nat" "default" {
-  for_each                           = { for i, v in local.cloud_nats : v.index_key => v }
-  project                            = each.value.project_id
-  name                               = each.value.name
-  router                             = each.value.router
-  region                             = each.value.region
-  nat_ip_allocate_option             = each.value.nat_ip_allocate_option
-  nat_ips                            = try([for address in local.cloud_nat_addresses[each.key] : "${local.url_prefix}/${address.project_id}/regions/${address.region}/addresses/${address.name}"], null)
+  for_each               = { for i, v in local.cloud_nats : v.index_key => v }
+  project                = each.value.project_id
+  name                   = each.value.name
+  router                 = each.value.router
+  region                 = each.value.region
+  nat_ip_allocate_option = each.value.nat_ip_allocate_option
+  nat_ips = [for address in local.cloud_nat_addresses :
+    google_compute_address.cloud_nat[address.index_key].self_link if address.cloud_nat_index_key == each.value.index_key
+  ]
   source_subnetwork_ip_ranges_to_nat = each.value.source_subnetwork_ip_ranges_to_nat
   dynamic "subnetwork" {
     for_each = each.value.subnets

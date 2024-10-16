@@ -29,10 +29,11 @@ output "vpc_networks" {
       ]
       cloud_nats = [for cloud_nat in local.cloud_nats :
         {
-          name   = cloud_nat.name
-          region = cloud_nat.region
-          router = cloud_nat.router
-        }
+          name      = cloud_nat.name
+          region    = cloud_nat.region
+          router    = cloud_nat.router
+          addresses = [for k, v in local.cloud_nat_addresses : google_compute_address.cloud_nat[v.index_key].address]
+        } if cloud_nat.create == true
       ]
     }
   ]
