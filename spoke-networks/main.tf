@@ -16,25 +16,30 @@ locals {
   url_prefix = "https://www.googleapis.com/compute/v1"
   name       = "${var.name_prefix}-${var.region}"
   subnets = flatten(concat(
-    [for i in range(length(var.main_cidrs)) :
+    [for i, v in var.subnets :
       {
         name           = "${local.name}-subnet${i + 1}"
         private_access = var.enable_private_access
-        ip_range       = var.main_cidrs[i]
+        ip_range       = v.main_cidr
         secondary_ranges = concat(
           # GKE Pods Range
-          [{
-            name  = "gke-pods"
-            range = var.gke_pods_cidrs[i]
-          }],
+          [
+            {
+              name  = "gke-pods"
+              range = v.gke_pods_cidr
+            }
+          ],
           # GKE Services Ranges
-          length(coalesce(var.gke_services_cidrs, [])) > 0 ? [for s in range(0, 29) : {
-            name  = format("gke-services-%02s", s)
-            range = cidrsubnet(var.gke_services_cidrs[i], var.gke_services_range_length - split("/", var.gke_services_cidrs[i])[1], s)
-          }] : [],
+          v.gke_services_cidr != null ? [
+            for s in range(0, 29) : {
+              name  = format("gke-services-%02s", s)
+              range = cidrsubnet(v.gke_services_cidr, var.gke_services_range_length - split("/", v.gke_services_cidr)[1], s)
+            }
+          ] : [],
         )
-        attached_projects = concat(var.subnet_attached_projects, var.attached_projects)
-        shared_accounts   = concat(var.subnet_shared_accounts, var.shared_accounts)
+        attached_projects = concat(v.attached_projects, var.attached_projects)
+        shared_accounts   = concat(v.shared_accounts, var.shared_accounts)
+        viewer_accounts   = concat(v.viewer_accounts, var.viewer_accounts)
       }
     ],
     var.create_proxy_only_subnet == true && var.proxy_only_cidr != null ? [
@@ -271,9 +276,16 @@ locals {
       cloud_router                    = one(local.cloud_routers).name
       cloud_vpn_gateway               = one(local.cloud_vpn_gateways).name
       peer_gcp_vpn_gateway_project_id = coalesce(var.hub_vpc.project_id, var.project_id)
-      peer_gcp_vpn_gateway            = "${var.hub_vpc.network}-${var.region}"
+      peer_gcp_vpn_gateway            = coalesce(var.hub_vpc.cloud_vpn_gateway, "${var.hub_vpc.network}-${var.region}")
       peer_bgp_asn                    = var.hub_vpc.bgp_asn
-      advertised_ip_ranges            = [for i, v in var.main_cidrs : { range = v }]
+      advertised_ip_ranges = flatten([for i, v in var.subnets :
+        [
+          {
+            range       = v.main_cidr
+            description = v.name
+          }
+        ]
+      ])
       tunnels = [for i in range(0, 2) :
         {
           name                = "${local.name}-${var.hub_vpc.network}-${i}"
@@ -302,12 +314,12 @@ module "vpn-to-hub" {
 locals {
   remote_vpn_tunnels = [
     {
-      cloud_router                    = "${var.hub_vpc.network}-${var.region}"
-      cloud_vpn_gateway               = "${var.hub_vpc.network}-${var.region}"
+      cloud_router                    = coalesce(var.hub_vpc.cloud_router, "${var.hub_vpc.network}-${var.region}")
+      cloud_vpn_gateway               = coalesce(var.hub_vpc.cloud_vpn_gateway, "${var.hub_vpc.network}-${var.region}")
       peer_gcp_vpn_gateway_project_id = var.project_id
       peer_gcp_vpn_gateway            = one(local.cloud_vpn_gateways).name
       peer_bgp_asn                    = one(local.cloud_routers).bgp_asn
-      advertised_ip_ranges            = [for i, v in var.hub_vpc.advertised_ip_ranges : { range = v }]
+      advertised_ip_ranges            = [for i, v in coalesce(var.hub_vpc.advertised_ip_ranges, var.internal_ips) : { range = v }]
       tunnels = [for i in range(0, 2) :
         {
           name                = "${local.name}-${i}"

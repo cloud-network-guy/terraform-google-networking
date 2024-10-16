@@ -61,17 +61,6 @@ variable "cloud_nat_log_type" {
   type    = string
   default = "errors"
 }
-variable "main_cidrs" {
-  type = list(string)
-}
-variable "gke_pods_cidrs" {
-  type    = list(string)
-  default = []
-}
-variable "gke_services_cidrs" {
-  type    = list(string)
-  default = []
-}
 variable "gke_services_range_length" {
   type    = number
   default = 22
@@ -118,11 +107,7 @@ variable "shared_accounts" {
   type    = list(string)
   default = []
 }
-variable "subnet_shared_accounts" {
-  type    = list(string)
-  default = []
-}
-variable "subnet_viewer_accounts" {
+variable "viewer_accounts" {
   type    = list(string)
   default = []
 }
@@ -130,8 +115,17 @@ variable "attached_projects" {
   type    = list(string)
   default = []
 }
-variable "subnet_attached_projects" {
-  type    = list(string)
+variable "subnets" {
+  type = list(object({
+    main_cidr         = string
+    gke_pods_cidr     = string
+    gke_services_cidr = string
+    region            = optional(string)
+    name              = optional(string)
+    attached_projects = optional(list(string), [])
+    shared_accounts   = optional(list(string), [])
+    viewer_accounts   = optional(list(string), [])
+  }))
   default = []
 }
 variable "allow_internal_ingress" {
@@ -179,6 +173,8 @@ variable "hub_vpc" {
     project_id           = optional(string)
     network              = optional(string, "default")
     bgp_asn              = optional(number, 64512)
+    cloud_router         = optional(string)
+    cloud_vpn_gateway    = optional(string)
     advertised_ip_ranges = optional(list(string), ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"])
   })
 }
