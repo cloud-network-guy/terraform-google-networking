@@ -6,7 +6,7 @@ locals {
   description               = var.description
   logging                   = coalesce(var.logging, false)
   enable_inbound_forwarding = coalesce(var.enable_inbound_forwarding, false)
-  target_name_servers = [for ns in var.target_name_servers :
+  target_name_servers = [for ns in coalesce(var.target_name_servers, []) :
     {
       ipv4_address    = ns.ipv4_address
       forwarding_path = trimspace(lower(lookup(ns, "forwarding_path", "default")))

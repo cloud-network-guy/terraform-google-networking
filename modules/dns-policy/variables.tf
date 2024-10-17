@@ -28,7 +28,7 @@ variable "target_name_servers" {
   }))
   default = []
   validation {
-    condition     = alltrue([for ns in var.target_name_servers :
+    condition     = alltrue([for ns in coalesce(var.target_name_servers, []) :
       contains(["default", "private"], trimspace(lower(ns.forwarding_path)))
     ])
     error_message = "Name Server forwarding path must be 'default' or 'private'."
