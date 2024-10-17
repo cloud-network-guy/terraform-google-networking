@@ -17,9 +17,6 @@ locals {
   ]
 }
 
-resource "null_resource" "default" {
-  count = local.create ? 1 : 0
-}
 resource "google_dns_policy" "default" {
   count                     = local.create ? 1 : 0
   project                   = local.project
@@ -45,5 +42,4 @@ resource "google_dns_policy" "default" {
       network_url = networks.value
     }
   }
-  depends_on = [null_resource.default]
 }
