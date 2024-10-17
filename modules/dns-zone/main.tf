@@ -1,156 +1,105 @@
+
 locals {
-  create          = coalesce(var.create, true)
-  project_id      = lower(trimspace(var.project_id))
-  _dns_zones = local.create == true ? [
+  create      = coalesce(var.create, true)
+  project     = lower(trimspace(var.project_id))
+  name        = lower(trimspace(var.name))
+  description = var.description
+  dns_name    = lower(trimspace(endswith(var.dns_name, ".") ? var.dns_name : "${var.dns_name}."))
+  logging     = coalesce(var.logging, false)
+  visibility  = lower(coalesce(var.visibility, "public"))
+  is_private  = lower(trimspace(local.visibility)) == "private" ? true : false
+  target_name_servers = [for ns in var.target_name_servers :
     {
-      project_id          = local.project_id
-      description         = local.description
-      dns_name            = lower(trimspace(endswith(v.dns_name, ".") ? v.dns_name : "${v.dns_name}."))
-      peer_project_id     = coalesce(var.peer_project_id, local.project_id)
-      visible_networks    = coalesce(var.visible_networks, [])
-      target_name_servers = coalesce(var.target_name_servers, [])
-      logging             = coalesce(var.logging, false)
-      visibility          = lower(coalesce(var.visibility, "public"))
-      records             = coalesce(var.records, []    }
-  ] : []
-  __dns_zones = [for i, v in local._dns_zones :
-    merge(v, {
-      name       = lower(trimspace(coalesce(v.name, trimsuffix(replace(v.dns_name, ".", "-"), "-"))))
-      visibility = length(v.visible_networks) > 0 ? "private" : v.visibility
-    })
+      ipv4_address    = ns.ipv4_address
+      forwarding_path = trimspace(lower(lookup(ns, "forwarding_path", "default")))
+    }
   ]
-  dns_zones = [for i, v in local.__dns_zones :
-    merge(v, {
-      is_private = v.visibility == "private" ? true : false
-      is_public  = v.visibility == "public" ? true : false
-      index_key  = "${v.project_id}/${v.name}"
-    }) if v.create == true
+  networks = [for n in var.networks :
+    strcontains(n, "projects/") ? n : "projects/${local.project}/global/networks/${n}"
   ]
+  force_destroy = coalesce(var.force_destroy, false)
+  peer_project  = coalesce(var.peer_project_id, var.peer_project, local.project)
+  _peer_network = try(coalesce(var.peer_network_id, var.peer_network), null)
+  peer_network  = local._peer_network != null ? strcontains(local._peer_network, "projects/") ? local._peer_network : "projects/${local.peer_project}/global/networks/${local._peer_network}" : null
 }
 
-# DNS Zones
+# The DNS Zone
+resource "null_resource" "default" {
+  count = local.create ? 1 : 0
+}
 resource "google_dns_managed_zone" "default" {
-  for_each      = { for i, v in local.dns_zones : v.index_key => v }
-  project       = each.value.project_id
-  name          = each.value.name
-  description   = each.value.description
-  dns_name      = each.value.dns_name
-  visibility    = each.value.visibility
-  force_destroy = each.value.force_destroy
+  count         = local.create ? 1 : 0
+  project       = local.project
+  name          = local.name
+  description   = local.description
+  dns_name      = local.dns_name
+  visibility    = local.visibility
+  force_destroy = local.force_destroy
   dynamic "private_visibility_config" {
-    for_each = each.value.is_private && length(each.value.visible_networks) > 0 ? [true] : []
+    for_each = local.is_private && length(local.networks) > 0 ? [true] : []
     content {
       dynamic "networks" {
-        for_each = each.value.visible_networks
+        for_each = local.networks
         content {
-          network_url = "${local.url_prefix}/${each.value.project_id}/global/networks/${networks.value}"
+          network_url = networks.value
         }
       }
     }
   }
   dynamic "forwarding_config" {
-    for_each = each.value.is_private && length(each.value.target_name_servers) > 0 ? [true] : []
+    for_each = local.is_private && length(local.target_name_servers) > 0 ? [true] : []
     content {
       dynamic "target_name_servers" {
-        for_each = each.value.target_name_servers
+        for_each = local.target_name_servers
         content {
           ipv4_address    = target_name_servers.value.ipv4_address
-          forwarding_path = coalesce(target_name_servers.value.forwarding_path, "default")
+          forwarding_path = target_name_servers.value.forwarding_path
         }
       }
     }
   }
   dynamic "peering_config" {
-    for_each = each.value.peer_network_name != null ? [true] : []
+    for_each = local.peer_network != null ? [true] : []
     content {
       target_network {
-        network_url = "projects/${each.value.peer_project_id}/global/networks/${each.value.peer_network_name}"
+        network_url = local.peer_network
       }
     }
   }
   dynamic "cloud_logging_config" {
-    for_each = each.value.logging ? [true] : []
+    for_each = local.logging ? [true] : []
     content {
       enable_logging = true
     }
   }
+  depends_on = [null_resource.default]
 }
+
 locals {
-  _dns_records = flatten([for dns_zone in local.dns_zones :
-    [for record in dns_zone.records : {
-      create         = coalesce(dns_zone.create, true)
-      project_id     = dns_zone.project_id
-      managed_zone   = dns_zone.name
-      name           = record.name == "" ? dns_zone.dns_name : trimspace(("${record.name}.${dns_zone.dns_name}")
-      type           = upper(trimspace(coalesce(record.type, "A")))
-      ttl            = coalesce(record.ttl, 300)
-      rrdatas        = coalesce(record.rrdatas, [])
-      index_key      = record.index_key
-      zone_index_key = dns_zone.index_key
-    }]
-  ])
-  dns_records = [for i, v in local._dns_records :
-    merge(v, {
-      index_key = coalesce(v.index_key, "${v.zone_index_key}/${v.name}/${v.type}")
-    }) if v.create == true
+  _dns_records = [for r in var.records :
+    {
+      create  = coalesce(lookup(r, "create", null), true)
+      name    = trimspace(endswith(r.name, local.dns_name) ? r.name : "${r.name}.${local.dns_name}")
+      type    = upper(trimspace(coalesce(lookup(r, "type", null), "A")))
+      ttl     = coalesce(lookup(r, "ttl", null), 300)
+      rrdatas = [for _ in coalesce(lookup(r, "rrdatas", null), []) : trimspace(_)]
+    }
+  ]
+  dns_records = [for r in local._dns_records :
+    merge(r, {
+      index_key = "${one(google_dns_managed_zone.default).name}/${r.name}/${r.type}"
+    }) if r.create == true
   ]
 }
 
 # DNS Records
 resource "google_dns_record_set" "default" {
-  for_each     = { for i, v in local.dns_records : v.index_key => v }
-  project      = each.value.project_id
-  managed_zone = each.value.managed_zone
+  for_each     = { for k, v in local.dns_records : v.index_key => v }
+  project      = local.project
+  managed_zone = local.create ? one(google_dns_managed_zone.default).name : null
   name         = each.value.name
   type         = each.value.type
   ttl          = each.value.ttl
   rrdatas      = each.value.rrdatas
   depends_on   = [google_dns_managed_zone.default]
-}
-locals {
-  _dns_policies = [for i, v in var.dns_policies :
-    merge(v, {
-      project_id                = coalesce(v.project_id, var.project_id)
-      name                      = coalesce(v.name, "dns-policy-${i}")
-      description               = coalesce(v.description, "Managed by Terraform")
-      enable_inbound_forwarding = coalesce(v.enable_inbound_forwarding, true)
-      target_name_servers       = coalesce(v.target_name_servers, [])
-      networks                  = coalesce(v.networks, [])
-      logging                   = coalesce(v.logging, false)
-      create                    = coalesce(v.create, true)
-    })
-  ]
-  dns_policies = [for i, v in local._dns_policies :
-    merge(v, {
-      index_key = coalesce(v.index_key, "${v.project_id}/${v.name}")
-    })
-  ]
-}
-
-# DNS Server Policies
-resource "google_dns_policy" "default" {
-  for_each                  = { for k, v in local.dns_policies : v.index_key => v if v.create }
-  project                   = each.value.project_id
-  name                      = each.value.name
-  description               = each.value.description
-  enable_logging            = each.value.logging
-  enable_inbound_forwarding = each.value.enable_inbound_forwarding
-  dynamic "alternative_name_server_config" {
-    for_each = length(each.value.target_name_servers) > 0 ? [true] : []
-    content {
-      dynamic "target_name_servers" {
-        for_each = each.value.target_name_servers
-        content {
-          ipv4_address    = target_name_servers.value.ipv4_address
-          forwarding_path = coalesce(target_name_servers.value.forwarding_path, "default")
-        }
-      }
-    }
-  }
-  dynamic "networks" {
-    for_each = each.value.networks
-    content {
-      network_url = "projects/${each.value.project_id}/global/networks/${networks.value}"
-    }
-  }
 }

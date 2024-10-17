@@ -1,53 +1,73 @@
 variable "project_id" {
-  type        = string
-  description = "Default GCP Project ID (can be overridden at resource level)"
-  default     = null
+  type = string
 }
-variable "dns_zones" {
-  description = "List of DNS zones"
+variable "create" {
+  type    = bool
+  default = true
+}
+variable "name" {
+  type    = string
+  default = null
+}
+variable "description" {
+  type    = string
+  default = null
+}
+variable "dns_name" {
+  type = string
+}
+variable "target_name_servers" {
   type = list(object({
-    create            = optional(bool, true)
-    project_id        = optional(string)
-    index_key         = optional(string)
-    dns_name          = string
-    name              = optional(string)
-    description       = optional(string)
-    visibility        = optional(string)
-    visible_networks  = optional(list(string))
-    peer_project_id   = optional(string)
-    peer_network_name = optional(string)
-    logging           = optional(bool)
-    force_destroy     = optional(bool)
-    target_name_servers = optional(list(object({
-      ipv4_address    = optional(string)
-      forwarding_path = optional(string)
-    })))
-    records = optional(list(object({
-      create    = optional(bool, true)
-      index_key = optional(string)
-      name      = string
-      type      = optional(string)
-      ttl       = optional(number)
-      rrdatas   = list(string)
-    })))
+    ipv4_address    = string
+    forwarding_path = optional(string)
+  }))
+  default = []
+  validation {
+    condition = alltrue([for ns in var.target_name_servers :
+      contains(["default", "private"], trimspace(lower(ns.forwarding_path)))
+    ])
+    error_message = "Name Server forwarding path must be 'default' or 'private'."
+  }
+}
+variable "visibility" {
+  type    = string
+  default = null
+}
+variable "networks" {
+  type    = list(string)
+  default = []
+}
+variable "peer_project_id" {
+  type    = string
+  default = null
+}
+variable "peer_project" {
+  type    = string
+  default = null
+}
+variable "peer_network_id" {
+  type    = string
+  default = null
+}
+variable "peer_network" {
+  type    = string
+  default = null
+}
+variable "records" {
+  type = list(object({
+    create  = optional(bool, true)
+    name    = string
+    type    = optional(string)
+    ttl     = optional(number)
+    rrdatas = list(string)
   }))
   default = []
 }
-variable "dns_policies" {
-  description = "List of DNS Policies"
-  type = list(object({
-    create                    = optional(bool, true)
-    project_id                = optional(string)
-    index_key                 = optional(string)
-    name                      = optional(string)
-    description               = optional(string)
-    logging                   = optional(bool)
-    enable_inbound_forwarding = optional(bool)
-    target_name_servers = optional(list(object({
-      ipv4_address    = optional(string)
-      forwarding_path = optional(string)
-    })))
-    networks = optional(list(string))
-  }))
-  default = []
+variable "force_destroy" {
+  type    = bool
+  default = false
+}
+variable "logging" {
+  type    = bool
+  default = false
 }
