@@ -1,8 +1,15 @@
+resource "random_string" "name" {
+  count   = var.name == null ? 1 : 0
+  length  = 8
+  upper   = false
+  special = false
+  numeric = false
+}
 
 locals {
   create                    = coalesce(var.create, true)
   project                   = lower(trimspace(var.project_id))
-  name                      = lower(trimspace(var.name))
+  name                      = lower(trimspace(var.name != null ? var.name : one(random_string.name).result))
   description               = var.description
   logging                   = coalesce(var.logging, false)
   enable_inbound_forwarding = coalesce(var.enable_inbound_forwarding, false)

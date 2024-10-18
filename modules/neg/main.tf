@@ -169,7 +169,7 @@ locals {
       default_port          = local.default_port
       endpoints = [for e in v.endpoints :
         merge(e, {
-          port       = lookup(e, "port", local.default_port)
+          port = lookup(e, "port", local.default_port)
         })
       ]
     }) if local.is_zonal

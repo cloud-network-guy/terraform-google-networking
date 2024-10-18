@@ -1,9 +1,16 @@
+resource "random_string" "name" {
+  count   = var.name == null ? 1 : 0
+  length  = 8
+  upper   = false
+  special = false
+  numeric = false
+}
 
 locals {
   api_prefix  = "https://www.googleapis.com/compute/v1"
   create      = coalesce(var.create, true)
   project     = lower(trimspace(var.project_id))
-  name        = lower(trimspace(coalesce(var.name, replace(var.dns_name, ".", "-"))))
+  name        = lower(trimspace(var.name != null ? var.name : one(random_string.name).result))
   description = var.description
   dns_name    = lower(trimspace(endswith(var.dns_name, ".") ? var.dns_name : "${var.dns_name}."))
   logging     = coalesce(var.logging, false)

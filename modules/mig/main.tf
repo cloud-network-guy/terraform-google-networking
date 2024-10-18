@@ -145,7 +145,9 @@ resource "google_compute_region_autoscaler" "default" {
       predictive_method = each.value.cpu_predictive_method
     }
   }
-}locals {
+}
+
+locals {
   _migs = [for i, v in var.migs :
     merge(v, {
       create                                = coalesce(v.create, true)
