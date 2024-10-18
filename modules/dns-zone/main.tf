@@ -86,6 +86,7 @@ resource "google_dns_managed_zone" "default" {
   }
 }
 
+# DNS Records
 locals {
   _dns_records = [for r in coalesce(var.records, []) :
     {
@@ -102,8 +103,9 @@ locals {
     }) if r.create == true
   ]
 }
-
-# DNS Records
+resource "null_resource" "dns_record_set" {
+  for_each = { for k, v in local.dns_records : v.index_key => v }
+}
 resource "google_dns_record_set" "default" {
   for_each     = { for k, v in local.dns_records : v.index_key => v }
   project      = local.project
@@ -112,5 +114,5 @@ resource "google_dns_record_set" "default" {
   type         = each.value.type
   ttl          = each.value.ttl
   rrdatas      = each.value.rrdatas
-  depends_on   = [google_dns_managed_zone.default]
+  depends_on   = [null_resource.dns_record_set]
 }
