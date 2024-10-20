@@ -1,5 +1,5 @@
 from traceback import format_exc
-from flask import Flask, request, Response, jsonify
+from flask import Flask, request, Response, jsonify, render_template
 from main import *
 
 app = Flask(__name__, static_url_path='/static')
@@ -9,50 +9,82 @@ app.config['SESSION_COOKIE_SAMESITE'] = "Strict"
 
 PLAIN_CONTENT_TYPE = "text/plain"
 JSON_RESPONSE_HEADERS = {'Cache-Control': "no-cache, no-store"}
-VALID_ACTIONS = ('version', 'init', 'plan', 'apply', 'providers')
 
 
-def _main(module, workspace, form):
-
-    try:
-        action = form.get('action', 'plan')
-        if action not in VALID_ACTIONS:
-            raise f"Unsupported action '{action}'"
-        _ = main(module, workspace, action)
-        return _
-    except Exception as e:
-        raise e
-
-
-@app.route("/<module>/")
-def _module(module: str):
+@app.route("/modules")
+def _modules():
 
     try:
-        _ = _main(module, workspace=None, form=request.form)
-        return Response(format(_), status=200, content_type=PLAIN_CONTENT_TYPE)
+        modules = get_modules()
+        return jsonify([m.__dict__ for m in modules]), JSON_RESPONSE_HEADERS
     except Exception as e:
         return Response(format_exc(), status=500, content_type=PLAIN_CONTENT_TYPE)
 
 
-@app.route("/<module>/<workspace>")
-def _workspace(module: str, workspace: str = None):
+@app.route("/modules/<module>/workspaces")
+def _workspaces(module: str):
 
     try:
-        _ = _main(module, workspace=workspace, form=request.form)
-        return Response(format(_), status=200, content_type=PLAIN_CONTENT_TYPE)
+        settings = get_settings()
+        _ = get_directories(settings)
+        if google_adc_key := settings.get('google_adc_key'):
+            google_adc_key = join(PWD, settings.get('google_adc_key'))
+        root_dir = _.get('root')
+        m = TFModule(module, join(root_dir, module))
+        _ = m.get_backend_workspaces(google_adc_key)
+        workspaces = [TFWorkSpace(w, m.name, m.backend_location) for w in m.workspaces]
+        for w in workspaces:
+            #print(m.workspace_details)
+            if w.name in m.workspace_details:
+                w.state_file_size = m.workspace_details[w.name]['size']
+                w.state_file_last_update = str(datetime.fromtimestamp(m.workspace_details[w.name]['updated']))
+            else:
+                w.state_file_size = 0
+                w.state_file_last_update = 0
+
+
+        #_ = [w.examine_state_file(google_adc_key) for w in workspaces]
+        workspaces = sorted(workspaces, key=lambda x: x.state_file_last_update, reverse=True)
+        return jsonify([w.__dict__ for w in workspaces]), JSON_RESPONSE_HEADERS
     except Exception as e:
         return Response(format_exc(), status=500, content_type=PLAIN_CONTENT_TYPE)
 
 
-@app.route("/environments")
-def _environments():
+@app.route("/")
+def _root():
 
     try:
-        environments = get_environment()
-        if request.args.get('format') == 'hcl':
-            _ = [f"{k} = {v}\n" if isinstance(v, int) else f"{k} = \"{v}\"\n" for k, v in environments.items()]
-            return Response(_, content_type=PLAIN_CONTENT_TYPE)
-        return jsonify(list(environments.keys())), JSON_RESPONSE_HEADERS
+
+        if module := request.args.get('module'):
+            title = "Workspaces"
+            settings = get_settings()
+            _ = get_directories(settings)
+            if google_adc_key := settings.get('google_adc_key'):
+                google_adc_key = join(PWD, settings.get('google_adc_key'))
+            root_dir = _.get('root')
+            m = TFModule(module, join(root_dir, module))
+            workspaces = [TFWorkSpace(w, m.backend_location) for w in m.workspaces]
+            _ = [w.examine_state_file(google_adc_key) for w in workspaces]
+            fields = vars(workspaces[0]).keys()
+            data = [w.__dict__ for w in workspaces]
+        else:
+            title = "Modules"
+            modules = get_modules()
+            fields = {
+                'name': "Workspace Name",
+                'num_workspaces': "Number of Workspaces",
+                'backend_location': "Backend Location",
+            }
+            data = []
+            for m in modules:
+                data.append({k: len(m.workspaces) if k == 'num_workspaces' else getattr(m, k) for k in fields.keys()})
+
+        return render_template(
+            template_name_or_list='index.html',
+            title=title,
+            fields=fields,
+            data=data
+        )
     except Exception as e:
         return Response(format_exc(), status=500, content_type=PLAIN_CONTENT_TYPE)
 
