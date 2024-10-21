@@ -1,18 +1,16 @@
 #!/usr/bin/env python3
 
-from sys import argv, exit
-from yaml import load, FullLoader
-from platform import system
+import platform
 from os import environ, chdir, listdir, scandir, access, R_OK, system
-from os.path import join, realpath, dirname, exists, isfile, isdir
+from os.path import realpath, dirname, join, exists, isfile, isdir
 from pathlib import Path
 from tempfile import gettempdir
 from datetime import datetime
-from asyncio import run, gather
-from git import Repo
+import yaml
 import google.auth
 import google.auth.transport.requests
 from google.cloud import storage
+from git import Repo
 
 SCOPES = ['https://www.googleapis.com/auth/cloud-platform']
 SSH_PRIVATE_KEY_FILES = ('id_rsa', 'id_ecdsa', 'id_ed25519')
@@ -179,7 +177,7 @@ def configure_git_ssh(private_key_file: str = None):
 
     if not (git_ssh_command := environ.get('GIT_SSH_COMMAND')):
         # Scan SSH Key locations to find valid private key file
-        my_os = system().lower()
+        my_os = platform.system().lower()
         home_dir = environ.get('HOME')
         if my_os.startswith('win'):
             home_dir = environ.get("USERPROFILE")
@@ -218,7 +216,7 @@ def get_settings(input_file: str = "settings.yaml") -> dict:
     """
     _ = check_file(input_file)
     with open(_, mode="rb") as fp:
-        _ = load(fp, Loader=FullLoader)
+        _ = yaml.load(fp, Loader=yaml.FullLoader)
         return _
 
 
@@ -392,10 +390,12 @@ def main(directory: str = ".", workspace: str = None, action: str = "plan", debu
 
 if __name__ == "__main__":
 
+    import sys
     from pprint import pprint
 
+    argv = sys.argv
     if len(argv) <= 2:
-        exit("Usage: " + argv[0] + " <module> <workspace>")
+        sys.exit("Usage: " + argv[0] + " <module> <workspace>")
 
     action = argv[3] if len(argv) > 3 else None
 
