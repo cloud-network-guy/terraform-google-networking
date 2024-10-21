@@ -63,9 +63,23 @@ def _root():
                 google_adc_key = join(PWD, settings.get('google_adc_key'))
             root_dir = _.get('root')
             m = TFModule(module, join(root_dir, module))
-            workspaces = [TFWorkSpace(w, m.backend_location) for w in m.workspaces]
-            _ = [w.examine_state_file(google_adc_key) for w in workspaces]
-            fields = vars(workspaces[0]).keys()
+            _ = m.get_backend_workspaces(google_adc_key)
+            workspaces = [TFWorkSpace(w, m.name, m.backend_location) for w in m.workspaces]
+            #_ = [w.examine_state_file(google_adc_key) for w in workspaces]
+            #print(m.workspace_details)
+            for w in workspaces:
+                if w.name in m.workspace_details:
+                    w.state_file_size = m.workspace_details[w.name]['size']
+                    w.state_file_last_update = str(datetime.fromtimestamp(m.workspace_details[w.name]['updated']))
+            workspaces = sorted(workspaces, key=lambda x: x.state_file_last_update, reverse=True)
+            fields = {
+                'name': "Workspace Name",
+                'module': "Module Name",
+                'input_file': "Input File",
+                'state_file_location': "State File Location",
+                'state_file_size': "State File Size",
+                'state_file_last_update': "State File Last Changed",
+            }
             data = [w.__dict__ for w in workspaces]
         else:
             title = "Modules"
