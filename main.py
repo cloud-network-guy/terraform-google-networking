@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import platform
+import sys
 from os import environ, chdir, listdir, scandir, access, R_OK, system
 from os.path import realpath, dirname, join, exists, isfile, isdir
 from pathlib import Path
@@ -177,14 +177,14 @@ def configure_git_ssh(private_key_file: str = None):
 
     if not (git_ssh_command := environ.get('GIT_SSH_COMMAND')):
         # Scan SSH Key locations to find valid private key file
-        my_os = platform.system().lower()
+        using_windows = True if sys.platform.startswith('win') else False
         home_dir = environ.get('HOME')
-        if my_os.startswith('win'):
+        if using_windows:
             home_dir = environ.get("USERPROFILE")
         if not private_key_file:
             for private_key_file in SSH_PRIVATE_KEY_FILES:
                 _ = f"{home_dir}/.ssh/{private_key_file}"
-                if my_os.startswith('win'):
+                if using_windows:
                     _ = _.replace("/", "\\")
                 if exists(_) and isfile(_) and access(_, R_OK):
                     private_key_file = _
@@ -390,7 +390,6 @@ def main(directory: str = ".", workspace: str = None, action: str = "plan", debu
 
 if __name__ == "__main__":
 
-    import sys
     from pprint import pprint
 
     argv = sys.argv
