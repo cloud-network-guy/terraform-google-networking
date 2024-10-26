@@ -22,7 +22,7 @@ variable "mtu" {
   type    = number
   default = 0
 }
-variable "enable_global_routing" {
+variable "global_routing" {
   type    = bool
   default = false
 }

@@ -9,7 +9,7 @@ resource "random_string" "name" {
 locals {
   mtu = coalesce(var.mtu, 0)
   routing_mode = upper(trimspace(
-    var.enable_global_routing == true ? "GLOBAL" : coalesce(var.routing_mode, "REGIONAL")
+    var.global_routing == true ? "GLOBAL" : coalesce(var.routing_mode, "REGIONAL")
   ))
   auto_create_subnetworks  = coalesce(var.auto_create_subnetworks, false)
   enable_ula_internal_ipv6 = coalesce(var.enable_ula_internal_ipv6, false)
