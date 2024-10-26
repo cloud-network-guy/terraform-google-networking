@@ -18,7 +18,6 @@ locals {
   ]
   __cloud_routers = [for router in local._cloud_routers :
     merge(router, {
-      network = local.network_self_link
       enable_bgp = coalesce(
         router.enable_bgp,
         router.bgp_asn != null ? true : false,

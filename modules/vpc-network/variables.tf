@@ -159,13 +159,12 @@ variable "cloud_routers" {
 }
 variable "cloud_nats" {
   type = list(object({
-    create            = optional(bool, true)
-    name              = optional(string)
-    region            = optional(string)
-    cloud_router      = optional(string)
-    cloud_router_name = optional(string)
-    subnets           = optional(list(string))
-    num_static_ips    = optional(number)
+    create         = optional(bool, true)
+    name           = optional(string)
+    region         = optional(string)
+    router         = optional(string)
+    subnets        = optional(list(string))
+    num_static_ips = optional(number)
     static_ips = optional(list(object({
       name        = optional(string)
       description = optional(string)

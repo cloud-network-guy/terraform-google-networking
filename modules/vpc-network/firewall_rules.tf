@@ -21,7 +21,7 @@ locals {
 
 # Get Current IP Ranges from Google via Data Source
 data "google_netblock_ip_ranges" "default" {
-  for_each   = toset(flatten([for rule in local._firewall_rules : rule.range_types]))
+  for_each   = toset(flatten([for rule in local._firewall_rules : rule.range_types if rule.create]))
   range_type = each.value
 }
 
