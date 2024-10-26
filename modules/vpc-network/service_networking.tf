@@ -28,7 +28,7 @@ resource "google_compute_global_address" "psa_ranges" {
   prefix_length = each.value.prefix_length
   address_type  = each.value.address_type
   purpose       = each.value.purpose
-  network       = local.network
+  network       = local.network_self_link
 }
 
 # Private Service Access Connection
@@ -55,7 +55,7 @@ locals {
 }
 resource "google_service_networking_connection" "default" {
   for_each                = { for i, v in local.service_connections : v.service => v if v.create == true }
-  network                 = local.network_self_link
+  network                 = local.network_name
   service                 = each.value.service
   reserved_peering_ranges = each.value.ip_ranges
 }
