@@ -30,7 +30,7 @@ resource "google_compute_address" "default" {
   subnetwork    = each.value.subnetwork
   address_type  = "INTERNAL"
   purpose       = "GCE_ENDPOINT"
-  network_tier  = "PREMIUM"
+  network_tier  = null
   address       = each.value.address
   ip_version    = ""
   prefix_length = 0
