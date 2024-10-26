@@ -39,17 +39,18 @@ resource "google_compute_address" "default" {
 
 # Regional Internal Forwarding Rule for PSC Consumer Endpoint
 resource "google_compute_forwarding_rule" "default" {
-  for_each              = { for i, v in local.psc_endpoints : v.index_key => v }
-  project               = each.value.project_id
-  name                  = each.value.name
-  description           = each.value.description
-  network               = each.value.network
-  region                = each.value.region
-  ip_address            = google_compute_address.default[each.value.index_key].self_link
-  target                = each.value.target
-  subnetwork            = null
-  load_balancing_scheme = ""
-  all_ports             = false
-  allow_global_access   = false
-  depends_on            = [google_compute_network.default]
+  for_each                = { for i, v in local.psc_endpoints : v.index_key => v }
+  project                 = each.value.project_id
+  name                    = each.value.name
+  description             = each.value.description
+  network                 = each.value.network
+  region                  = each.value.region
+  ip_address              = google_compute_address.default[each.value.index_key].self_link
+  target                  = each.value.target
+  subnetwork              = null
+  load_balancing_scheme   = ""
+  all_ports               = false
+  allow_global_access     = null
+  allow_psc_global_access = false
+  depends_on              = [google_compute_network.default]
 }
