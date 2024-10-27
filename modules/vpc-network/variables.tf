@@ -211,7 +211,7 @@ variable "firewall_rules" {
     range                   = optional(string)
     source_ranges           = optional(list(string))
     destination_ranges      = optional(list(string))
-    range_types             = optional(list(string), [])
+    range_types             = optional(list(string))
     range_type              = optional(string)
     protocol                = optional(string)
     protocols               = optional(list(string))
