@@ -56,8 +56,9 @@ locals {
   cloud_nat_addresses = flatten([for k, addresses in local._cloud_nat_addresses :
     [for i, address in coalesce(addresses, []) :
       merge(address, {
+        create              = local.create
         cloud_nat_index_key = k
-        index_key           = "${address.project_id}/${address.region}/${address.name}"
+        index_key           = "${local.project}/${address.region}/${address.name}"
       })
     ]
   ])
@@ -105,7 +106,7 @@ resource "google_compute_router_nat" "default" {
   region                 = each.value.region
   nat_ip_allocate_option = each.value.nat_ip_allocate_option
   nat_ips = [for address in local.cloud_nat_addresses :
-    google_compute_address.cloud_nat[address.index_key].self_link if address.cloud_nat_index_key == each.value.index_key
+    google_compute_address.cloud_nat["${address.region}/${address.name}"].self_link if address.cloud_nat_index_key == each.value.index_key
   ]
   source_subnetwork_ip_ranges_to_nat = each.value.source_subnetwork_ip_ranges_to_nat
   dynamic "subnetwork" {
