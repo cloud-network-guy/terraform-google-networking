@@ -9,5 +9,8 @@ locals {
   network_name      = local.create ? one(google_compute_network.default).name : local.name
   network_fields    = compact([local.name, local.description, local.mtu])
   recreate          = lookup(null_resource.network, join("/", local.network_fields), null) == null ? true : false
+  attached_projects = coalesce(var.attached_projects, [])
+  shared_accounts   = coalesce(var.shared_accounts, [])
+  viewer_accounts   = coalesce(var.viewer_accounts, [])
 }
 

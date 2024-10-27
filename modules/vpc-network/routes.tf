@@ -58,4 +58,6 @@ resource "google_compute_route" "default" {
     create = null
     delete = null
   }
+  # https://github.com/hashicorp/terraform-provider-google/issues/3034
+  depends_on = [google_compute_network_peering.default]
 }

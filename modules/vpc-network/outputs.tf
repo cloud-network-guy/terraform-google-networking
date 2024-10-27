@@ -3,6 +3,18 @@ output "name" { value = local.name }
 output "id" { value = local.network }
 output "network" { value = local.network }
 output "self_link" { value = local.network_self_link }
+output "subnets" {
+  value = [
+    for subnet in local.subnets :
+    {
+      name     = subnet.name
+      region   = subnet.region
+      ip_range = subnet.ip_range
+      id       = try(google_compute_subnetwork.default["${subnet.region}/${subnet.name}"].id, null)
+      purpose  = subnet.purpose
+    }
+  ]
+}
 output "peering_connections" {
   value = [for peering_connection in local.peerings :
     {

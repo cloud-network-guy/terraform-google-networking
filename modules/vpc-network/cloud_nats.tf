@@ -24,14 +24,14 @@ locals {
   __cloud_nats = [for i, v in local._cloud_nats :
     merge(v, {
       router = one([for r in local.cloud_routers :
-        google_compute_router.default["${r.region}/${r.name}"].name if r.name == v.router
+        google_compute_router.default["${r.region}/${r.name}"].name if r.name == v.router && v.create
       ])
     })
   ]
   ___cloud_nats = [for i, v in local.__cloud_nats :
     merge(v, {
       index_key = "${local.project}/${v.region}/${v.router}/${v.name}"
-    })
+    }) if v.create
   ]
   nat_addresses = { for i, v in local.___cloud_nats :
     v.index_key => [for a in range(v.num_static_ips) :

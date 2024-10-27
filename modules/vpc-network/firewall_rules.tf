@@ -2,16 +2,16 @@
 locals {
   _firewall_rules = [for rule in coalesce(var.firewall_rules, []) :
     merge(rule, {
-      name           = rule.name != null ? lower(trimspace(rule.name)) : null
-      create         = local.create ? coalesce(rule.create, true) : false
-      disabled       = coalesce(rule.disabled, false)
-      gen_short_name = rule.name == null ? true : false
-      priority       = coalesce(rule.priority, 1000)
-      logging        = coalesce(rule.logging, false)
-      direction      = length(coalesce(rule.destination_ranges, [])) > 0 ? "EGRESS" : upper(coalesce(rule.direction, "ingress"))
-      action         = upper(coalesce(rule.action, rule.allow != null ? "ALLOW" : (rule.deny != null ? "DENY" : "ALLOW")))
-      ports          = toset(coalesce(rule.ports, rule.port != null ? [rule.port] : []))
-      protocols      = toset(coalesce(rule.protocols, rule.protocol != null ? [rule.protocol] : ["all"]))
+      create      = local.create ? coalesce(rule.create, true) : false
+      name        = rule.name != null ? lower(trimspace(rule.name)) : null
+      description = rule.description != null ? trimspace(rule.description) : null
+      disabled    = coalesce(rule.disabled, false)
+      priority    = coalesce(rule.priority, 1000)
+      logging     = coalesce(rule.logging, false)
+      direction   = length(coalesce(rule.destination_ranges, [])) > 0 ? "EGRESS" : upper(coalesce(rule.direction, "ingress"))
+      action      = upper(coalesce(rule.action, rule.allow != null ? "ALLOW" : (rule.deny != null ? "DENY" : "ALLOW")))
+      ports       = toset(coalesce(rule.ports, rule.port != null ? [rule.port] : []))
+      protocols   = toset(coalesce(rule.protocols, rule.protocol != null ? [rule.protocol] : ["all"]))
       range_types = toset([for range_type in compact(coalesce(rule.range_types, [rule.range_type])) :
         lower(trimspace(range_type))
       ])
@@ -34,7 +34,9 @@ locals {
       source_ranges = rule.direction == "INGRESS" ? coalesce(
         rule.source_ranges,
         rule.ranges,
-        flatten([for range_type in rule.range_types : data.google_netblock_ip_ranges.default[range_type].cidr_blocks]),
+        flatten([for range_type in rule.range_types :
+          data.google_netblock_ip_ranges.default[range_type].cidr_blocks if rule.create
+        ]),
       ) : null
       destination_ranges = rule.direction == "EGRESS" ? coalesce(
         rule.destination_ranges,
