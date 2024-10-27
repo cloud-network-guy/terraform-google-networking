@@ -25,6 +25,7 @@ locals {
   ]
   subnets = [for i, v in local._subnets :
     merge(v, {
+      is_ipv6_enabled      = v.stack_type == "IPV4_ONLY" ? false : true
       is_private           = v.purpose == "PRIVATE" ? true : false
       is_proxy_only        = v.purpose == "INTERNAL_HTTPS_LOAD_BALANCER" || endswith(v.purpose, "MANAGED_PROXY") ? true : false
       has_secondary_ranges = length(v.secondary_ranges) > 0 ? true : false
@@ -42,18 +43,27 @@ resource "null_resource" "subnets" {
 }
 
 resource "google_compute_subnetwork" "default" {
-  for_each                 = { for i, v in local.subnets : "${v.region}/${v.name}" => v if v.create }
-  project                  = local.project
-  network                  = local.network_self_link
-  name                     = each.value.name
-  description              = each.value.description
-  region                   = each.value.region
-  stack_type               = each.value.is_private ? each.value.stack_type : null
-  ipv6_access_type         = null # each.value.is_proxy_only ? "INTERNAL" : null
-  ip_cidr_range            = each.value.ip_range
-  purpose                  = each.value.purpose
-  role                     = each.value.is_proxy_only ? upper(coalesce(each.value.role, "active")) : null
-  private_ip_google_access = each.value.is_private ? each.value.private_access : false
+  for_each                   = { for i, v in local.subnets : "${v.region}/${v.name}" => v if v.create }
+  project                    = local.project
+  network                    = local.network_self_link
+  name                       = each.value.name
+  description                = each.value.description
+  region                     = each.value.region
+  stack_type                 = each.value.is_private ? each.value.stack_type : null
+  ipv6_access_type           = null # each.value.is_proxy_only ? "INTERNAL" : null
+  ip_cidr_range              = each.value.ip_range
+  purpose                    = each.value.purpose
+  role                       = each.value.is_proxy_only ? upper(coalesce(each.value.role, "active")) : null
+  private_ip_google_access   = each.value.is_private ? each.value.private_access : false
+  private_ipv6_google_access = each.value.is_private && each.value.is_ipv6_enabled ? null : "DISABLE_GOOGLE_ACCESS"
+  # https://github.com/hashicorp/terraform-plugin-sdk/issues/161
+  dynamic "secondary_ip_range" {
+    for_each = each.value.secondary_ranges
+    content {
+      range_name    = secondary_ip_range.value.name
+      ip_cidr_range = secondary_ip_range.value.range
+    }
+  }
   dynamic "log_config" {
     for_each = each.value.flow_logs && each.value.is_private ? [true] : []
     content {
@@ -61,14 +71,6 @@ resource "google_compute_subnetwork" "default" {
       flow_sampling        = each.value.flow_sampling
       metadata             = each.value.log_metadata
       metadata_fields      = []
-    }
-  }
-  # https://github.com/hashicorp/terraform-plugin-sdk/issues/161
-  dynamic "secondary_ip_range" {
-    for_each = each.value.secondary_ranges
-    content {
-      range_name    = secondary_ip_range.value.name
-      ip_cidr_range = secondary_ip_range.value.range
     }
   }
   depends_on = [null_resource.subnets]
