@@ -26,6 +26,7 @@ locals {
     "projects/${local.host_project}/regions/${local.region}/subnetworks/${coalesce(var.subnetwork, "default")}"
   )
   network_tier        = upper(coalesce(var.network_tier, local.is_internal || local.is_application_lb ? "PREMIUM" : "STANDARD"))
+  address             = var.address != null ? trimspace(var.address) : null
   address_type        = local.is_internal ? "INTERNAL" : "EXTERNAL"
   address_purpose     = local.is_psc ? "GCE_ENDPOINT" : local.is_internal && local.is_redirect ? "SHARED_LOADBALANCER_VIP" : null
   address_name        = local.name
@@ -42,7 +43,7 @@ resource "null_resource" "ip_addresses" {
 # Regional IP Address
 resource "google_compute_address" "default" {
   count              = local.create && local.is_regional ? 1 : 0
-  address            = null
+  address            = local.address
   address_type       = local.address_type
   description        = local.address_description
   ip_version         = local.ip_version
@@ -60,7 +61,7 @@ resource "google_compute_address" "default" {
 # Global IP address
 resource "google_compute_global_address" "default" {
   count         = local.create && !local.is_regional ? 1 : 0
-  address       = null
+  address       = local.address
   address_type  = local.address_type
   description   = local.address_description
   ip_version    = local.ip_version

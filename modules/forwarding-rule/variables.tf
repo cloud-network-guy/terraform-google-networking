@@ -29,6 +29,10 @@ variable "description" {
   type    = string
   default = null
 }
+variable "address" {
+  type    = string
+  default = null
+}
 variable "address_name" {
   type    = string
   default = null
