@@ -10,8 +10,8 @@ locals {
       logging     = coalesce(rule.logging, false)
       direction   = length(coalesce(rule.destination_ranges, [])) > 0 ? "EGRESS" : upper(coalesce(rule.direction, "ingress"))
       action      = upper(coalesce(rule.action, rule.allow != null ? "ALLOW" : (rule.deny != null ? "DENY" : "ALLOW")))
-      ports       = toset(coalesce(rule.ports, rule.port != null ? [rule.port] : []))
-      protocols   = toset(coalesce(rule.protocols, rule.protocol != null ? [rule.protocol] : ["all"]))
+      ports       = toset(coalesce(rule.ports, compact([rule.port])))
+      protocols   = toset(coalesce(rule.protocols, coalescelist(compact([rule.protocol]), ["all"])))
       range_types = toset([for range_type in compact(coalesce(rule.range_types, [rule.range_type])) :
         lower(trimspace(range_type))
       ])
