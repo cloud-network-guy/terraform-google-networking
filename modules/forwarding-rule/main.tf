@@ -13,7 +13,7 @@ locals {
   create       = coalesce(var.create, true)
   project      = lower(trimspace(coalesce(var.project_id, var.project)))
   name         = lower(trimspace(var.name != null ? var.name : one(random_string.name).result))
-  description  = coalesce(var.description, "Managed by Terraform")
+  description  = var.description != null ? trimspace(var.description) : null
   is_regional  = var.region != null ? true : false
   region       = local.is_regional ? var.region : "global"
   type         = var.type == "PSC" ? var.type : upper(coalesce(var.type, "INTERNAL"))
@@ -30,7 +30,7 @@ locals {
   address_type        = local.is_internal ? "INTERNAL" : "EXTERNAL"
   address_purpose     = local.is_psc ? "GCE_ENDPOINT" : local.is_internal && local.is_redirect ? "SHARED_LOADBALANCER_VIP" : null
   address_name        = lower(trimspace(coalesce(var.address_name, local.name)))
-  address_description = var.address_description
+  address_description = var.address_description != null ? trimspace(var.address_description) : null
   address_index_key   = local.is_regional ? "${local.project}/${local.region}/${local.address_name}" : "${local.project}/${local.address_name}"
   ip_version          = null
 }
