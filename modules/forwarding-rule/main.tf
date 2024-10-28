@@ -84,7 +84,7 @@ locals {
   all_ports               = coalesce(var.all_ports, false)
   ip_protocol             = local.is_psc || local.protocol == "HTTP" ? null : local.protocol
   allow_global_access     = local.is_internal && !local.is_psc ? coalesce(var.global_access, false) : null
-  allow_psc_global_access = local.is_psc ? local.allow_global_access : null
+  allow_psc_global_access = local.is_psc ? coalesce(var.global_access, false) : null
   load_balancing_scheme   = local.is_psc ? "" : local.is_application_lb && !local.is_classic ? "${local.type}_MANAGED" : local.type
   ip_address              = local.create && local.is_psc && local.is_regional ? one(google_compute_address.default).self_link : null
   labels                  = { for k, v in coalesce(var.labels, {}) : k => lower(replace(v, " ", "_")) }
