@@ -188,6 +188,7 @@ resource "google_compute_backend_service" "default" {
       minimum_ring_size = 1
     }
   }
+  /* Need to update for 6.x provider
   dynamic "iap" {
     for_each = each.value.uses_iap ? [true] : []
     content {
@@ -195,6 +196,7 @@ resource "google_compute_backend_service" "default" {
       oauth2_client_secret = google_iap_client.default[each.key].secret
     }
   }
+   */
   enable_cdn = each.value.enable_cdn
   dynamic "cdn_policy" {
     for_each = each.value.enable_cdn == true ? [true] : []
