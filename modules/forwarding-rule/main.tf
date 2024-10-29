@@ -77,9 +77,9 @@ locals {
   ports                   = coalesce(var.ports, compact([local.port]))
   port_range              = var.port_range
   target                  = var.target
-  backend_service         = null
-  is_application_lb       = local.backend_service != null ? true : false
-  is_classic              = false
+  backend_service         = var.backend_service != null ? lower(trimspace(var.backend_service)) : null
+  is_application_lb       = false # TODO
+  is_classic              = false # TODO
   protocol                = upper(coalesce(var.protocol, length(local.ports) > 0 || local.all_ports || local.is_psc ? "TCP" : "HTTP"))
   all_ports               = coalesce(var.all_ports, false)
   ip_protocol             = local.is_psc || local.protocol == "HTTP" ? null : local.protocol
@@ -88,8 +88,8 @@ locals {
   load_balancing_scheme   = local.is_psc ? "" : local.is_application_lb && !local.is_classic ? "${local.type}_MANAGED" : local.type
   ip_address              = local.create && local.is_psc && local.is_regional ? one(google_compute_address.default).self_link : null
   labels                  = { for k, v in coalesce(var.labels, {}) : k => lower(replace(v, " ", "_")) }
-  is_mirroring_collector  = false
-  source_ip_ranges        = []
+  is_mirroring_collector  = false # TODO
+  source_ip_ranges        = []    # TODO
 }
 
 # Regional Forwarding Rule
