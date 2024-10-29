@@ -55,7 +55,7 @@ resource "google_compute_subnetwork" "default" {
   purpose                    = each.value.purpose
   role                       = each.value.is_proxy_only ? upper(coalesce(each.value.role, "active")) : null
   private_ip_google_access   = each.value.is_private ? each.value.private_access : false
-  private_ipv6_google_access = each.value.is_private ? null : "DISABLE_GOOGLE_ACCESS"  # TODO
+  private_ipv6_google_access = each.value.is_private ? "DISABLE_GOOGLE_ACCESS" : null   # TODO
   # https://github.com/hashicorp/terraform-plugin-sdk/issues/161
   dynamic "secondary_ip_range" {
     for_each = each.value.secondary_ranges
