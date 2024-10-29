@@ -65,6 +65,10 @@ variable "all_ports" {
   type    = bool
   default = false
 }
+variable "backend_service" {
+  type    = string
+  default = null
+}
 variable "target" {
   type    = string
   default = null

@@ -19,11 +19,15 @@ locals {
   type         = var.type == "PSC" ? var.type : upper(coalesce(var.type, "INTERNAL"))
   is_internal  = local.type == "INTERNAL" || local.subnetwork != null ? true : false
   host_project = lower(trimspace(coalesce(var.host_project_id, var.host_project, local.project)))
-  network      = "projects/${local.host_project}/global/networks/${coalesce(var.network, "default")}"
+  network = coalesce(
+    startswith(var.network, local.api_prefix) ? var.network : null,
+    startswith(var.network, "projects/") ? "${local.api_prefix}/${var.network}" : null,
+    "projects/${local.host_project}/global/networks/${var.network}",
+  )
   subnetwork = coalesce(
-    startswith("projects/", var.subnetwork) ? var.subnetwork : null,
-    startswith("${local.api_prefix}/projects/", var.subnetwork) ? var.subnetwork : null,
-    "projects/${local.host_project}/regions/${local.region}/subnetworks/${coalesce(var.subnetwork, "default")}"
+    startswith(var.subnetwork, local.api_prefix) ? var.subnetwork : null,
+    startswith(var.subnetwork, "projects/", ) ? "${local.api_prefix}/${var.subnetwork}" : null,
+    "projects/${local.host_project}/regions/${local.region}/subnetworks/${var.subnetwork}",
   )
   network_tier        = upper(coalesce(var.network_tier, local.is_internal || local.is_application_lb ? "PREMIUM" : "STANDARD"))
   address             = var.address != null ? trimspace(var.address) : null
@@ -77,9 +81,9 @@ locals {
   ports                   = coalesce(var.ports, compact([local.port]))
   port_range              = var.port_range
   target                  = var.target
-  backend_service         = null
-  is_application_lb       = local.backend_service != null ? true : false
-  is_classic              = false
+  backend_service         = var.backend_service != null ? trimspace(var.backend_service) : null
+  is_application_lb       = false # TODO
+  is_classic              = false # TODO
   protocol                = upper(coalesce(var.protocol, length(local.ports) > 0 || local.all_ports || local.is_psc ? "TCP" : "HTTP"))
   all_ports               = coalesce(var.all_ports, false)
   ip_protocol             = local.is_psc || local.protocol == "HTTP" ? null : local.protocol
@@ -88,8 +92,8 @@ locals {
   load_balancing_scheme   = local.is_psc ? "" : local.is_application_lb && !local.is_classic ? "${local.type}_MANAGED" : local.type
   ip_address              = local.create && local.is_psc && local.is_regional ? one(google_compute_address.default).self_link : null
   labels                  = { for k, v in coalesce(var.labels, {}) : k => lower(replace(v, " ", "_")) }
-  is_mirroring_collector  = false
-  source_ip_ranges        = []
+  is_mirroring_collector  = false # TODO
+  source_ip_ranges        = []    # TODO
 }
 
 # Regional Forwarding Rule

@@ -55,7 +55,7 @@ resource "google_compute_subnetwork" "default" {
   ip_cidr_range            = each.value.ip_range
   purpose                  = each.value.purpose
   role                     = each.value.is_proxy_only ? upper(coalesce(each.value.role, "active")) : null
-  private_ip_google_access = each.value.is_private ? each.value.private_access : false
+  private_ip_google_access = each.value.is_private ? each.value.private_access : null
   dynamic "log_config" {
     for_each = each.value.flow_logs && each.value.is_private ? [true] : []
     content {
