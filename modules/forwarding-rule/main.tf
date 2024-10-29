@@ -20,13 +20,13 @@ locals {
   is_internal  = local.type == "INTERNAL" || local.subnetwork != null ? true : false
   host_project = lower(trimspace(coalesce(var.host_project_id, var.host_project, local.project)))
   network = coalesce(
-    startswith(local.api_prefix, var.network) ? var.network : null,
-    startswith("projects/", var.network) ? "${local.api_prefix}/${var.network}" : null,
+    startswith(var.network, local.api_prefix) ? var.network : null,
+    startswith(var.network, "projects/") ? "${local.api_prefix}/${var.network}" : null,
     "projects/${local.host_project}/global/networks/${var.network}",
   )
   subnetwork = coalesce(
-    startswith(local.api_prefix, var.subnetwork) ? var.subnetwork : null,
-    startswith("projects/", var.subnetwork) ? "${local.api_prefix}/${var.subnetwork}" : null,
+    startswith(var.subnetwork, local.api_prefix) ? var.subnetwork : null,
+    startswith(var.subnetwork, "projects/", ) ? "${local.api_prefix}/${var.subnetwork}" : null,
     "projects/${local.host_project}/regions/${local.region}/subnetworks/${var.subnetwork}",
   )
   network_tier        = upper(coalesce(var.network_tier, local.is_internal || local.is_application_lb ? "PREMIUM" : "STANDARD"))
