@@ -21,9 +21,9 @@ locals {
   host_project = lower(trimspace(coalesce(var.host_project_id, var.host_project, local.project)))
   network      = "projects/${local.host_project}/global/networks/${coalesce(var.network, "default")}"
   subnetwork = coalesce(
-    startswith("projects/", var.subnetwork) ? var.subnetwork : null,
-    startswith("${local.api_prefix}/projects/", var.subnetwork) ? var.subnetwork : null,
-    "projects/${local.host_project}/regions/${local.region}/subnetworks/${coalesce(var.subnetwork, "default")}"
+    startswith(local.api_prefix, var.subnetwork) ? var.subnetwork : null,
+    startswith("projects/", var.subnetwork) ? "${local.api_prefix}/${var.subnetwork}" : null,
+    "projects/${local.host_project}/regions/${local.region}/subnetworks/${var.subnetwork}",
   )
   network_tier        = upper(coalesce(var.network_tier, local.is_internal || local.is_application_lb ? "PREMIUM" : "STANDARD"))
   address             = var.address != null ? trimspace(var.address) : null
@@ -77,7 +77,7 @@ locals {
   ports                   = coalesce(var.ports, compact([local.port]))
   port_range              = var.port_range
   target                  = var.target
-  backend_service         = var.backend_service != null ? lower(trimspace(var.backend_service)) : null
+  backend_service         = var.backend_service != null ? trimspace(var.backend_service) : null
   is_application_lb       = false # TODO
   is_classic              = false # TODO
   protocol                = upper(coalesce(var.protocol, length(local.ports) > 0 || local.all_ports || local.is_psc ? "TCP" : "HTTP"))
