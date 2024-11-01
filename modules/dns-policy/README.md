@@ -3,14 +3,16 @@
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.3 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5.7 |
 | <a name="requirement_google"></a> [google](#requirement\_google) | >= 4.49, < 7.0 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.4 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
 | <a name="provider_google"></a> [google](#provider\_google) | >= 4.49, < 7.0 |
+| <a name="provider_random"></a> [random](#provider\_random) | >= 3.4 |
 
 ## Modules
 
@@ -21,6 +23,7 @@ No modules.
 | Name | Type |
 |------|------|
 | [google_dns_policy.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dns_policy) | resource |
+| [random_string.name](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
 
 ## Inputs
 

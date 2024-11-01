@@ -22,8 +22,8 @@ locals {
   instances  = [for i, v in coalesce(var.instances, compact([var.instance])) : lower(trimspace(v))]
   named_ports = [for i, v in coalesce(var.named_ports, []) :
     {
-      name = lookup(v, "name", "https")
-      port = lookup(v, "port", 443)
+      name = lower(trimspace(coalesce(v.name, "https")))
+      port = coalesce(v.port, 443)
     }
   ]
   is_regional  = var.region != null ? true : false
@@ -62,6 +62,61 @@ locals {
   version_name              = "${local.name}-0"
   distribution_policy_zones = local.is_zonal ? [local.zone] : one(data.google_compute_zones.available).names
   healthchecks              = var.healthcheck != null ? [var.healthcheck] : coalesce(var.healthchecks, [])
+}
+
+# Squid Instance Template, MIG, and Auto-Scaler
+resource "null_resource" "instance_template" {}
+resource "google_compute_instance_template" "squid" {
+  project        = local.project
+  region         = local.region
+  name_prefix    = local.name_prefix
+  machine_type   = local.machine_type
+  can_ip_forward = false
+  metadata = {
+    "enable-osconfig" = "true"
+  }
+  metadata_startup_script = var.startup_script
+  tags                    = []
+  disk {
+    auto_delete           = true
+    boot                  = true
+    disk_type             = "pd-ssd"
+    disk_size_gb          = 10
+    interface             = "SCSI"
+    mode                  = "READ_WRITE"
+    provisioned_iops      = 0
+    resource_manager_tags = {}
+    resource_policies     = []
+    source_image          = var.squid_source_image
+    source_snapshot       = null
+    type                  = "PERSISTENT"
+  }
+  network_interface {
+    network            = local.network_self_link
+    queue_count        = 0
+    subnetwork         = local.subnet_id
+    subnetwork_project = local.project
+  }
+  scheduling {
+    automatic_restart           = true
+    instance_termination_action = null
+    min_node_cpus               = 0
+    on_host_maintenance         = "MIGRATE"
+    preemptible                 = false
+    provisioning_model          = "STANDARD"
+  }
+  service_account {
+    email = local.squid_email
+    scopes = [
+      "https://www.googleapis.com/auth/cloud-platform",
+    ]
+  }
+  shielded_instance_config {
+    enable_integrity_monitoring = true
+    enable_secure_boot          = true
+    enable_vtpm                 = true
+  }
+  depends_on = [null_resource.instance_template]
 }
 
 # Regional Managed Instance Group
