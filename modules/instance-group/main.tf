@@ -37,11 +37,6 @@ locals {
     startswith(var.network, local.api_prefix) ? var.network : null,
     "projects/${local.host_project}/global/networks/${var.network}",
   )
-  subnetwork = coalesce(
-    startswith(var.subnetwork, "projects/", ) ? var.subnetwork : null,
-    startswith(var.subnetwork, local.api_prefix) ? var.subnetwork : null,
-    "projects/${local.host_project}/regions/${local.region}/subnetworks/${var.subnetwork}",
-  )
   autoscaling_mode                 = var.autoscaling_mode != null ? upper(trimspace(var.autoscaling_mode)) : "OFF"
   target_size                      = local.autoscaling_mode == "OFF" ? coalesce(var.target_size, 2) : null
   zones_prefix                     = local.zone != null ? "projects/${local.project}/zones/${local.zone}" : null
@@ -50,7 +45,7 @@ locals {
   update = {
     type                           = trimspace(upper(coalesce(var.update.type, "OPPORTUNISTIC")))
     instance_redistribution_type   = trimspace(upper(coalesce(var.update.instance_redistribution_type, "PROACTIVE")))
-    minimal_action                 = trimspace(upper(coalesce(var.update.minimal_action, "RESTART")))
+    minimal_action                 = trimspace(upper(coalesce(var.update.minimal_action, "REFRESH")))
     most_disruptive_allowed_action = trimspace(upper(coalesce(var.update.most_disruptive_action, "REPLACE")))
     replacement_method             = trimspace(upper(coalesce(var.update.replacement_method, "SUBSTITUTE")))
     max_unavailable_fixed          = length(local.distribution_policy_zones)
@@ -61,62 +56,21 @@ locals {
   }
   version_name              = "${local.name}-0"
   distribution_policy_zones = local.is_zonal ? [local.zone] : one(data.google_compute_zones.available).names
-  healthchecks              = var.healthcheck != null ? [var.healthcheck] : coalesce(var.healthchecks, [])
-}
-
-# Squid Instance Template, MIG, and Auto-Scaler
-resource "null_resource" "instance_template" {}
-resource "google_compute_instance_template" "squid" {
-  project        = local.project
-  region         = local.region
-  name_prefix    = local.name_prefix
-  machine_type   = local.machine_type
-  can_ip_forward = false
-  metadata = {
-    "enable-osconfig" = "true"
-  }
-  metadata_startup_script = var.startup_script
-  tags                    = []
-  disk {
-    auto_delete           = true
-    boot                  = true
-    disk_type             = "pd-ssd"
-    disk_size_gb          = 10
-    interface             = "SCSI"
-    mode                  = "READ_WRITE"
-    provisioned_iops      = 0
-    resource_manager_tags = {}
-    resource_policies     = []
-    source_image          = var.squid_source_image
-    source_snapshot       = null
-    type                  = "PERSISTENT"
-  }
-  network_interface {
-    network            = local.network_self_link
-    queue_count        = 0
-    subnetwork         = local.subnet_id
-    subnetwork_project = local.project
-  }
-  scheduling {
-    automatic_restart           = true
-    instance_termination_action = null
-    min_node_cpus               = 0
-    on_host_maintenance         = "MIGRATE"
-    preemptible                 = false
-    provisioning_model          = "STANDARD"
-  }
-  service_account {
-    email = local.squid_email
-    scopes = [
-      "https://www.googleapis.com/auth/cloud-platform",
-    ]
-  }
-  shielded_instance_config {
-    enable_integrity_monitoring = true
-    enable_secure_boot          = true
-    enable_vtpm                 = true
-  }
-  depends_on = [null_resource.instance_template]
+  _health_checks            = var.health_check != null ? [var.health_check] : coalesce(var.health_checks, [])
+  health_checks = [for hc in local._health_checks :
+    coalesce(
+      startswith(hc, local.api_prefix) ? hc : null,
+      startswith(hc, "projects/", ) ? "${local.api_prefix}/${hc}" : null,
+      "${local.api_prefix}/projects/${local.project}/regions/${local.region}/healthChecks/${hc}",
+    )
+  ]
+  name_prefix    = lower(trimspace(coalesce(var.name_prefix, "template-${local.name}")))
+  _instance_template = var.instance_template != null ? trimspace(var.instance_template) : null
+  instance_template = local._instance_template != null ? coalesce(
+      startswith(local._instance_template, local.api_prefix) ? local._instance_template : null,
+      startswith(local._instance_template, "projects/", ) ? "${local.api_prefix}/${local._instance_template}" : null,
+      "${local.api_prefix}/projects/${local.project}/global/instanceTemplates/${lower(local._instance_template)}",
+  ) : null
 }
 
 # Regional Managed Instance Group
@@ -138,7 +92,7 @@ resource "google_compute_region_instance_group_manager" "default" {
     ignore_changes        = [distribution_policy_zones]
   }
   dynamic "auto_healing_policies" {
-    for_each = local.healthchecks
+    for_each = local.health_checks
     content {
       health_check      = auto_healing_policies.value
       initial_delay_sec = local.auto_healing_policies.initial_delay_sec
@@ -150,7 +104,7 @@ resource "google_compute_region_instance_group_manager" "default" {
   }
   version {
     name              = local.version_name
-    instance_template = null #try(google_compute_instance_template.default[each.value.instance_template_key].id, null)
+    instance_template = local.create ? local.instance_template : null
   }
   update_policy {
     type                           = local.update.type
@@ -168,6 +122,39 @@ resource "google_compute_region_instance_group_manager" "default" {
   }
 }
 
+locals {
+  auto_scaler_name = local.name_prefix
+  autoscaling_policy = {
+    mode            = local.autoscaling_mode
+    min_replicas    = local.autoscaling_mode != "OFF" ? coalesce(var.min_replicas, 1) : 0
+    max_replicas    = local.autoscaling_mode != "OFF" ? coalesce(var.max_replicas, 10) : 0
+    cooldown_period = coalesce(var.cooldown_period, 60)
+    cpu_utilization = {
+      target            = coalesce(var.cpu_target, 0.60)
+      predictive_method = coalesce(var.cpu_predictive_method, "NONE")
+    }
+  }
+}
+
+# Auto-Scaler
+resource "google_compute_region_autoscaler" "default" {
+  count   = local.autoscaling_mode != "OFF" ? 1 : 0
+  name    = local.auto_scaler_name
+  project = local.project
+  region  = local.region
+  target  = one(google_compute_region_instance_group_manager.default).self_link
+  autoscaling_policy {
+    max_replicas    = local.autoscaling_policy.max_replicas
+    min_replicas    = local.autoscaling_policy.min_replicas
+    cooldown_period = local.autoscaling_policy.cooldown_period
+    mode            = local.autoscaling_policy.mode
+    cpu_utilization {
+      target            = local.autoscaling_policy.cpu_utilization.target
+      predictive_method = local.autoscaling_policy.cpu_utilization.predictive_method
+    }
+  }
+}
+
 # Unmanaged Instance Group
 resource "google_compute_instance_group" "default" {
   count     = local.create && local.is_zonal && !local.is_managed ? 1 : 0
@@ -176,7 +163,6 @@ resource "google_compute_instance_group" "default" {
   network   = local.network
   zone      = local.zone
   instances = formatlist("${local.api_prefix}/${local.zones_prefix}/instances/%s", local.instances)
-  # Also do named ports within the instance group
   dynamic "named_port" {
     for_each = local.named_ports
     content {

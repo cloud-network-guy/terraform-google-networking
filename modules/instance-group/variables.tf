@@ -45,17 +45,6 @@ variable "network" {
   type    = string
   default = "default"
 }
-variable "subnetwork" {
-  type    = string
-  default = "default"
-}
-variable "named_ports" {
-  type = list(object({
-    name = optional(string)
-    port = optional(number)
-  }))
-  default = []
-}
 variable "name_prefix" {
   type    = string
   default = null
@@ -90,11 +79,11 @@ variable "auto_healing_initial_delay" {
   type    = number
   default = 300
 }
-variable "healthcheck" {
+variable "health_check" {
   type    = string
   default = null
 }
-variable "healthchecks" {
+variable "health_checks" {
   type    = list(string)
   default = null
 }
@@ -121,4 +110,15 @@ variable "cpu_predictive_method" {
 variable "cooldown_period" {
   type    = number
   default = 60
+}
+variable "instance_template" {
+  type    = string
+  default = null
+}
+variable "named_ports" {
+  type = list(object({
+    name = optional(string)
+    port = optional(number)
+  }))
+  default = []
 }
