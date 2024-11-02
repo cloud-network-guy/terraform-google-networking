@@ -31,4 +31,5 @@ output "connected_endpoints" {
   value = { for k, v in local.lb_frontends :
     k => module.lb-frontend[k].psc_connected_endpoints
   }
+  sensitive = true
 }
