@@ -50,7 +50,7 @@ locals {
   }
   logging = coalesce(var.logging, false)
   log_config = {
-    enable      = local.logging
+    enable      = local.logging ? local.logging : null
     sample_rate = local.logging ? coalesce(var.logging_sample_rate, 1) : null
   }
   groups = [for group in coalesce(var.groups, []) :
@@ -74,6 +74,7 @@ resource "google_compute_region_backend_service" "default" {
   count                           = local.create && local.is_regional ? 1 : 0
   project                         = local.project
   name                            = local.name
+  description                     = local.description
   protocol                        = local.protocol
   load_balancing_scheme           = local.load_balancing_scheme
   locality_lb_policy              = local.locality_lb_policy
@@ -81,10 +82,6 @@ resource "google_compute_region_backend_service" "default" {
   health_checks                   = local.health_checks
   timeout_sec                     = local.timeout_sec
   connection_draining_timeout_sec = local.connection_draining_timeout_sec
-  log_config {
-    enable      = local.log_config.enable
-    sample_rate = local.log_config.sample_rate
-  }
   dynamic "backend" {
     for_each = local.groups
     content {
@@ -98,6 +95,13 @@ resource "google_compute_region_backend_service" "default" {
       max_rate_per_endpoint        = local.backend.max_rate_per_endpoint
       max_rate_per_instance        = local.backend.max_connections_per_instance
       max_utilization              = local.backend.max_utilization
+    }
+  }
+  dynamic "log_config" {
+    for_each = local.logging ? [true] : []
+    content {
+      enable      = local.log_config.enable
+      sample_rate = local.log_config.sample_rate
     }
   }
   dynamic "consistent_hash" {
@@ -116,6 +120,7 @@ resource "google_compute_backend_service" "default" {
   count                           = local.create && !local.is_regional ? 1 : 0
   project                         = local.project
   name                            = local.name
+  description                     = local.description
   protocol                        = local.protocol
   load_balancing_scheme           = local.load_balancing_scheme
   locality_lb_policy              = local.locality_lb_policy
@@ -123,10 +128,6 @@ resource "google_compute_backend_service" "default" {
   health_checks                   = local.health_checks
   timeout_sec                     = local.timeout_sec
   connection_draining_timeout_sec = local.connection_draining_timeout_sec
-  log_config {
-    enable      = local.log_config.enable
-    sample_rate = local.log_config.sample_rate
-  }
   dynamic "backend" {
     for_each = local.groups
     content {
@@ -140,6 +141,13 @@ resource "google_compute_backend_service" "default" {
       max_rate_per_endpoint        = local.backend.max_rate_per_endpoint
       max_rate_per_instance        = local.backend.max_connections_per_instance
       max_utilization              = local.backend.max_utilization
+    }
+  }
+  dynamic "log_config" {
+    for_each = local.logging ? [true] : []
+    content {
+      enable      = local.log_config.enable
+      sample_rate = local.log_config.sample_rate
     }
   }
   dynamic "consistent_hash" {

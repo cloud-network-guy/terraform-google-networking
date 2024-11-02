@@ -149,8 +149,8 @@ variable "deployments" {
       name                        = optional(string)
       nat_subnets                 = optional(list(string))
       auto_accept_all_connections = optional(bool)
-      accept_project_ids = optional(list(object({
-        project_id       = string
+      accept_projects = optional(list(object({
+        project          = string
         connection_limit = optional(number)
       })))
     }))

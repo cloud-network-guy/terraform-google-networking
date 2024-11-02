@@ -40,13 +40,15 @@ locals {
     most_disruptive_allowed_action = trimspace(upper(coalesce(var.update.most_disruptive_action, "REPLACE")))
     replacement_method             = trimspace(upper(coalesce(var.update.replacement_method, "SUBSTITUTE")))
     max_unavailable_fixed          = length(local.distribution_policy_zones)
+    max_unavailable_percent        = 0
     max_surge_fixed                = length(local.distribution_policy_zones)
+    max_surge_percent              = 0
   }
   auto_healing_policies = {
     initial_delay_sec = coalesce(var.auto_healing_initial_delay, 300)
   }
   version_name              = "${local.name}-0"
-  distribution_policy_zones = local.is_zonal ? [local.zone] : one(data.google_compute_zones.available).names
+  distribution_policy_zones = try(one(data.google_compute_zones.available).names, [for z in ["b", "c"] : "${local.region}-${z}"])
   _health_checks            = var.health_check != null ? [var.health_check] : coalesce(var.health_checks, [])
   health_checks = [for hc in local._health_checks :
     coalesce(

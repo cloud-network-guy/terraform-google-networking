@@ -144,3 +144,55 @@ resource "google_compute_global_forwarding_rule" "default" {
   subnetwork            = local.subnetwork
   target                = local.target
 }
+
+locals {
+  psc_publish = var.psc != null && var.psc != {} ? true : false
+  psc = local.psc_publish ? {
+    name                     = coalesce(var.psc.name, local.name)
+    description              = coalesce(var.psc.description, "PSC Publish for '${local.name}'")
+    target_service           = local.create && local.is_regional ? one(google_compute_forwarding_rule.default).self_link : null
+    reconcile_connections    = coalesce(var.psc.reconcile_connections, true)
+    enable_proxy_protocol    = coalesce(var.psc.enable_proxy_protocol, false)
+    auto_accept_all_projects = coalesce(var.psc.auto_accept_all_projects, false)
+    accept_projects = [for p in coalesce(var.psc.accept_projects, []) :
+      {
+        project_id_or_num = p.project
+        connection_limit  = coalesce(p.connection_limit, 10)
+      }
+    ]
+    consumer_reject_lists = coalesce(var.psc.consumer_reject_lists, [])
+    domain_names          = coalesce(var.psc.domain_names, [])
+    host_project_id       = coalesce(var.psc.host_project, local.host_project)
+    nat_subnets           = coalescelist(var.psc.nat_subnets, ["default"])
+    nat_subnets = coalescelist([for nat_subnet in coalesce(var.psc.nat_subnets, []) :
+      coalesce(
+        startswith(nat_subnet, local.api_prefix) ? nat_subnet : null,
+        startswith(nat_subnet, "projects/", ) ? "${local.api_prefix}/${nat_subnet}" : null,
+        "${local.api_prefix}/projects/${local.host_project}/regions/${local.region}/subnetworks/${nat_subnet}",
+      )
+    ])
+  } : null
+}
+
+# Service Attachment (PSC Publishing)
+resource "google_compute_service_attachment" "default" {
+  count                 = local.create && local.is_regional && local.psc_publish ? 1 : 0
+  project               = local.project
+  name                  = local.psc.name
+  region                = local.region
+  description           = local.psc.description
+  enable_proxy_protocol = local.psc.enable_proxy_protocol
+  nat_subnets           = local.psc.nat_subnets
+  target_service        = local.psc.target_service
+  connection_preference = local.psc.auto_accept_all_projects && length(local.psc.accept_projects) == 0 ? "ACCEPT_AUTOMATIC" : "ACCEPT_MANUAL"
+  dynamic "consumer_accept_lists" {
+    for_each = local.psc.accept_projects
+    content {
+      project_id_or_num = consumer_accept_lists.value.project_id_or_num
+      connection_limit  = consumer_accept_lists.value.connection_limit
+    }
+  }
+  consumer_reject_lists = local.psc.consumer_reject_lists
+  domain_names          = local.psc.domain_names
+  reconcile_connections = local.psc.reconcile_connections
+}

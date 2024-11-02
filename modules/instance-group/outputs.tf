@@ -22,6 +22,12 @@ output "instance_group" {
 output "region" {
   value = local.create ? local.region : null
 }
+output "zones" {
+  value = local.create ? coalesce(
+    local.is_managed && local.is_regional ? one(google_compute_region_instance_group_manager.default).distribution_policy_zones : null,
+    local.is_zonal ? [one(google_compute_instance_group.default).zone] : null,
+  ) : []
+}
 output "zone" {
   value = local.create && local.is_zonal ? one(google_compute_instance_group.default).zone : null
 }

@@ -11,9 +11,6 @@ output "address_name" {
     "error",
   ) : null
 }
-output "psc_connection_id" {
-  value = local.create && local.is_psc ? coalesce(
-    local.is_regional ? one(google_compute_forwarding_rule.default).psc_connection_id : null,
-    "error",
-  ) : null
+output "psc_connected_endpoints" {
+  value = local.create && local.is_regional && local.psc_publish ? one(google_compute_service_attachment.default).connected_endpoints : null
 }

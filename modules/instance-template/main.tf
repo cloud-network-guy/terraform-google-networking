@@ -58,6 +58,7 @@ resource "google_compute_instance_template" "default" {
   machine_type   = local.machine_type
   can_ip_forward = local.can_ip_forward
   metadata = {
+    "enable-guest-attributes" = "true"
     "enable-osconfig" = "true"
   }
   metadata_startup_script = local.startup_script

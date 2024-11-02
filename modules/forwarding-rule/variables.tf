@@ -97,3 +97,23 @@ variable "port_range" {
   type    = string
   default = null
 }
+variable "psc" {
+  description = "Parameters to Publish this Frontend via PSC"
+  type = object({
+    create                   = optional(bool)
+    host_project             = optional(string)
+    name                     = optional(string)
+    description              = optional(string)
+    nat_subnets              = optional(list(string))
+    enable_proxy_protocol    = optional(bool)
+    auto_accept_all_projects = optional(bool)
+    accept_projects = optional(list(object({
+      project          = string
+      connection_limit = optional(number)
+    })))
+    domain_names          = optional(list(string))
+    consumer_reject_lists = optional(list(string))
+    reconcile_connections = optional(bool)
+  })
+  default = null
+}
