@@ -15,21 +15,13 @@ resource "random_string" "name" {
 }
 
 locals {
-  api_prefix = "https://www.googleapis.com/compute/v1"
-  create     = coalesce(var.create, true)
-  project    = lower(trimspace(coalesce(var.project_id, var.project)))
-  name       = lower(trimspace(var.name != null ? var.name : one(random_string.name).result))
-  instances  = [for i, v in coalesce(var.instances, compact([var.instance])) : lower(trimspace(v))]
-  named_ports = [for i, v in coalesce(var.named_ports, []) :
-    {
-      name = lower(trimspace(coalesce(v.name, "https")))
-      port = coalesce(v.port, 443)
-    }
-  ]
+  api_prefix   = "https://www.googleapis.com/compute/v1"
+  create       = coalesce(var.create, true)
+  project      = lower(trimspace(coalesce(var.project_id, var.project)))
+  name         = lower(trimspace(var.name != null ? var.name : one(random_string.name).result))
   is_regional  = var.region != null ? true : false
   region       = local.is_regional ? lower(trimspace(var.region)) : trimsuffix(local.zone, substr(local.zone, -2, 2))
   is_zonal     = var.zone != null ? true : false
-  zone         = local.is_zonal ? lower(trimspace(var.zone)) : null
   is_managed   = !local.is_zonal
   host_project = lower(trimspace(coalesce(var.host_project_id, var.host_project, local.project)))
   network = coalesce(
@@ -39,8 +31,7 @@ locals {
   )
   autoscaling_mode                 = var.autoscaling_mode != null ? upper(trimspace(var.autoscaling_mode)) : "OFF"
   target_size                      = local.autoscaling_mode == "OFF" ? coalesce(var.target_size, 2) : null
-  zones_prefix                     = local.zone != null ? "projects/${local.project}/zones/${local.zone}" : null
-  base_instance_name               = try(coalesce(var.base_instance_name, var.name_prefix), null)
+  base_instance_name               = var.base_instance_name
   distribution_policy_target_shape = upper(coalesce(var.distribution_policy_target_shape, "EVEN"))
   update = {
     type                           = trimspace(upper(coalesce(var.update.type, "OPPORTUNISTIC")))
@@ -64,18 +55,21 @@ locals {
       "${local.api_prefix}/projects/${local.project}/regions/${local.region}/healthChecks/${hc}",
     )
   ]
-  name_prefix    = lower(trimspace(coalesce(var.name_prefix, "template-${local.name}")))
   _instance_template = var.instance_template != null ? trimspace(var.instance_template) : null
   instance_template = local._instance_template != null ? coalesce(
-      startswith(local._instance_template, local.api_prefix) ? local._instance_template : null,
-      startswith(local._instance_template, "projects/", ) ? "${local.api_prefix}/${local._instance_template}" : null,
-      "${local.api_prefix}/projects/${local.project}/global/instanceTemplates/${lower(local._instance_template)}",
+    startswith(local._instance_template, local.api_prefix) ? local._instance_template : null,
+    startswith(local._instance_template, "projects/", ) ? "${local.api_prefix}/${local._instance_template}" : null,
+    local.is_regional ? "${local.api_prefix}/projects/${local.project}/regions/${local.region}/instanceTemplates/${lower(local._instance_template)}" : null,
+    "${local.api_prefix}/projects/${local.project}/global/instanceTemplates/${lower(local._instance_template)}",
   ) : null
 }
 
 # Regional Managed Instance Group
+resource "null_resource" "mig" {
+  count = local.create && local.is_managed && local.is_regional ? 1 : 0
+}
 resource "google_compute_region_instance_group_manager" "default" {
-  count                            = local.create && local.is_managed ? 1 : 0
+  count                            = local.create && local.is_managed && local.is_regional ? 1 : 0
   base_instance_name               = local.base_instance_name
   distribution_policy_target_shape = local.distribution_policy_target_shape
   distribution_policy_zones        = local.distribution_policy_zones
@@ -115,15 +109,11 @@ resource "google_compute_region_instance_group_manager" "default" {
     max_unavailable_fixed          = local.update.max_unavailable_fixed
     max_surge_fixed                = local.update.max_surge_fixed
   }
-  timeouts {
-    create = "5m"
-    update = "5m"
-    delete = "15m"
-  }
+  depends_on = [null_resource.mig]
 }
 
 locals {
-  auto_scaler_name = local.name_prefix
+  auto_scaler_name = local.name
   autoscaling_policy = {
     mode            = local.autoscaling_mode
     min_replicas    = local.autoscaling_mode != "OFF" ? coalesce(var.min_replicas, 1) : 0
@@ -153,6 +143,18 @@ resource "google_compute_region_autoscaler" "default" {
       predictive_method = local.autoscaling_policy.cpu_utilization.predictive_method
     }
   }
+}
+
+locals {
+  zone         = local.is_zonal ? lower(trimspace(var.zone)) : null
+  zones_prefix = local.zone != null ? "projects/${local.project}/zones/${local.zone}" : null
+  instances    = [for i, v in coalesce(var.instances, compact([var.instance])) : lower(trimspace(v))]
+  named_ports = [for i, v in coalesce(var.named_ports, []) :
+    {
+      name = lower(trimspace(coalesce(v.name, "https")))
+      port = coalesce(v.port, 443)
+    }
+  ]
 }
 
 # Unmanaged Instance Group

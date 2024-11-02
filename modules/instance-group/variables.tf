@@ -45,10 +45,6 @@ variable "network" {
   type    = string
   default = "default"
 }
-variable "name_prefix" {
-  type    = string
-  default = null
-}
 variable "base_instance_name" {
   type    = string
   default = null
