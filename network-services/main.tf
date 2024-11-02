@@ -98,6 +98,10 @@ module "instance-template" {
   os             = each.value.os
   labels         = each.value.labels
   startup_script = each.value.startup_script
+  metadata = {
+    enable-guest-attributes = "true"
+    enable-osconfig         = "true"
+  }
 }
 
 locals {

@@ -81,6 +81,12 @@ variable "image" {
   type    = string
   default = null
 }
+variable "metadata" {
+  type = map(string)
+  default = {
+    enable-osconfig = "true"
+  }
+}
 variable "startup_script" {
   type    = string
   default = null

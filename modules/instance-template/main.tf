@@ -43,7 +43,8 @@ locals {
     email  = var.service_account_email
     scopes = coalescelist(var.service_account_scopes, ["https://www.googleapis.com/auth/cloud-platform"])
   }
-  tags = [for tag in coalesce(var.network_tags, var.tags, []) : lower(trimspace(tag))]
+  tags     = [for tag in coalesce(var.network_tags, var.tags, []) : lower(trimspace(tag))]
+  metadata = coalesce(var.metadata, { enable-osconfig = "true" })
 }
 
 # Instance Template
@@ -51,16 +52,13 @@ resource "null_resource" "instance_template" {
   count = local.create ? 1 : 0
 }
 resource "google_compute_instance_template" "default" {
-  count          = local.create ? 1 : 0
-  project        = local.project
-  region         = local.region
-  name_prefix    = local.name_prefix
-  machine_type   = local.machine_type
-  can_ip_forward = local.can_ip_forward
-  metadata = {
-    "enable-guest-attributes" = "true"
-    "enable-osconfig" = "true"
-  }
+  count                   = local.create ? 1 : 0
+  project                 = local.project
+  region                  = local.region
+  name_prefix             = local.name_prefix
+  machine_type            = local.machine_type
+  can_ip_forward          = local.can_ip_forward
+  metadata                = local.metadata
   metadata_startup_script = local.startup_script
   tags                    = local.tags
   disk {
