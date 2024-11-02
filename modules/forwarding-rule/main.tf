@@ -29,7 +29,7 @@ locals {
     startswith(var.subnetwork, "projects/", ) ? "${local.api_prefix}/${var.subnetwork}" : null,
     "projects/${local.host_project}/regions/${local.region}/subnetworks/${var.subnetwork}",
   )
-  network_tier        = upper(coalesce(var.network_tier, local.is_internal || local.is_application_lb ? "PREMIUM" : "STANDARD"))
+  network_tier        = local.is_internal ? null : upper(coalesce(var.network_tier, local.is_application_lb ? "PREMIUM" : "STANDARD"))
   address             = var.address != null ? trimspace(var.address) : null
   address_type        = local.is_internal ? "INTERNAL" : "EXTERNAL"
   address_purpose     = local.is_psc ? "GCE_ENDPOINT" : local.is_internal && local.is_redirect ? "SHARED_LOADBALANCER_VIP" : null
