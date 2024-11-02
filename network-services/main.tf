@@ -155,22 +155,26 @@ locals {
 
 # Instance Groups
 module "instance-groups" {
-  source             = "../modules/instance-group"
-  for_each           = { for i, v in local.instance_groups : v.index_key => v }
-  project_id         = var.project_id
-  host_project_id    = var.host_project_id
-  name               = each.value.name
-  network            = each.value.network
-  base_instance_name = lookup(each.value, "base_instance_name", null)
-  region             = lookup(each.value, "region", null)
-  zone               = lookup(each.value, "zone", null)
-  instances          = lookup(each.value, "instances", null)
-  target_size        = lookup(each.value, "target_size", null)
-  min_replicas       = lookup(each.value, "min_replicas", null)
-  max_replicas       = lookup(each.value, "max_replicas", null)
-  health_checks      = lookup(each.value, "health_checks", null)
-  instance_template  = lookup(each.value, "instance_template", null)
-  cooldown_period    = lookup(each.value, "cooldown_period", null)
+  source                = "../modules/instance-group"
+  for_each              = { for i, v in local.instance_groups : v.index_key => v }
+  project_id            = var.project_id
+  host_project_id       = var.host_project_id
+  name                  = each.value.name
+  network               = each.value.network
+  base_instance_name    = lookup(each.value, "base_instance_name", null)
+  region                = lookup(each.value, "region", null)
+  zone                  = lookup(each.value, "zone", null)
+  instances             = lookup(each.value, "instances", null)
+  target_size           = lookup(each.value, "target_size", null)
+  health_checks         = lookup(each.value, "health_checks", null)
+  instance_template     = lookup(each.value, "instance_template", null)
+  autoscaling_mode      = lookup(each.value, "min_replicas", null) != null ? "ON" : "OFF"
+  autoscaler_name       = var.name_prefix
+  min_replicas          = lookup(each.value, "min_replicas", null)
+  max_replicas          = lookup(each.value, "max_replicas", null)
+  cpu_target            = lookup(each.value, "cpu_target", null)
+  cpu_predictive_method = lookup(each.value, "cpu_predictive_method", null)
+  cooldown_period       = lookup(each.value, "cooldown_period", null)
   update = {
     type                   = "PROACTIVE"
     minimal_action         = "REPLACE"

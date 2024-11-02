@@ -115,11 +115,11 @@ resource "google_compute_region_instance_group_manager" "default" {
 }
 
 locals {
-  auto_scaler_name = local.name
+  auto_scaler_name   = lower(trimspace(coalesce(var.autoscaler_name, local.name)))
   autoscaling_policy = {
     mode            = local.autoscaling_mode
-    min_replicas    = local.autoscaling_mode != "OFF" ? coalesce(var.min_replicas, 1) : 0
-    max_replicas    = local.autoscaling_mode != "OFF" ? coalesce(var.max_replicas, 10) : 0
+    min_replicas    = local.autoscaling_mode == "OFF" ? 0 : coalesce(var.min_replicas, 1)
+    max_replicas    = local.autoscaling_mode == "OFF" ? 0 : coalesce(var.max_replicas, 10)
     cooldown_period = coalesce(var.cooldown_period, 60)
     cpu_utilization = {
       target            = coalesce(var.cpu_target, 0.60)
@@ -130,7 +130,7 @@ locals {
 
 # Auto-Scaler
 resource "google_compute_region_autoscaler" "default" {
-  count   = local.autoscaling_mode != "OFF" ? 1 : 0
+  count   = local.autoscaling_mode == "OFF" ? 0 : 1
   name    = local.auto_scaler_name
   project = local.project
   region  = local.region

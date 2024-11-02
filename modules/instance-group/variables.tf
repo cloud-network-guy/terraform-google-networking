@@ -87,6 +87,10 @@ variable "autoscaling_mode" {
   type    = string
   default = "OFF"
 }
+variable "autoscaler_name" {
+  type    = string
+  default = null
+}
 variable "min_replicas" {
   type    = number
   default = 1
