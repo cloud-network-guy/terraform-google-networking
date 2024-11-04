@@ -1,6 +1,7 @@
 from os.path import *
 from os import environ, chdir, scandir, access, R_OK
 from sys import platform
+from time import time
 from tempfile import gettempdir
 from pathlib import Path
 from datetime import datetime
@@ -33,12 +34,21 @@ class GitRepo:
         self.location = join(temp_dir, to_path)
 
         if exists(self.location):
+            print("Setting repo in:", self.location)
             repo = Repo(path=self.location)
             origin = repo.remotes.origin
+            _ = time()
+            print("starting git pull", _)
             origin.pull()  # Perform git pull
+            _ = time() - _
+            print("finished git pull", _)
         else:
+            _ = time()
+            print("starting git clone", _)
             chdir(temp_dir)
             repo = Repo.clone_from(url=url, to_path=to_path, branch=branch)  # Perform git clone
+            _ = time() - _
+            print("finished git clone", _)
 
         chdir(PWD)  # Change back to base directory
 
@@ -140,7 +150,8 @@ class TFModule:
 
         # Get Workspaces
         if self.uses_workspaces:
-            self.get_workspaces()
+            self.workspaces = []
+            #self.get_workspaces()
         else:
             self.workspaces = []
         #self.get_backend_workspaces()
@@ -152,9 +163,7 @@ class TFModule:
 
         # Examine each file for bucket information
         for tf_file in tf_files:
-            #print(tf_file)
             with open(tf_file.path, 'r') as fp:
-                print("opened:", tf_file.path)
                 in_terraform = False
                 in_provider = False
                 in_backend = False
@@ -162,10 +171,8 @@ class TFModule:
                     if line.lstrip().startswith("#"):
                         in_comment = True
                     elif line.lstrip().startswith("/*"):
-                        #print("In comment", line)
                         in_comment = True
                     elif line.lstrip().startswith("*/"):
-                        #print("leaving comment", line)
                         in_comment = False
                     else:
                         in_comment = False
@@ -179,7 +186,6 @@ class TFModule:
                             provider = line.split("\"")[1]
                             print("Provider update:", provider, line)
                             self.providers.update({provider: {}})
-                            #line = next(fp)
                         if in_provider:
                             for k in ['credentials', 'project', 'region', 'zone']:
                                 print("checking for", k, "in", line)
@@ -191,13 +197,10 @@ class TFModule:
                                     print(self.providers)
                             if '}' in line:
                                 in_provider = False
-                            #line = next(fp)
-                        #line = next(fp)
                         if 'backend ' in line:
                             in_backend = True
                             backend_type = line.split("\"")[1]
                             self.backend['type'] = backend_type.lower()
-                            #line = next(fp)
                         if in_backend:
                             if self.backend['type'] in ['s3', 'gcs']:
                                 for k in ['bucket', 'prefix', 'credentials']:
@@ -208,8 +211,6 @@ class TFModule:
                                 in_backend = False
                         if '}' in line:
                             in_terraform = False
-                            #break
-                print("closed:", tf_file.path)
         if self.backend['type'] in ['s3', 'gcs']:
             self.backend.update({
                 'prefix': self.backend.get('prefix', "")

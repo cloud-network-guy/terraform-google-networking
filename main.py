@@ -2,6 +2,7 @@
 
 import os
 import yaml
+from time import time
 import google.auth
 import google.auth.transport.requests
 from classes import *
@@ -127,6 +128,8 @@ def get_modules(environment: str) -> list[TFModule]:
     assert environment in environments, f"environment '{environment}' not found"
 
     root_dir = "."
+
+    _ = time()
     e = environments.get(environment)
     if url := e.get('git_url'):
         repo = GitRepo(url, branch=e.get('git_branch'), ssh_private_key_file=e.get('git_ssh_key'))
@@ -136,15 +139,24 @@ def get_modules(environment: str) -> list[TFModule]:
         print("Root directory:", root_dir)
     elif directory := e.get('directory'):
         root_dir = join(directory)
+    print("Git action took", time() - _)
 
+    _ = time()
     sub_directories = get_sub_directories(root_dir)
     print([sub_dir for sub_dir in sub_directories])
+    print("subdir scan took", time() - _)
+
+    _ = time()
     if valid_modules := e.get('modules'):
         modules = [TFModule(sub_dir, str(join(root_dir, sub_dir))) for sub_dir in sub_directories.keys() if sub_dir in valid_modules]
     else:
         modules = [TFModule(sub_dir, str(join(root_dir, sub_dir))) for sub_dir in sub_directories.keys()]
-    _ = [module.get_workspace_details(e.get('google_adc_key')) for module in modules if module.uses_workspaces]
+    print("module init took", time() - _)
+
+    _ = time()
+    [module.get_workspace_details(e.get('google_adc_key')) for module in modules if module.uses_workspaces]
     #_ = [module.get_backend_workspaces() for module in modules]
+    print("workspace details fetch took", time() - _)
     return modules
 
 
