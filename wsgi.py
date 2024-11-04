@@ -1,6 +1,9 @@
+#!/usr/bin/env python3
+
 from traceback import format_exc
 from flask import Flask, request, Response, jsonify, render_template
 from main import *
+from classes import *
 
 app = Flask(__name__, static_url_path='/static')
 app.config['JSON_SORT_KEYS'] = False
@@ -11,12 +14,54 @@ PLAIN_CONTENT_TYPE = "text/plain"
 JSON_RESPONSE_HEADERS = {'Cache-Control': "no-cache, no-store"}
 
 
-@app.route("/modules")
-def _modules():
+@app.route("/environments")
+def _environments():
 
     try:
-        modules = get_modules()
-        return jsonify([m.__dict__ for m in modules]), JSON_RESPONSE_HEADERS
+        environments = get_environments()
+        return jsonify(list(environments.keys())), JSON_RESPONSE_HEADERS
+    except Exception as e:
+        return Response(format_exc(), status=500, content_type=PLAIN_CONTENT_TYPE)
+
+
+@app.route("/environments/<environment>")
+def _environment(environment: str):
+
+    try:
+        modules = []
+        for module in get_modules(environment):
+            m = module.__dict__
+            m['workspaces'] = [workspace.__dict__ for workspace in module.workspaces if module.uses_workspaces]
+            modules.append(m)
+        return jsonify(modules), JSON_RESPONSE_HEADERS
+    except Exception as e:
+        return Response(format_exc(), status=500, content_type=PLAIN_CONTENT_TYPE)
+
+
+@app.route("/environments/<environment>/modules")
+def _modules(environment: str):
+
+    try:
+        modules = []
+        for module in get_modules(environment):
+            m = module.__dict__
+            m['workspaces'] = [workspace.__dict__ for workspace in module.workspaces if module.uses_workspaces]
+            modules.append(m)
+        return jsonify(modules), JSON_RESPONSE_HEADERS
+    except Exception as e:
+        return Response(format_exc(), status=500, content_type=PLAIN_CONTENT_TYPE)
+
+
+@app.route("/modules")
+def __modules():
+
+    try:
+        modules = []
+        for module in get_modules():
+            m = module.__dict__
+            m['workspaces'] = [workspace.__dict__ for workspace in module.workspaces]
+            modules.append(m)
+        return jsonify(modules), JSON_RESPONSE_HEADERS
     except Exception as e:
         return Response(format_exc(), status=500, content_type=PLAIN_CONTENT_TYPE)
 
@@ -27,24 +72,10 @@ def _workspaces(module: str):
     try:
         settings = get_settings()
         _ = get_directories(settings)
-        if google_adc_key := settings.get('google_adc_key'):
-            google_adc_key = join(PWD, settings.get('google_adc_key'))
         root_dir = _.get('root')
         m = TFModule(module, join(root_dir, module))
-        _ = m.get_backend_workspaces(google_adc_key)
-        workspaces = [TFWorkSpace(w, m.name, m.backend_location) for w in m.workspaces]
-        for w in workspaces:
-            #print(m.workspace_details)
-            if w.name in m.workspace_details:
-                w.state_file_size = m.workspace_details[w.name]['size']
-                w.state_file_last_update = str(datetime.fromtimestamp(m.workspace_details[w.name]['updated']))
-            else:
-                w.state_file_size = 0
-                w.state_file_last_update = 0
-
-
-        #_ = [w.examine_state_file(google_adc_key) for w in workspaces]
-        workspaces = sorted(workspaces, key=lambda x: x.state_file_last_update, reverse=True)
+        workspaces = get_workspaces(m)
+        workspaces = sorted(workspaces, key=lambda w: w.state_file['last_update'], reverse=True)
         return jsonify([w.__dict__ for w in workspaces]), JSON_RESPONSE_HEADERS
     except Exception as e:
         return Response(format_exc(), status=500, content_type=PLAIN_CONTENT_TYPE)
@@ -62,8 +93,8 @@ def _root():
             if google_adc_key := settings.get('google_adc_key'):
                 google_adc_key = join(PWD, settings.get('google_adc_key'))
             root_dir = _.get('root')
-            m = TFModule(module, join(root_dir, module))
-            _ = m.get_backend_workspaces(google_adc_key)
+            m = TFModule(module, join(root_dir, module), google_adc_key)
+            _ = m.get_backend_workspaces()
             workspaces = [TFWorkSpace(w, m.name, m.backend_location) for w in m.workspaces]
             #_ = [w.examine_state_file(google_adc_key) for w in workspaces]
             #print(m.workspace_details)
