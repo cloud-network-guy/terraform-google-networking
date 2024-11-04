@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from traceback import format_exc
+from asyncio import run
 from flask import Flask, request, Response, jsonify, render_template
 from main import *
 from classes import *
@@ -29,7 +30,7 @@ def _environment(environment: str):
 
     try:
         modules = []
-        for module in get_modules(environment):
+        for module in run(get_modules(environment)):
             m = module.__dict__
             m['workspaces'] = [workspace.__dict__ for workspace in module.workspaces if module.uses_workspaces]
             modules.append(m)

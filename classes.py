@@ -6,7 +6,9 @@ from tempfile import gettempdir
 from pathlib import Path
 from datetime import datetime
 from git import Repo
-from google.cloud import storage
+#from google.cloud import storage
+from gcloud.aio.auth import Token
+from gcloud.aio.storage import Storage
 
 
 SSH_PRIVATE_KEY_FILES = ('id_rsa', 'id_ecdsa', 'id_ed25519')
@@ -228,7 +230,7 @@ class TFModule:
                 w = TFWorkSpace(workspace_name, self.path, self.backend['location'])
                 self.workspaces.append(w)
 
-    def get_workspace_details(self, authentication_file: str = None) -> None:
+    async def get_workspace_details(self, authentication_file: str = None) -> None:
 
         if not authentication_file and self.backend['type'] in ['s3', 'gcs']:
             match(self.backend['type']):
@@ -264,18 +266,40 @@ class TFModule:
         if self.backend['type'] == 's3':
             pass  # TODO
         if self.backend['type'] == 'gcs':
+            """
             storage_client = storage.Client.from_service_account_json(self.backend.get('key_path'))
             blobs = storage_client.list_blobs(self.backend['bucket'], prefix=self.backend['prefix'])
-            for blob in blobs:
+            """
+            scopes = ["https://www.googleapis.com/auth/cloud-platform.read-only"]
+            token = Token(service_file=self.backend.get('key_path'), scopes=scopes)
+            storage = Storage(token=token)
+            params = {'prefix': self.backend['prefix']}
+            timeout = 15
+            objects = []
+            while True:
+                print("Calling storage", self.backend['bucket'], params)
+                _ = await storage.list_objects(self.backend['bucket'], params=params, timeout=timeout)
+                objects.extend(_.get('items', []))
+                if next_page_token := _.get('nextPageToken'):
+                    params.update({'pageToken': next_page_token})
+                else:
+                    await storage.close()
+                    break
+            for blob in objects:
                 #print(b.name)
-                workspace_name = blob.name.split('/')[-1].replace('.tfstate', "")
-                _updated = str(blob.updated)[0:19]
+                #workspace_name = blob.name.split('/')[-1].replace('.tfstate', "")
+                workspace_name = blob['name'].split('/')[-1].replace('.tfstate', "")
+                #_updated = str(blob.updated)[0:19]
+                #print(blob['updated'])
+                _updated = str(blob['updated'])[0:19]
+                _updated = _updated[:10] + " " + _updated[11:19]
                 updated = int(datetime.timestamp(datetime.strptime(_updated, "%Y-%m-%d %H:%M:%S")))
                 workspaces = [w for w in self.workspaces if w.name == workspace_name]
                 if len(workspaces) == 1:
                     workspace = workspaces[0]
                     workspace.state_file.update({
-                        'size': int(blob.size),
+                        #'size': int(blob.size),
+                        'size': int(blob['size']),
                         'last_update': updated,
                     })
                 #print("Workspace:", workspace_name, blob.size, updated)
