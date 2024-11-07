@@ -25,8 +25,8 @@ def _environments():
         return Response(format_exc(), status=500, content_type=PLAIN_CONTENT_TYPE)
 
 
-@app.route("/environments/<environment>")
-def _environment(environment: str):
+@app.route("/environments/<environment>/modules")
+def _modules(environment: str):
 
     try:
         modules = []
@@ -39,34 +39,16 @@ def _environment(environment: str):
         return Response(format_exc(), status=500, content_type=PLAIN_CONTENT_TYPE)
 
 
-@app.route("/environments/<environment>/modules")
-def _modules(environment: str):
-
+@app.route("/environments/<environment>/modules/<module>/workspaces")
+def _workspaces(environment: str, module: str):
     try:
-        modules = []
-        for module in get_modules(environment):
-            m = module.__dict__
-            m['workspaces'] = [workspace.__dict__ for workspace in module.workspaces if module.uses_workspaces]
-            modules.append(m)
-        return jsonify(modules), JSON_RESPONSE_HEADERS
+        workspaces = run(get_workspaces(environment, module))
+        workspaces = sorted(workspaces, key=lambda x: x.state_file['last_update'], reverse=True)
+        return jsonify(workspaces), JSON_RESPONSE_HEADERS
     except Exception as e:
         return Response(format_exc(), status=500, content_type=PLAIN_CONTENT_TYPE)
 
-
-@app.route("/modules")
-def __modules():
-
-    try:
-        modules = []
-        for module in get_modules():
-            m = module.__dict__
-            m['workspaces'] = [workspace.__dict__ for workspace in module.workspaces]
-            modules.append(m)
-        return jsonify(modules), JSON_RESPONSE_HEADERS
-    except Exception as e:
-        return Response(format_exc(), status=500, content_type=PLAIN_CONTENT_TYPE)
-
-
+"""
 @app.route("/modules/<module>/workspaces")
 def _workspaces(module: str):
 
@@ -80,7 +62,7 @@ def _workspaces(module: str):
         return jsonify([w.__dict__ for w in workspaces]), JSON_RESPONSE_HEADERS
     except Exception as e:
         return Response(format_exc(), status=500, content_type=PLAIN_CONTENT_TYPE)
-
+"""
 
 @app.route("/")
 def _root():

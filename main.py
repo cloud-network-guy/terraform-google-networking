@@ -124,7 +124,7 @@ def get_directories(environment: dict, directory: str = None) -> dict:
 """
 
 
-async def get_modules(environment: str) -> list[TFModule]:
+async def get_modules(environment: str, module: str = None) -> list[TFModule]:
 
     environments = get_environments()
     assert environment in environments, f"environment '{environment}' not found"
@@ -136,8 +136,10 @@ async def get_modules(environment: str) -> list[TFModule]:
     if url := e.get('git_url'):
         repo = GitRepo(url, branch=e.get('git_branch'), ssh_private_key_file=e.get('git_ssh_key'))
         #git_repo(url=url, branch=branch)
-        sub_dir = e.get('sub_dir')
-        root_dir = join(repo.location, sub_dir) if sub_dir else repo.location
+        repo.configure()
+        repo.pull()
+        sub_dir = str(e.get('sub_dir', ""))
+        root_dir = join(repo.local_path, sub_dir) if sub_dir else repo.local_path
         print("Root directory:", root_dir)
     elif directory := e.get('directory'):
         root_dir = join(directory)
@@ -149,11 +151,39 @@ async def get_modules(environment: str) -> list[TFModule]:
     print("subdir scan took", time() - _)
 
     _ = time()
+    """
     if valid_modules := e.get('modules'):
         modules = [TFModule(sub_dir, str(join(root_dir, sub_dir))) for sub_dir in sub_directories.keys() if sub_dir in valid_modules]
     else:
         modules = [TFModule(sub_dir, str(join(root_dir, sub_dir))) for sub_dir in sub_directories.keys()]
+    """
+    modules = [TFModule(sub_dir, str(join(root_dir, sub_dir))) for sub_dir in sub_directories.keys()]
+    #modules = await gather(*tasks)
+    if module:
+        modules = [m for m in modules if m.name == module]
+    if valid_modules := e.get('modules'):
+        modules = [m for m in modules if m.name in valid_modules]
     print("module init took", time() - _)
+    #print(modules)
+
+    _ = time()
+    #modules = [m.get_config() for m in modules]
+    tasks = [m.discover_backend() for m in modules]
+    await gather(*tasks)
+    print("module get config took", time() - _)
+    #print(modules)
+
+    _ = time()
+    tasks = [m.set_credentials(e.get('google_adc_key')) for m in modules]
+    await gather(*tasks)
+    print("module set authentication took", time() - _)
+
+    _ = time()
+    #modules = [m.find_workspaces() for m in modules]
+    tasks = [m.find_workspaces() for m in modules]
+    await gather(*tasks)
+    print("module find workspaces took", time() - _)
+    #print(modules)
 
     _ = time()
     #[module.get_workspace_details(e.get('google_adc_key')) for module in modules if module.uses_workspaces]
@@ -161,18 +191,46 @@ async def get_modules(environment: str) -> list[TFModule]:
     #for module in modules:
     #    if module.uses_workspaces:
     #        tasks.append(create_task(module.get_workspace_details(e.get('google_adc_key'))))
-    tasks = [module.get_workspace_details(e.get('google_adc_key')) for module in modules if module.uses_workspaces]
+    #tasks = [module.get_workspace_details(e.get('google_adc_key')) for module in modules if module.uses_workspaces]
+    tasks = [m.examine_workspaces() for m in modules]
     await gather(*tasks)
     #_ = [module.get_backend_workspaces() for module in modules]
-    print("workspace details fetch took", time() - _)
+    print("examine workspaces took", time() - _)
+
     return modules
 
 
-def get_workspaces(module: TFModule) -> list[TFWorkSpace]:
+async def get_workspaces(environment: str, module: str) -> list[TFWorkSpace]:
 
-    settings = get_settings()
-    module.get_workspace_details(settings.get('google_adc_key'))
-    return module.workspaces
+    #settings = get_settings()
+    #module.get_workspace_details(settings.get('google_adc_key'))
+    #return module.workspaces
+
+    environments = get_environments()
+    assert environment in environments, f"environment '{environment}' not found"
+
+    root_dir = "."
+
+    _ = time()
+    e = environments.get(environment)
+    print("Getting modules:", environment, module)
+    modules = await get_modules(environment, module)
+    print("Modules:", [m.name for m in modules])
+    assert (len(modules) > 0), f"module '{module}' not found in environment '{environment}'"
+    assert (len(modules) == 1), f"multiple modules found matching environment '{environment}' and module '{module}'"
+    _ = modules[0]
+    workspaces = _.workspaces
+
+    _ = time()
+    tasks = [w.configure() for w in workspaces]
+    print("configure workspaces took", time() - _)
+    await gather(*tasks)
+
+    #for w in workspaces:
+    #    print("Workspace:", w.name, w.input_file, w.state_file)
+    print([w for w in workspaces if w.state_file.get('last_update') == None])
+    print("Workspaces:", workspaces)
+    return workspaces
 
 
 def get_sub_directories(base_dir: str) -> dict:

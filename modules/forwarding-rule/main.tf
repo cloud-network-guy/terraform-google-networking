@@ -8,7 +8,7 @@ resource "random_string" "name" {
 
 locals {
   is_psc       = var.target != null ? strcontains(var.target, "/serviceAttachments/") ? true : false : false
-  is_redirect  = false
+  is_redirect  = false  # TODO
   api_prefix   = "https://www.googleapis.com/compute/v1"
   create       = coalesce(var.create, true)
   project      = lower(trimspace(coalesce(var.project_id, var.project)))
@@ -16,20 +16,21 @@ locals {
   description  = var.description != null ? trimspace(var.description) : null
   is_regional  = var.region != null ? true : false
   region       = local.is_regional ? var.region : "global"
-  type         = var.type == "PSC" ? var.type : upper(coalesce(var.type, "INTERNAL"))
+  type         = local.is_psc ? "PSC" : upper(coalesce(var.type, local.subnetwork != null ? "INTERNAL" : "EXTERNAL"))
   is_internal  = local.type == "INTERNAL" || local.subnetwork != null ? true : false
   host_project = lower(trimspace(coalesce(var.host_project_id, var.host_project, local.project)))
-  network = coalesce(
+  network = var.network != null ? trimspace(coalesce(
     startswith(var.network, local.api_prefix) ? var.network : null,
     startswith(var.network, "projects/") ? "${local.api_prefix}/${var.network}" : null,
     "projects/${local.host_project}/global/networks/${var.network}",
-  )
-  subnetwork = coalesce(
+  )) : null
+  subnetwork = var.subnetwork != null ? trimspace(coalesce(
     startswith(var.subnetwork, local.api_prefix) ? var.subnetwork : null,
     startswith(var.subnetwork, "projects/", ) ? "${local.api_prefix}/${var.subnetwork}" : null,
     "projects/${local.host_project}/regions/${local.region}/subnetworks/${var.subnetwork}",
-  )
+  )) : null
   network_tier        = local.is_internal ? null : upper(coalesce(var.network_tier, local.is_application_lb ? "PREMIUM" : "STANDARD"))
+  create_static_ip    = local.create && var.address != null || var.address_name != null || local.is_psc ? true : false
   address             = var.address != null ? trimspace(var.address) : null
   address_type        = local.is_internal ? "INTERNAL" : "EXTERNAL"
   address_purpose     = local.is_psc ? "GCE_ENDPOINT" : local.is_internal && local.is_redirect ? "SHARED_LOADBALANCER_VIP" : null
@@ -41,12 +42,12 @@ locals {
 
 # Work-around for scenarios where PSC Consumer Endpoint IP changes
 resource "null_resource" "ip_addresses" {
-  count = local.create && local.is_psc ? 1 : 0
+  count = local.create_static_ip && local.is_psc ? 1 : 0
 }
 
 # Regional IP Address
 resource "google_compute_address" "default" {
-  count              = local.create && local.is_regional ? 1 : 0
+  count              = local.create_static_ip && local.is_regional ? 1 : 0
   address            = local.address
   address_type       = local.address_type
   description        = local.address_description
@@ -64,7 +65,7 @@ resource "google_compute_address" "default" {
 
 # Global IP address
 resource "google_compute_global_address" "default" {
-  count         = local.create && !local.is_regional ? 1 : 0
+  count         = local.create_static_ip && !local.is_regional ? 1 : 0
   address       = local.address
   address_type  = local.address_type
   description   = local.address_description
@@ -75,25 +76,30 @@ resource "google_compute_global_address" "default" {
   purpose       = local.address_purpose
 }
 
-#allow_global_access     = local.is_psc ? null : local.is_internal ? coalesce(var.global_access, false) : null
 locals {
-  port                    = var.port
-  ports                   = coalesce(var.ports, compact([local.port]))
-  port_range              = var.port_range
-  target                  = var.target
-  backend_service         = var.backend_service != null ? trimspace(var.backend_service) : null
-  is_application_lb       = false # TODO
-  is_classic              = false # TODO
+  port       = var.port
+  ports      = coalesce(var.ports, compact([local.port]))
+  port_range = var.port_range
+  target     = var.target
+  backend_service = var.backend_service != null ? trimspace(coalesce(
+    startswith(var.backend_service, local.api_prefix) ? var.network : null,
+    startswith(var.backend_service, "projects/") ? "${local.api_prefix}/${var.backend_service}" : null,
+    "projects/${local.host_project}/${local.is_regional ? "regions" : ""}/${local.region}/backendServices/${var.backend_service}"
+  )) : null
+  is_application_lb       = startswith(local.protocol, "HTTP") ? true : false
+  is_classic              = coalesce(var.classic, false)
   protocol                = upper(coalesce(var.protocol, length(local.ports) > 0 || local.all_ports || local.is_psc ? "TCP" : "HTTP"))
-  all_ports               = coalesce(var.all_ports, false)
-  ip_protocol             = local.is_psc || local.protocol == "HTTP" ? null : local.protocol
+  all_ports               = coalesce(var.all_ports, length(local.ports) == 0 ? true : false)
+  ip_protocol             = local.is_psc || local.is_application_lb ? null : local.protocol
   allow_global_access     = local.is_internal && !local.is_psc ? coalesce(var.global_access, false) : null
   allow_psc_global_access = local.is_psc ? coalesce(var.global_access, false) : null
   load_balancing_scheme   = local.is_psc ? "" : local.is_application_lb && !local.is_classic ? "${local.type}_MANAGED" : local.type
-  ip_address              = local.create && local.is_psc && local.is_regional ? one(google_compute_address.default).self_link : null
-  labels                  = { for k, v in coalesce(var.labels, {}) : k => lower(replace(v, " ", "_")) }
-  is_mirroring_collector  = false # TODO
-  source_ip_ranges        = []    # TODO
+  ip_address = local.create_static_ip ? (
+    local.is_regional ? one(google_compute_address.default).address : one(google_compute_global_address.default).address
+  ) : null
+  labels                 = { for k, v in coalesce(var.labels, {}) : k => lower(replace(v, " ", "_")) }
+  is_mirroring_collector = false # TODO
+  source_ip_ranges       = []    # TODO
 }
 
 # Regional Forwarding Rule

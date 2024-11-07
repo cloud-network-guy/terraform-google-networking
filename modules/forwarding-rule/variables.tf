@@ -43,15 +43,15 @@ variable "address_description" {
 }
 variable "network" {
   type    = string
-  default = "default"
+  default = null
 }
 variable "subnetwork" {
   type    = string
-  default = "default"
+  default = null
 }
 variable "type" {
   type    = string
-  default = "INTERNAL"
+  default = null
 }
 variable "network_tier" {
   type    = string
@@ -63,7 +63,7 @@ variable "protocol" {
 }
 variable "all_ports" {
   type    = bool
-  default = false
+  default = null
 }
 variable "backend_service" {
   type    = string
