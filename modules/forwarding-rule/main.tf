@@ -82,7 +82,7 @@ locals {
   port_range = var.port_range
   target     = var.target
   backend_service = var.backend_service != null ? trimspace(coalesce(
-    startswith(var.backend_service, local.api_prefix) ? var.network : null,
+    startswith(var.backend_service, local.api_prefix) ? var.backend_service : null,
     startswith(var.backend_service, "projects/") ? "${local.api_prefix}/${var.backend_service}" : null,
     "projects/${local.host_project}/${local.is_regional ? "regions" : ""}/${local.region}/backendServices/${var.backend_service}"
   )) : null
