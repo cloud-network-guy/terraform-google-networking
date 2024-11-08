@@ -357,66 +357,21 @@ locals {
       target          = startswith(v.target, local.url_prefix) ? v.target : "${local.url_prefix}/${v.target}"
     })
   ]
-  /*
-
-  __psc_endpoints = [for i, v in local._psc_endpoints :
-
-    merge(v, {
-
-      target = {
-
-        project_id = coalesce(v.target.project_id, v.target_id != null ? element(reverse(split("/", v.target_id)), 4) : v.project_id)
-
-        region     = coalesce(v.target.region, v.target_id != null ? element(reverse(split("/", v.target_id)), 2) : v.region)
-
-        name       = coalesce(v.target.name, v.target_id != null ? element(reverse(split("/", v.target_id)), 0) : null)
-
-      }
-
-    })
-
-  ]
-
-  ___psc_endpoints = [for i, v in local.__psc_endpoints :
-
-    merge(v, {
-
-      target_id = coalesce(v.target_id, "projects/${v.target.project_id}/regions/${v.target.region}/serviceAttachments/${v.target.name}")
-
-    })
-
-  ]
-
-  psc_endpoints = [for i, v in local.___psc_endpoints :
-
-    merge(v, {
-
-     ip_address_name        = coalesce(v.ip_address_name, "psc-endpoint-${v.target.region}-${v.target.name}")
-
-      ip_address_description = coalesce(v.ip_address_description, "PSC to ${v.target_id}")
-
-    })
-
-  ]
-
-  */
 }
-
 module "psc-endpoints" {
-  source                 = "../modules/lb-frontend"
-  for_each               = { for k, v in local.psc_endpoints : "${v.project_id}/${v.region}/${v.name}" => v }
-  type                   = "INTERNAL"
-  project_id             = each.value.project_id
-  host_project_id        = each.value.host_project_id
-  region                 = each.value.region
-  ip_address             = each.value.ip_address
-  ip_address_name        = each.value.ip_address_name
-  ip_address_description = each.value.ip_address_description
-  network                = each.value.network
-  subnet                 = each.value.subnet
-  name                   = each.value.name
-  description            = each.value.description
-  target                 = each.value.target
-  global_access          = false
-  depends_on             = [module.vpc-network]
+  source              = "../modules/forwarding-rule"
+  for_each            = { for k, v in local.psc_endpoints : "${v.project_id}/${v.region}/${v.name}" => v }
+  project_id          = each.value.project_id
+  host_project_id     = each.value.host_project_id
+  name                = each.value.name
+  description         = each.value.description
+  region              = each.value.region
+  address             = each.value.ip_address
+  address_name        = each.value.ip_address_name
+  address_description = each.value.ip_address_description
+  network             = each.value.network
+  subnetwork          = each.value.subnet
+  target              = each.value.target
+  global_access       = false
+  depends_on          = [module.vpc-network]
 }
