@@ -89,7 +89,7 @@ locals {
   is_application_lb       = startswith(local.protocol, "HTTP") ? true : false
   is_classic              = coalesce(var.classic, false)
   protocol                = upper(coalesce(var.protocol, length(local.ports) > 0 || local.all_ports || local.is_psc ? "TCP" : "HTTP"))
-  all_ports               = coalesce(var.all_ports, length(local.ports) == 0 ? true : false)
+  all_ports               = local.is_psc ? false : coalesce(var.all_ports, length(local.ports) == 0 ? true : false)
   ip_protocol             = local.is_psc || local.is_application_lb ? null : local.protocol
   allow_global_access     = local.is_internal && !local.is_psc ? coalesce(var.global_access, false) : null
   allow_psc_global_access = local.is_psc ? coalesce(var.global_access, false) : null
