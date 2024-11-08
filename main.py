@@ -3,7 +3,7 @@
 import os
 import yaml
 from time import time
-from asyncio import gather
+#from asyncio import gather
 import google.auth
 import google.auth.transport.requests
 from classes import *
@@ -86,7 +86,7 @@ def get_settings(input_file: str = "settings.yaml") -> dict:
         return _
 
 
-def get_environments(input_file: str = ENVIRONMENTS_FILE) -> dict:
+async def get_environments(input_file: str = ENVIRONMENTS_FILE) -> dict:
     """
     Get environments
     """
@@ -126,7 +126,7 @@ def get_directories(environment: dict, directory: str = None) -> dict:
 
 async def get_modules(environment: str, module: str = None) -> list[TFModule]:
 
-    environments = get_environments()
+    environments = await get_environments()
     assert environment in environments, f"environment '{environment}' not found"
 
     root_dir = "."
@@ -197,6 +197,8 @@ async def get_modules(environment: str, module: str = None) -> list[TFModule]:
     #_ = [module.get_backend_workspaces() for module in modules]
     print("examine workspaces took", time() - _)
 
+    modules = sorted(modules, key=lambda m: len(m.workspaces), reverse=True)
+
     return modules
 
 
@@ -206,7 +208,7 @@ async def get_workspaces(environment: str, module: str) -> list[TFWorkSpace]:
     #module.get_workspace_details(settings.get('google_adc_key'))
     #return module.workspaces
 
-    environments = get_environments()
+    environments = await get_environments()
     assert environment in environments, f"environment '{environment}' not found"
 
     root_dir = "."

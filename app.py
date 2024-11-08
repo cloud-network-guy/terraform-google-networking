@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 from traceback import format_exc
-from asyncio import run
-from flask import Flask, request, Response, jsonify, render_template
+#from asyncio import run
+from quart import Quart, request, Response, jsonify, render_template
 from main import *
 from classes import *
 
-app = Flask(__name__, static_url_path='/static')
+app = Quart(__name__, static_url_path='/static')
 app.config['JSON_SORT_KEYS'] = False
 app.config['SESSION_COOKIE_SAMESITE'] = "Strict"
 
@@ -16,21 +16,22 @@ JSON_RESPONSE_HEADERS = {'Cache-Control': "no-cache, no-store"}
 
 
 @app.route("/environments")
-def _environments():
+async def _environments():
 
     try:
-        environments = get_environments()
+        environments = await get_environments()
         return jsonify(list(environments.keys())), JSON_RESPONSE_HEADERS
     except Exception as e:
         return Response(format_exc(), status=500, content_type=PLAIN_CONTENT_TYPE)
 
 
 @app.route("/environments/<environment>/modules")
-def _modules(environment: str):
+async def _modules(environment: str):
 
     try:
         modules = []
-        for module in run(get_modules(environment)):
+        _ = await get_modules(environment)
+        for module in _:
             m = module.__dict__
             m['workspaces'] = [workspace.__dict__ for workspace in module.workspaces if module.uses_workspaces]
             modules.append(m)
@@ -40,9 +41,9 @@ def _modules(environment: str):
 
 
 @app.route("/environments/<environment>/modules/<module>/workspaces")
-def _workspaces(environment: str, module: str):
+async def _workspaces(environment: str, module: str):
     try:
-        workspaces = run(get_workspaces(environment, module))
+        workspaces = await get_workspaces(environment, module)
         workspaces = sorted(workspaces, key=lambda x: x.state_file['last_update'], reverse=True)
         return jsonify(workspaces), JSON_RESPONSE_HEADERS
     except Exception as e:
@@ -66,28 +67,38 @@ def _workspaces(module: str):
 
 
 @app.route("/")
-def _root():
+async def _root():
 
     data = []
 
     try:
-
-        if environment := request.args.get('module'):
-            pass
-        else:
+        environments = await get_environments()
+        if environment := request.args.get('environment'):
             title = "Modules"
+            fields = {
+                'name': "Module Name",
+                'num_workspaces': "Number of Workspaces",
+            }
+            modules = await get_modules(environment)
+            for m in modules:
+                data.append({
+                    'name': m.name,
+                    'num_workspaces': len(m.workspaces),
+                })
+
+        else:
+            title = "Environments"
             fields = {
                 'name': "Environment Name",
                 'num_modules': "Number of Modules",
             }
-            _ = run(get_environments())
-            for e in _:
-                modules = run(get_modules(e))
+            for k, v in environments.items():
+                modules = await get_modules(k)
                 data.append({
-                    'name': e,
+                    'name': k,
                     'num_modules': len(modules),
                 })
-        return render_template(
+        return await render_template(
                 template_name_or_list='index.html',
                 title=title,
                 fields=fields,
