@@ -84,6 +84,9 @@ resource "google_dns_managed_zone" "default" {
       enable_logging = true
     }
   }
+  timeouts {
+    
+  }
 }
 
 # DNS Records
