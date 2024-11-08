@@ -231,8 +231,11 @@ class TFModule:
                 })
             else:
                 self.uses_workspaces = False
-                self.workspaces = [TFWorkSpace("default", self.path, self.backend)]
-                return
+                self.backend.update({
+                    'location': "."
+                })
+            self.workspaces = [TFWorkSpace("default", self.path, self.backend)]
+            return
         if self.backend['type'] == 's3':
             self.backend.update({'protocol': "s3"})
         if self.backend['type'] == 'gcs':
@@ -249,7 +252,7 @@ class TFModule:
         for input_file in input_files:
             if input_file.name.lower() != 'defaults.auto.tfvars':
                 workspace_name = input_file.name.split('.')[0]
-                w = TFWorkSpace(workspace_name, self.path, self.backend['location'])
+                w = TFWorkSpace(workspace_name, self.path, self.backend)
                 self.workspaces.append(w)
         if len(self.workspaces) > 0:
             self.uses_workspaces = True
@@ -258,14 +261,19 @@ class TFModule:
 
         if self.backend['type'] == 'local':
             if self.uses_workspaces:
+                pass
+            else:
                 _ = Path(self.backend['location'])
-                assert _.is_file(), f"'{self.backend['location']}' is not a valid file"
+                #assert _.is_file(), f"'{self.backend['location']}' is not a valid file"
                 file_stat = _.stat()
                 workspace = self.workspaces[0]
+                if not workspace.state_file:
+                    workspace.state_file = {}
                 workspace.state_file.update({
                     'size': int(file_stat.st_size),
                     'last_update': file_stat.st_mtime,
                 })
+
         if self.backend['type'] == 's3':
             pass  # TODO
         if self.backend['type'] == 'gcs':
@@ -316,6 +324,11 @@ class TFModule:
                 #    }
                 #})
 
+        _ = [w.name for w in self.workspaces if not w.state_file]
+        if len(_) > 0:
+            print("Null state files:", _)
+        self.workspaces = sorted(self.workspaces, key=lambda w: w.state_file.get('last_update') if w.state_file else 0, reverse=True)
+
     def __repr__(self):
         return str({k: v for k, v in vars(self).items() if v})
 
@@ -328,13 +341,16 @@ class TFWorkSpace:
     """ Data C lass for a Terraform Workspace """
     name: str
     module_path: str
-    module_backend_location: str
+    module_backend: dict
     input_file: dict = None
     state_file: dict = None
 
     async def configure(self):
 
-        input_file = 'terraform.tfvars' if self.name == 'default' else f"{self.name}.tfvars"
+        if self.name == 'default':
+            input_file = 'terraform.tfvars'
+        else:
+            input_file = f"{self.name}.tfvars"
         self.input_file = {'name': input_file}
         #print("Configured input file", self.input_file, "for workspace", self.name)
 
@@ -353,25 +369,27 @@ class TFWorkSpace:
         # Get Metadata for State file
         if not self.state_file:
             self.state_file = {'name': f"{self.name}.tfstate", 'size': None, 'last_update': 0}
-        if self.module_backend_location:
-            state_file_url = f"{self.module_backend_location}/{self.state_file['name']}"
-        else:
-            state_file_url = join(self.module_path, self.state_file['name'])
-            if exists(state_file_url) and isfile(state_file_url):
-                print("State File:", state_file_url)
-                file_stat = Path(state_file_url).stat()
-                self.state_file.update({
-                    'size': file_stat.st_size,
-                    'last_update': int(file_stat.st_mtime),
-                })
+        if location := self.module_backend.get('location'):
+            if self.module_backend.get('type') == 'local':
+                #state_file_url = realpath(f"{location}/{self.state_file['name']}")
+                state_file_url = join(self.module_path, self.state_file['name'])
+                if exists(state_file_url) and isfile(state_file_url):
+                    print("State File:", state_file_url)
+                    file_stat = Path(state_file_url).stat()
+                    self.state_file.update({
+                        'size': file_stat.st_size,
+                        'last_update': int(file_stat.st_mtime),
+                    })
+            else:
+                state_file_url = f"{location}/{self.state_file['name']}"
         #print("Setting state file:", self.name, state_file_url)
         # Set the URL for the state file
-        self.state_file.update({'url': state_file_url})
+            self.state_file.update({'url': state_file_url})
 
     async def fetch_state_file(self, service_file) -> str:
 
-        if not self.state_file:
-            self.state_file = {'name': f"{self.name}.tfstate"}
+        #if not self.state_file:
+        #    self.state_file = {'name': f"{self.name}.tfstate"}
 
         if self.state_file.get('url'):
             #storage_client = storage.Client.from_service_account_json(key_path)

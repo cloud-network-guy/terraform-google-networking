@@ -232,6 +232,9 @@ async def get_workspaces(environment: str, module: str) -> list[TFWorkSpace]:
     #    print("Workspace:", w.name, w.input_file, w.state_file)
     print([w for w in workspaces if w.state_file.get('last_update') == None])
     print("Workspaces:", workspaces)
+
+    workspaces = sorted(workspaces, key=lambda w: w.state_file.get('last_update'), reverse=True)
+
     return workspaces
 
 

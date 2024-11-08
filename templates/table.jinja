@@ -19,25 +19,27 @@ tr.odd td { background-color:#f2f2f2; }
 <body>
 <table style="width:100%" border="1">
 {%if data|length > 0 %}
-  <tr>
-
+    <tr>
     {% for k,v in fields.items() %}
-      <th>{{v}}</th>
+        <th>{{v}}</th>
     {% endfor %}
-  </tr>
-{% endif %}
-
-  {% for row in data %}
-  {%if loop.index is divisibleby 2 %}
-      <tr class="even">
+    </tr>
+    {% for row in data %}
+        {%if loop.index is divisibleby 2 %}
+             <tr class="even">
         {% else %}
-      <tr class="odd">
-  {% endif %}
-  {% for k in fields.keys() -%}
-      <td>{{ row[k] }}</td>
-   {% endfor -%}
-  </tr>
-  {% endfor %}
+            <tr class="odd">
+        {% endif %}
+        {% for k in fields.keys() -%}
+            {% if k == 'name' %}
+                 <td><a href='.'>{{ row[k] }}</a></td>
+            {% else %}
+                 <td>{{ row[k] }}</td>
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+    </tr>
+{% endif %}
 </table>
 </body>
 </html>

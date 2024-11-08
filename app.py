@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 from traceback import format_exc
-#from asyncio import run
 from quart import Quart, request, Response, jsonify, render_template
 from main import *
 from classes import *
@@ -74,18 +73,54 @@ async def _root():
     try:
         environments = await get_environments()
         if environment := request.args.get('environment'):
-            title = "Modules"
-            fields = {
-                'name': "Module Name",
-                'num_workspaces': "Number of Workspaces",
-            }
-            modules = await get_modules(environment)
-            for m in modules:
-                data.append({
-                    'name': m.name,
-                    'num_workspaces': len(m.workspaces),
-                })
+            if module := request.args.get('module'):
+                title = "Workspaces"
+                fields = {
+                    'name': "Workspace Name",
+                    'state_file_url': "State File Url",
+                    'last_modified': "Last Modified",
+                }
+                modules = await get_modules(environment, module)
+                m = modules[0]
+                for w in m.workspaces:
+                    state_file_url = "Unknown"
+                    last_modified = "N/A"
+                    if state_file := w.state_file:
+                        state_file_url = state_file.get('url')
+                        _ = state_file.get('last_update', 0)
+                        last_modified = str(datetime.fromtimestamp(_))
+                    data.append({
+                        'name': w.name,
+                        'state_file_url': state_file_url,
+                        'last_modified': last_modified,
+                    })
 
+            else:
+                title = "Modules"
+                fields = {
+                    'name': "Module Name",
+                    'backend_type': "Backend Type",
+                    'backend_location': "Backend Location",
+                    'num_workspaces': "Number of Workspaces",
+                    'last_modified': "Last Modified",
+                }
+                modules = await get_modules(environment)
+                for m in modules:
+                    workspaces = m.workspaces
+                    last_modified = "N/A"
+                    if len(workspaces) > 0:
+                        most_recent = workspaces[0]
+                        if most_recent.state_file:
+                            _ = most_recent.state_file.get('last_update', 0)
+                            last_modified = str(datetime.fromtimestamp(_))
+                    data.append({
+                        'name': m.name,
+                        'backend_type': m.backend.get('type', "Unknown"),
+                        'backend_location': m.backend.get('location', "Unknown"),
+                        'num_workspaces': len(m.workspaces),
+                        'last_modified': last_modified,
+                    })
+        #ime_str = str(datetime.fromtimestamp(last_modified))
         else:
             title = "Environments"
             fields = {
@@ -99,7 +134,7 @@ async def _root():
                     'num_modules': len(modules),
                 })
         return await render_template(
-                template_name_or_list='index.html',
+                template_name_or_list='table.jinja',
                 title=title,
                 fields=fields,
                 data=data
