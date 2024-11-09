@@ -78,14 +78,14 @@ resource "google_compute_region_network_firewall_policy" "default" {
 locals {
   _rules = [
     for rule in coalesce(var.rules, []) : merge(rule, {
-      create                    = coalesce(rule.create, local.create)
-      action                    = lower(coalesce(rule.action, "allow"))
-      disabled                  = coalesce(rule.disabled, false)
-      priority                  = coalesce(rule.priority, 1000)
-      enable_logging            = coalesce(rule.logging, false)
-      direction                 = upper(trimspace(coalesce(
+      create         = coalesce(rule.create, local.create)
+      action         = lower(coalesce(rule.action, "allow"))
+      disabled       = coalesce(rule.disabled, false)
+      priority       = coalesce(rule.priority, 1000)
+      enable_logging = coalesce(rule.logging, false)
+      direction = upper(trimspace(coalesce(
         rule.direction,
-          rule.destination_ranges != null || rule.destination_address_groups != null ? "egress" : "ingress"
+        rule.destination_ranges != null || rule.destination_address_groups != null ? "EGRESS" : "INGRESS"
       )))
       target_service_accounts   = coalesce(rule.target_service_accounts, [])
       src_ip_ranges             = rule.source_ranges
@@ -123,7 +123,7 @@ data "google_netblock_ip_ranges" "default" {
 }
 
 locals {
-  rules = !local.create ? [] : flatten([for i, rule in local._rules : merge(rule, {
+  rules = !local.create ? [] : [for i, rule in local._rules : merge(rule, {
     priority        = coalesce(rule.priority, i)
     firewall_policy = local.firewall_policy
     range_types = [
@@ -161,12 +161,12 @@ locals {
         try(google_network_security_address_group.default["${rule.location}/${address_group}"].id, null)
       ]
     ))) : null
-  }) if rule.create])
+  }) if rule.create]
 }
 
 locals {
-  network_firewall_policy_rules = [for rule in local.rules :
-    merge(rule, {
+  network_firewall_policy_rules = [
+    for rule in local.rules : merge(rule, {
       rule_name = null
     }) if local.is_network
   ]
@@ -238,8 +238,8 @@ resource "google_compute_region_network_firewall_policy_rule" "default" {
 
 # Associations
 locals {
-  network_firewall_policy_associations = [for network in local.networks :
-    {
+  network_firewall_policy_associations = [
+    for network in local.networks : {
       name              = element(split("/networks/", network), length(split("/networks/", network)) - 1)
       attachment_target = network
     } if local.create
