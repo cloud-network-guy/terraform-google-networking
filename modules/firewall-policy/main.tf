@@ -78,14 +78,14 @@ resource "google_compute_region_network_firewall_policy" "default" {
 locals {
   _rules = [
     for rule in coalesce(var.rules, []) : merge(rule, {
-      create                    = coalesce(rule.create, local.create)
-      action                    = lower(coalesce(rule.action, "allow"))
-      disabled                  = coalesce(rule.disabled, false)
-      priority                  = coalesce(rule.priority, 1000)
-      enable_logging            = coalesce(rule.logging, false)
-      direction                 = upper(trimspace(coalesce(
+      create         = coalesce(rule.create, local.create)
+      action         = lower(coalesce(rule.action, "allow"))
+      disabled       = coalesce(rule.disabled, false)
+      priority       = coalesce(rule.priority, 1000)
+      enable_logging = coalesce(rule.logging, false)
+      direction = upper(trimspace(coalesce(
         rule.direction,
-          rule.destination_ranges != null || rule.destination_address_groups != null ? "egress" : "ingress"
+        rule.destination_ranges != null || rule.destination_address_groups != null ? "EGRESS" : "INGRESS"
       )))
       target_service_accounts   = coalesce(rule.target_service_accounts, [])
       src_ip_ranges             = rule.source_ranges
