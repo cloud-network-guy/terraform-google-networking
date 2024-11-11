@@ -8,7 +8,6 @@ from pathlib import Path
 from datetime import datetime
 from asyncio import gather
 from git import Repo
-#from google.cloud import storage
 from gcloud.aio.auth import Token
 from gcloud.aio.storage import Storage
 
@@ -18,6 +17,7 @@ GOOGLE_ADC_VAR = 'GOOGLE_APPLICATION_CREDENTIALS'
 AWS_PROFILE_VAR = 'AWS_PROFILE'
 AWS_REGION_VAR = 'AWS_REGION'
 STORAGE_TIMEOUT = 15
+GCS_SCOPES = ["https://www.googleapis.com/auth/cloud-platform.read-only"]
 PWD = realpath(dirname(__file__))
 
 
@@ -49,22 +49,19 @@ class GitRepo:
         to_path = self.url.split('/')[-1]
         self.local_path = join(temp_dir, to_path)
 
+        now = time()
         if exists(self.local_path):
-            print("Setting repo in:", self.local_path)
+            print("starting git init:", self.local_path)
             repo = Repo(path=self.local_path)
+            repo.git.reset('--hard', f'origin/{self.branch}')
             origin = repo.remotes.origin
-            _ = time()
-            print("starting git pull", _)
             origin.pull()  # Perform git pull
-            _ = time() - _
-            print("finished git pull", _)
+            print("finished git pull in ", time() - now)
         else:
-            _ = time()
-            print("starting git clone", _)
             chdir(temp_dir)
+            _ = time()
             repo = Repo.clone_from(url=self.url, to_path=to_path, branch=self.branch)  # Perform git clone
-            _ = time() - _
-            print("finished git clone", _)
+            print("finished git clone in ", time() - now)
 
         chdir(PWD)  # Change back to base directory
 
@@ -90,30 +87,6 @@ class GitRepo:
     def __str__(self):
         return str({k: v for k, v in vars(self).items() if v})
 
-"""
-
-class TFBackend:
-
-    def __init__(self, backend_type: str = 'local', bucket: str = None, prefix: str = None):
-
-        self.type = backend_type.lower()
-        self.url = '.'
-
-        if self.type in ('gcs', 'gs'):
-            self.url = f"gs://{bucket}"
-        if self.type == 's3':
-            self.url = f"s3://{bucket}"
-        if prefix:
-            self.url = f"{self.url}{prefix}"
-
-    def __repr__(self):
-        return str({k: v for k, v in vars(self).items() if v})
-
-    def __str__(self):
-        return str({k: v for k, v in vars(self).items() if v})
-
-"""
-
 
 @dataclass
 class TFModule:
@@ -125,6 +98,7 @@ class TFModule:
     authentication_file: str = None
     uses_workspaces: bool = None
     workspaces: list = None
+    storage: Storage = None
 
     async def discover_backend(self) -> None:
 
@@ -207,7 +181,6 @@ class TFModule:
                         if userprofile := environ.get("USERPROFILE"):
                             authentication_file = f"{userprofile}\\AppData\\Roaming\\gcloud\\application_default_credentials.json"
                             fp = open(authentication_file, 'r')
-                            print(fp)
                 case 's3':
                     if home := environ.get('HOME'):
                         credentials_file = f"{home}/.aws/credentials"
@@ -215,9 +188,12 @@ class TFModule:
                     pass
 
         if authentication_file:
-            self.backend.update({
-                'key_path': realpath(authentication_file)
-            })
+            if self.backend['type'] == "gcs":
+                self.backend.update({
+                    'key_path': realpath(authentication_file),
+                })
+                token = Token(service_file=self.backend.get('key_path'), scopes=GCS_SCOPES)
+                self.storage = Storage(token=token)
 
     async def find_workspaces(self) -> None:
 
@@ -281,26 +257,27 @@ class TFModule:
             storage_client = storage.Client.from_service_account_json(self.backend.get('key_path'))
             blobs = storage_client.list_blobs(self.backend['bucket'], prefix=self.backend['prefix'])
             """
-            scopes = ["https://www.googleapis.com/auth/cloud-platform.read-only"]
-            token = Token(service_file=self.backend.get('key_path'), scopes=scopes)
-            storage = Storage(token=token)
+            #scopes = ["https://www.googleapis.com/auth/cloud-platform.read-only"]
+            #token = Token(service_file=self.backend.get('key_path'), scopes=scopes)
+            #storage = Storage(token=token)
             params = {'prefix': self.backend['prefix']}
             objects = []
             while True:
                 print("Calling storage", self.backend['bucket'], params)
-                _ = await storage.list_objects(self.backend['bucket'], params=params, timeout=STORAGE_TIMEOUT)
+                _ = await self.storage.list_objects(self.backend['bucket'], params=params, timeout=STORAGE_TIMEOUT)
                 objects.extend(_.get('items', []))
                 if next_page_token := _.get('nextPageToken'):
                     params.update({'pageToken': next_page_token})
                 else:
                     break
-            await storage.close()
+            await self.storage.close()
+            self.storage = None
             for blob in objects:
                 #print(b.name)
                 #workspace_name = blob.name.split('/')[-1].replace('.tfstate', "")
                 workspace_name = blob['name'].split('/')[-1].replace('.tfstate', "")
                 #_updated = str(blob.updated)[0:19]
-                print(blob['name'], blob['size'], blob['updated'])
+                #print(blob['name'], blob['size'], blob['updated'])
                 _updated = str(blob['updated'])[0:19]
                 _updated = _updated[:10] + " " + _updated[11:19]
                 updated = int(datetime.timestamp(datetime.strptime(_updated, "%Y-%m-%d %H:%M:%S")))

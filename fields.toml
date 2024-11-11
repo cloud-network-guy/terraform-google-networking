@@ -1,0 +1,17 @@
+
+[Environments]
+name = "Environment Name"
+num_modules = "Number of Modules"
+
+
+[Modules]
+name = "Module Name"
+backend_type = "Backend Type"
+backend_location = "Backend Location"
+num_workspaces = "Number of Workspaces"
+last_modified = "Last Modified"
+
+[Workspaces]
+name = "Workspace Name"
+state_file_url = "State File Url"
+last_modified = "Last Modified"

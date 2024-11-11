@@ -2,6 +2,7 @@
 
 import os
 import yaml
+import tomli
 from time import time
 #from asyncio import gather
 import google.auth
@@ -14,6 +15,7 @@ ADC_VAR = 'GOOGLE_APPLICATION_CREDENTIALS'
 VALID_ACTIONS = ('version', 'init', 'plan', 'apply', 'providers')
 OPTIONS = {'debug': True}
 ENVIRONMENTS_FILE = "environments.yaml"
+FIELDS_FILE = "fields.toml"
 
 
 def get_gcp_access_token(key_file: str = None) -> str:
@@ -86,14 +88,25 @@ def get_settings(input_file: str = "settings.yaml") -> dict:
         return _
 
 
-async def get_environments(input_file: str = ENVIRONMENTS_FILE) -> dict:
+def get_environments(input_file: str = ENVIRONMENTS_FILE) -> dict:
     """
     Get environments
     """
     _ = check_file(input_file)
-    with open(_, mode="rb") as fp:
-        _ = yaml.load(fp, Loader=yaml.FullLoader)
-        return _
+    fp = open(_, mode="rb")
+    _ = yaml.load(fp, Loader=yaml.FullLoader)
+    fp.close()
+    return _
+
+
+def get_fields(input_file: str = FIELDS_FILE) -> dict:
+
+    _ = check_file(input_file)
+    fp = open(_, mode="rb")
+    _ = tomli.load(fp)
+    fp.close()
+    return _
+
 
 """
 def get_directories(environment: dict, directory: str = None) -> dict:
@@ -126,12 +139,12 @@ def get_directories(environment: dict, directory: str = None) -> dict:
 
 async def get_modules(environment: str, module: str = None) -> list[TFModule]:
 
-    environments = await get_environments()
+    environments = get_environments()
     assert environment in environments, f"environment '{environment}' not found"
 
     root_dir = "."
 
-    _ = time()
+    splits = {'start': time()}
     e = environments.get(environment)
     if url := e.get('git_url'):
         repo = GitRepo(url, branch=e.get('git_branch'), ssh_private_key_file=e.get('git_ssh_key'))
@@ -143,14 +156,12 @@ async def get_modules(environment: str, module: str = None) -> list[TFModule]:
         print("Root directory:", root_dir)
     elif directory := e.get('directory'):
         root_dir = join(directory)
-    print("Git action took", time() - _)
+    splits['finish_git_init'] = time()
 
-    _ = time()
     sub_directories = get_sub_directories(root_dir)
     print([sub_dir for sub_dir in sub_directories])
-    print("subdir scan took", time() - _)
+    splits['scan_sub_dirs'] = time()
 
-    _ = time()
     """
     if valid_modules := e.get('modules'):
         modules = [TFModule(sub_dir, str(join(root_dir, sub_dir))) for sub_dir in sub_directories.keys() if sub_dir in valid_modules]
@@ -163,29 +174,25 @@ async def get_modules(environment: str, module: str = None) -> list[TFModule]:
         modules = [m for m in modules if m.name == module]
     if valid_modules := e.get('modules'):
         modules = [m for m in modules if m.name in valid_modules]
-    print("module init took", time() - _)
-    #print(modules)
+    splits['module_init'] = time()
 
-    _ = time()
+
     #modules = [m.get_config() for m in modules]
     tasks = [m.discover_backend() for m in modules]
     await gather(*tasks)
-    print("module get config took", time() - _)
+    splits['discover_backend'] = time()
     #print(modules)
-
     _ = time()
     tasks = [m.set_credentials(e.get('google_adc_key')) for m in modules]
     await gather(*tasks)
-    print("module set authentication took", time() - _)
+    splits['set_authentication'] = time()
 
-    _ = time()
     #modules = [m.find_workspaces() for m in modules]
     tasks = [m.find_workspaces() for m in modules]
     await gather(*tasks)
-    print("module find workspaces took", time() - _)
-    #print(modules)
+    splits['find_workspaces'] = time()
 
-    _ = time()
+
     #[module.get_workspace_details(e.get('google_adc_key')) for module in modules if module.uses_workspaces]
     #tasks = []
     #for module in modules:
@@ -195,9 +202,19 @@ async def get_modules(environment: str, module: str = None) -> list[TFModule]:
     tasks = [m.examine_workspaces() for m in modules]
     await gather(*tasks)
     #_ = [module.get_backend_workspaces() for module in modules]
-    print("examine workspaces took", time() - _)
+    splits['examine_workspaces'] = time()
 
     modules = sorted(modules, key=lambda m: len(m.workspaces), reverse=True)
+
+    durations = {}
+    last_split = splits['start']
+    for key, timestamp in splits.items():
+        if key != 'start':
+            duration = round((splits[key] - last_split), 3)
+            durations[key] = f"{duration:.3f}"
+            last_split = timestamp
+    durations['total'] = f"{round(last_split - splits['start'], 3):.3f}"
+    print("Durations:", durations)
 
     return modules
 
@@ -208,7 +225,7 @@ async def get_workspaces(environment: str, module: str) -> list[TFWorkSpace]:
     #module.get_workspace_details(settings.get('google_adc_key'))
     #return module.workspaces
 
-    environments = await get_environments()
+    environments = get_environments()
     assert environment in environments, f"environment '{environment}' not found"
 
     root_dir = "."
