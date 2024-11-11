@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 
-import os
-import yaml
-import tomli
+from os import scandir, chdir, system, environ
+from os.path import realpath, dirname, join, exists, isfile, isdir, splitext
 from time import time
-#from asyncio import gather
+from asyncio import gather
 import google.auth
 import google.auth.transport.requests
-from classes import *
+from classes import TFModule, TFWorkSpace, GitRepo
 
 SCOPES = ['https://www.googleapis.com/auth/cloud-platform']
 PWD = realpath(dirname(__file__))
@@ -29,40 +28,15 @@ def get_gcp_access_token(key_file: str = None) -> str:
     credentials.refresh(_)
     return credentials.token
 
-"""
-
-def configure_git_ssh(private_key_file: str = None):
-
-    if not (git_ssh_variant := environ.get('GIT_SSH_VARIANT')):
-        git_ssh_variant = "ssh"
-        environ.update({'GIT_SSH_VARIANT': git_ssh_variant})
-
-    if not (git_ssh_command := environ.get('GIT_SSH_COMMAND')):
-        # Scan SSH Key locations to find valid private key file
-        using_windows = True if sys.platform.startswith('win') else False
-        home_dir = environ.get('HOME')
-        if using_windows:
-            home_dir = environ.get("USERPROFILE")
-        if not private_key_file:
-            for private_key_file in SSH_PRIVATE_KEY_FILES:
-                _ = f"{home_dir}/.ssh/{private_key_file}"
-                if using_windows:
-                    _ = _.replace("/", "\\")
-                if exists(_) and isfile(_) and access(_, R_OK):
-                    private_key_file = _
-                    break
-        environ.update({'GIT_SSH_COMMAND': f"ssh -i {private_key_file}"})
-
-"""
 
 
 def check_file(file_name: str) -> str:
     """
     Verify a file exists
     """
-    _ = str(os.path.join(PWD, str(file_name)))
-    assert os.path.exists(_), f"File '{_}' does not exist"
-    assert os.path.isfile(_), f"File '{_}' is not a file"
+    _ = str(join(PWD, str(file_name)))
+    assert exists(_), f"File '{_}' does not exist"
+    assert isfile(_), f"File '{_}' is not a file"
 
     #_ = Path(join(PWD, str(file_name)))
     #assert _.is_file() and _.stat().st_size > 0, f"File '{file_name}' does not exist or is empty!"
@@ -73,68 +47,38 @@ def check_directory(directory: str) -> bool:
     """
     Verify a directory exists
     """
-    assert os.path.exists(directory), f"Directory '{directory}' does not exist"
-    assert os.path.isdir(directory), f"Directory '{directory}' is not a directory"
+    assert exists(directory), f"Directory '{directory}' does not exist"
+    assert isdir(directory), f"Directory '{directory}' is not a directory"
     return True
 
+def get_config(input_file: str) -> dict:
+
+    import tomli
+    import yaml
+
+    if _ := check_file(input_file):
+        file_format = splitext(input_file)[-1].lower()
+        with open(_, mode="rb") as fp:
+            if 'yaml' in file_format:
+                _ = yaml.load(fp, Loader=yaml.FullLoader)
+            if 'toml' in file_format:
+                _ = tomli.load(fp)
+            return _
+    return {}
 
 def get_settings(input_file: str = "settings.yaml") -> dict:
-    """
-    Get settings
-    """
-    _ = check_file(input_file)
-    with open(_, mode="rb") as fp:
-        _ = yaml.load(fp, Loader=yaml.FullLoader)
-        return _
+
+    return get_config(input_file)
 
 
 def get_environments(input_file: str = ENVIRONMENTS_FILE) -> dict:
-    """
-    Get environments
-    """
-    _ = check_file(input_file)
-    fp = open(_, mode="rb")
-    _ = yaml.load(fp, Loader=yaml.FullLoader)
-    fp.close()
-    return _
+
+    return get_config(input_file)
 
 
 def get_fields(input_file: str = FIELDS_FILE) -> dict:
 
-    _ = check_file(input_file)
-    fp = open(_, mode="rb")
-    _ = tomli.load(fp)
-    fp.close()
-    return _
-
-
-"""
-def get_directories(environment: dict, directory: str = None) -> dict:
-    if url := environment.get('git_url'):
-        # If Git repo URL used, verify it exists, then find
-        temp_dir = tempfile.gettempdir()
-        check_directory(temp_dir)
-        to_path = url.split('/')[-1]
-        repo_dir = join(temp_dir, to_path)
-    else:
-        # Repo is already cloned as local directory
-        repo_dir = environment.get('base_dir')
-        check_directory(repo_dir)
-
-    # Use specific sub-directory, if configured
-    sub_dir = environment.get('sub_dir')
-    root_dir = join(repo_dir, sub_dir) if sub_dir else repo_dir
-
-    # Use specific directory within the root, if specified
-    target_dir = join(root_dir, directory) if directory else root_dir
-    #check_directory(target_dir)
-
-    return {
-        'repo': Path(repo_dir),
-        'root': Path(root_dir),
-        'target': Path(target_dir),
-    }
-"""
+    return get_config(input_file)
 
 
 async def get_modules(environment: str, module: str = None) -> list[TFModule]:
@@ -168,40 +112,27 @@ async def get_modules(environment: str, module: str = None) -> list[TFModule]:
     else:
         modules = [TFModule(sub_dir, str(join(root_dir, sub_dir))) for sub_dir in sub_directories.keys()]
     """
-    modules = [TFModule(sub_dir, str(join(root_dir, sub_dir))) for sub_dir in sub_directories.keys()]
-    #modules = await gather(*tasks)
+    modules = [TFModule(module_name, str(root_dir)) for module_name in sub_directories.keys()]
     if module:
         modules = [m for m in modules if m.name == module]
     if valid_modules := e.get('modules'):
         modules = [m for m in modules if m.name in valid_modules]
     splits['module_init'] = time()
 
-
-    #modules = [m.get_config() for m in modules]
     tasks = [m.discover_backend() for m in modules]
     await gather(*tasks)
     splits['discover_backend'] = time()
-    #print(modules)
-    _ = time()
+
     tasks = [m.set_credentials(e.get('google_adc_key')) for m in modules]
     await gather(*tasks)
     splits['set_authentication'] = time()
 
-    #modules = [m.find_workspaces() for m in modules]
     tasks = [m.find_workspaces() for m in modules]
     await gather(*tasks)
     splits['find_workspaces'] = time()
 
-
-    #[module.get_workspace_details(e.get('google_adc_key')) for module in modules if module.uses_workspaces]
-    #tasks = []
-    #for module in modules:
-    #    if module.uses_workspaces:
-    #        tasks.append(create_task(module.get_workspace_details(e.get('google_adc_key'))))
-    #tasks = [module.get_workspace_details(e.get('google_adc_key')) for module in modules if module.uses_workspaces]
     tasks = [m.examine_workspaces() for m in modules]
     await gather(*tasks)
-    #_ = [module.get_backend_workspaces() for module in modules]
     splits['examine_workspaces'] = time()
 
     modules = sorted(modules, key=lambda m: len(m.workspaces), reverse=True)
@@ -266,64 +197,6 @@ def get_sub_directories(base_dir: str) -> dict:
             sub_directories.update({subdir: tf_files})
     return sub_directories
 
-"""
-
-def get_file_details(location: str, authentication_key: str) -> dict:
-
-    if location.startswith("s3://"):
-        return {}
-    elif location.startswith("gs://"):
-        key_path = realpath(authentication_key)
-        bucket_name = location.replace('gs://', "").split('/')[0]
-        blob_name = location.replace(f"gs://{bucket_name}/", "")
-        storage_client = storage.Client.from_service_account_json(key_path)
-        bucket = storage_client.bucket(bucket_name)
-        blob = bucket.get_blob(blob_name)
-        print(blob)
-        return {'size': blob.size, 'updated': blob.updated}
-    else:
-        _ = Path(location)
-        assert _.is_file(), f"'{location}' is not a valid file"
-        file_stat = _.stat()
-        return {'size': file_stat.st_size, 'updated': file_stat.st_mtime}
-
-def get_workspaces(module_dir) -> list:
-
-    module_dir = Path(module_dir)
-    try:
-        chdir(module_dir)
-    except Exception as e:
-        raise f"Could not chdir to module '{module_dir}'"
-    workspaces = []
-    for f in listdir():
-        if f.endswith(".tfvars") and f != 'defaults.auto.tfvars':
-            workspaces.append({
-                'name': f.split('.')[0],
-                'input_file': f,
-            })
-
-    return workspaces
-
-def git_repo(url: str, branch: str = None, debug: bool = False) -> None:
-
-    temp_dir = tempfile.gettempdir()
-    to_path = url.split('/')[-1]
-    repo_dir = join(temp_dir, to_path)
-
-    if exists(repo_dir):
-        if debug or OPTIONS.get('debug'):
-            print("Doing git pull:", repo_dir)
-        repo = Repo(path=repo_dir)
-        origin = repo.remotes.origin
-        origin.pull()  # Perform git pull
-    else:
-        chdir(temp_dir)
-        if debug or OPTIONS.get('debug'):
-            print("Cloning git repo in:", temp_dir)
-        repo = Repo.clone_from(url=url, to_path=to_path, branch=branch)  # Perform git clone
-
-"""
-
 
 def tf_init(directory: str = "./", options: str = None, debug: bool = False):
 
@@ -331,7 +204,7 @@ def tf_init(directory: str = "./", options: str = None, debug: bool = False):
     if debug or OPTIONS.get('debug'):
         print("Running terraform init in:", directory, "with options", options)
     chdir(directory)
-    os.system(f"terraform init{options}")
+    system(f"terraform init{options}")
 
 
 def main(environment: str, module: str, workspace: str = None, action: str = "plan", debug: bool = False) -> str:
@@ -371,9 +244,9 @@ def main(environment: str, module: str, workspace: str = None, action: str = "pl
     chdir(target_dir)
     #os.system(f"terraform -chdir='{directory}' plan")
     environ.update({'TF_WORKSPACE': workspace})
-    tfvars_file = Path(join(target_dir, f"{workspace}.tfvars"))
+    tfvars_file = join(target_dir, f"{workspace}.tfvars")
     print(tfvars_file)
-    os.system(f"terraform plan -var-file='{tfvars_file}'")
+    system(f"terraform plan -var-file='{tfvars_file}'")
     return None
 
     _ = ""

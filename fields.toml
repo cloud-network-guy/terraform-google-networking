@@ -13,5 +13,8 @@ last_modified = "Last Modified"
 
 [Workspaces]
 name = "Workspace Name"
+input_file_url = "Input File Url"
+input_file_size = "Input File Size"
 state_file_url = "State File Url"
+state_file_size = "State File Size"
 last_modified = "Last Modified"

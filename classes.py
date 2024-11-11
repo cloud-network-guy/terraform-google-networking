@@ -12,6 +12,7 @@ from gcloud.aio.auth import Token
 from gcloud.aio.storage import Storage
 
 
+
 SSH_PRIVATE_KEY_FILES = ('id_rsa', 'id_ecdsa', 'id_ed25519')
 GOOGLE_ADC_VAR = 'GOOGLE_APPLICATION_CREDENTIALS'
 AWS_PROFILE_VAR = 'AWS_PROFILE'
@@ -80,6 +81,8 @@ class GitRepo:
                     self.ssh_private_key_file = _
                     break
             environ.update({'GIT_SSH_COMMAND': f"ssh -i {self.ssh_private_key_file}"})
+        print("Git using private ssh key:", self.ssh_private_key_file)
+        print(environ)
 
     def __repr__(self):
         return str({k: v for k, v in vars(self).items() if v})
@@ -92,7 +95,8 @@ class GitRepo:
 class TFModule:
     """ Data Class for a Terraform Module """
     name: str
-    path: str
+    root_path: str
+    path: str = None
     backend: dict = None
     providers: dict = None
     authentication_file: str = None
@@ -102,10 +106,10 @@ class TFModule:
 
     async def discover_backend(self) -> None:
 
-        self.backend = {'type': "unknown"}
-
         # Verify the path actually exists
+        self.path = join(self.root_path, self.name)
         assert exists(self.path) and isdir(self.path), f"{self.path} is not a valid directory"
+        self.backend = {'path': self.path, 'type': "unknown"}
 
         # Scan the directory for Terraform code files
         tf_files = [f for f in scandir(self.path) if f.name.lower().endswith(".tf")]
@@ -210,7 +214,7 @@ class TFModule:
                 self.backend.update({
                     'location': "."
                 })
-            self.workspaces = [TFWorkSpace("default", self.path, self.backend)]
+            self.workspaces = [TFWorkSpace("default", self.backend)]
             return
         if self.backend['type'] == 's3':
             self.backend.update({'protocol': "s3"})
@@ -228,7 +232,7 @@ class TFModule:
         for input_file in input_files:
             if input_file.name.lower() != 'defaults.auto.tfvars':
                 workspace_name = input_file.name.split('.')[0]
-                w = TFWorkSpace(workspace_name, self.path, self.backend)
+                w = TFWorkSpace(workspace_name, self.backend)
                 self.workspaces.append(w)
         if len(self.workspaces) > 0:
             self.uses_workspaces = True
@@ -317,7 +321,6 @@ class TFModule:
 class TFWorkSpace:
     """ Data C lass for a Terraform Workspace """
     name: str
-    module_path: str
     module_backend: dict
     input_file: dict = None
     state_file: dict = None
@@ -328,20 +331,25 @@ class TFWorkSpace:
             input_file = 'terraform.tfvars'
         else:
             input_file = f"{self.name}.tfvars"
-        self.input_file = {'name': input_file}
+        module_path = self.module_backend.get('path')
+        self.input_file = {
+            'name': input_file,
+            'path': f"{module_path}/{input_file}",
+            'fullpath': None,
+            'size': None,
+            'last_update': None,
+        }
         #print("Configured input file", self.input_file, "for workspace", self.name)
 
         # Get size & timestamp for input file
-        _ = join(self.module_path, self.input_file['name'])
-        self.input_file = {'path': _, 'size': None, 'last_update': None}
-        if exists(_) and isfile(_):
+        _ = str(join(module_path, self.input_file['path']))
+        if exists(_):
             file_stat = Path(_).stat()
             self.input_file.update({
+                'fullpath': _,
                 'size': file_stat.st_size,
                 'last_update': int(file_stat.st_mtime),
             })
-        else:
-            self.input_file = {}
 
         # Get Metadata for State file
         if not self.state_file:
@@ -349,10 +357,10 @@ class TFWorkSpace:
         if location := self.module_backend.get('location'):
             if self.module_backend.get('type') == 'local':
                 #state_file_url = realpath(f"{location}/{self.state_file['name']}")
-                state_file_url = join(self.module_path, self.state_file['name'])
+                state_file_url = join(module_path, self.state_file['name'])
                 if exists(state_file_url) and isfile(state_file_url):
                     print("State File:", state_file_url)
-                    file_stat = Path(state_file_url).stat()
+                    file_stat = Path(str(state_file_url)).stat()
                     self.state_file.update({
                         'size': file_stat.st_size,
                         'last_update': int(file_stat.st_mtime),
