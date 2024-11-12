@@ -80,11 +80,15 @@ locals {
   port       = var.port
   ports      = coalesce(var.ports, compact([local.port]))
   port_range = var.port_range
-  target     = var.target
   backend_service = var.backend_service != null ? trimspace(coalesce(
     startswith(var.backend_service, local.api_prefix) ? var.backend_service : null,
     startswith(var.backend_service, "projects/") ? "${local.api_prefix}/${var.backend_service}" : null,
-    "projects/${local.host_project}/${local.is_regional ? "regions" : ""}/${local.region}/backendServices/${var.backend_service}"
+    "${local.api_prefix}/projects/${local.project}/${local.is_regional ? "regions" : ""}/${local.region}/backendServices/${var.backend_service}"
+  )) : null
+  target     = var.target != null ? trimspace(coalesce(
+    startswith(var.target, local.api_prefix) ? var.target : null,
+    startswith(var.target, "projects/") ? "${local.api_prefix}/${var.target}" : null,
+    "${local.api_prefix}/projects/${local.project}/${local.is_regional ? "regions" : ""}/${local.region}/serviceAttachments/${var.target}"
   )) : null
   is_application_lb       = startswith(local.protocol, "HTTP") ? true : false
   is_classic              = coalesce(var.classic, false)
@@ -95,7 +99,7 @@ locals {
   allow_psc_global_access = local.is_psc ? coalesce(var.global_access, false) : null
   load_balancing_scheme   = local.is_psc ? "" : local.is_application_lb && !local.is_classic ? "${local.type}_MANAGED" : local.type
   ip_address = local.create_static_ip ? (
-    local.is_regional ? one(google_compute_address.default).address : one(google_compute_global_address.default).address
+    local.is_regional ? one(google_compute_address.default).self_link : one(google_compute_global_address.default).self_link
   ) : null
   labels                 = { for k, v in coalesce(var.labels, {}) : k => lower(replace(v, " ", "_")) }
   is_mirroring_collector = false # TODO
