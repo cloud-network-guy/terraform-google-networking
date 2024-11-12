@@ -83,6 +83,7 @@ locals {
   url_list_name = one(google_network_security_url_lists.default).name
   url_list_id   = one(google_network_security_url_lists.default).id
   rules = concat(
+    # Iterate over manual rules
     [for i, v in coalesce(var.rules, []) : merge(v, {
       create              = coalesce(v.create, local.create)
       enabled             = coalesce(v.enabled, true)
@@ -93,7 +94,7 @@ locals {
       application_matcher = ""
       basic_profile       = upper(trimspace(coalesce(v.basic_profile, "ALLOW")))
     })],
-    [
+    length(local.url_list) > 0 ? [
       {
         create              = local.create
         enabled             = true
@@ -104,7 +105,7 @@ locals {
         application_matcher = ""
         basic_profile       = "ALLOW"
       }
-    ]
+    ] : []
   )
 }
 
