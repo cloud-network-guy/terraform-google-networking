@@ -8,7 +8,7 @@ resource "random_string" "name" {
 
 locals {
   is_psc       = var.target != null ? strcontains(var.target, "/serviceAttachments/") ? true : false : false
-  is_redirect  = false  # TODO
+  is_redirect  = false # TODO
   api_prefix   = "https://www.googleapis.com/compute/v1"
   create       = coalesce(var.create, true)
   project      = lower(trimspace(coalesce(var.project_id, var.project)))
@@ -77,18 +77,19 @@ resource "google_compute_global_address" "default" {
 }
 
 locals {
-  port       = var.port
-  ports      = coalesce(var.ports, compact([local.port]))
-  port_range = var.port_range
+  port           = var.port
+  ports          = coalesce(var.ports, compact([local.port]))
+  port_range     = var.port_range
+  project_prefix = "${local.api_prefix}/projects/${local.project}"
   backend_service = var.backend_service != null ? trimspace(coalesce(
     startswith(var.backend_service, local.api_prefix) ? var.backend_service : null,
     startswith(var.backend_service, "projects/") ? "${local.api_prefix}/${var.backend_service}" : null,
-    "${local.api_prefix}/projects/${local.project}/${local.is_regional ? "regions" : ""}/${local.region}/backendServices/${var.backend_service}"
+    "${local.project_prefix}/${local.is_regional ? "regions" : ""}/${local.region}/backendServices/${var.backend_service}"
   )) : null
-  target     = var.target != null ? trimspace(coalesce(
+  target = var.target != null ? trimspace(coalesce(
     startswith(var.target, local.api_prefix) ? var.target : null,
     startswith(var.target, "projects/") ? "${local.api_prefix}/${var.target}" : null,
-    "${local.api_prefix}/projects/${local.project}/${local.is_regional ? "regions" : ""}/${local.region}/serviceAttachments/${var.target}"
+    "${local.project_prefix}/${local.is_regional ? "regions" : ""}/${local.region}/serviceAttachments/${var.target}"
   )) : null
   is_application_lb       = startswith(local.protocol, "HTTP") ? true : false
   is_classic              = coalesce(var.classic, false)
