@@ -9,7 +9,7 @@ locals {
         name        = coalesce(lookup(v, "name", null), "psc-endpoint-${i + 1}")
         description = lookup(v, "description", null)
         address     = lookup(v, "address", null)
-        target      = startswith(local.url_prefix, v.target) ? v.target : "${local.url_prefix}/${v.target}"
+        target      = startswith(v.target, local.url_prefix) ? v.target : "${local.url_prefix}/${v.target}"
       }
     ]
   ])
