@@ -74,6 +74,6 @@ variable "rules" {
 }
 variable "url_list" {
   description = "List of domains allow"
-  type    = list(string)
-  default = []
+  type        = list(string)
+  default     = []
 }
