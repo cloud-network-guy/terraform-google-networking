@@ -4,7 +4,7 @@ locals {
       create      = coalesce(v.create, true)
       project     = coalesce(v.project_id, local.project)
       name        = lower(trimspace(coalesce(v.name, k)))
-      description = var.description != null ? trimspace(var.description) : null
+      description = v.description != null ? trimspace(v.description) : null
       location    = lower(trimspace(v.region != null ? v.region : "global"))
       type        = "IPV4"
       capacity    = 100
@@ -108,10 +108,6 @@ locals {
 
 # Get a list of unique range types in all rules
 locals {
-  firewall_policy = local.create && local.is_network ? coalesce(
-    local.is_global ? one(google_compute_network_firewall_policy.default).self_link : null,
-    local.is_regional ? one(google_compute_region_network_firewall_policy.default).self_link : null,
-  ) : null
   range_types = toset(flatten([
     for rule in local._rules : [for rt in rule.range_types : lower(trimspace(rt))]
   ]))
@@ -123,6 +119,10 @@ data "google_netblock_ip_ranges" "default" {
 }
 
 locals {
+  firewall_policy = local.create && local.is_network ? coalesce(
+    local.is_global ? one(google_compute_network_firewall_policy.default).name : null,
+    local.is_regional ? one(google_compute_region_network_firewall_policy.default).name : null,
+  ) : null
   rules = !local.create ? [] : [for i, rule in local._rules : merge(rule, {
     priority        = coalesce(rule.priority, i)
     firewall_policy = local.firewall_policy
