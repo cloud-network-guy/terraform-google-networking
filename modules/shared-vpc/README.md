@@ -62,3 +62,58 @@ network         = "shared-network-1"
 project_ids     = ["project-1234", "project-5678"]
 regions         = ["europe-west1", "europe-west4"]
 ```
+<!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5.7 |
+| <a name="requirement_google"></a> [google](#requirement\_google) | >= 5.34.0, < 6.0.0 |
+| <a name="requirement_google-beta"></a> [google-beta](#requirement\_google-beta) | >= 5.34.0, < 6.0.0 |
+
+## Providers
+
+| Name | Version |
+|------|---------|
+| <a name="provider_google"></a> [google](#provider\_google) | >= 5.34.0, < 6.0.0 |
+| <a name="provider_google-beta"></a> [google-beta](#provider\_google-beta) | >= 5.34.0, < 6.0.0 |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [google_compute_subnetwork_iam_binding.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_subnetwork_iam_binding) | resource |
+| [google-beta_google_cloud_asset_resources_search_all.services](https://registry.terraform.io/providers/hashicorp/google-beta/latest/docs/data-sources/google_cloud_asset_resources_search_all) | data source |
+| [google_compute_network.shared_vpc](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_network) | data source |
+| [google_compute_networks.shared_vpc](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_networks) | data source |
+| [google_compute_regions.available](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_regions) | data source |
+| [google_compute_subnetworks.private_subnets](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_subnetworks) | data source |
+| [google_projects.active_projects](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/projects) | data source |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_credentials_file"></a> [credentials\_file](#input\_credentials\_file) | GCP service account JSON key | `string` | `null` | no |
+| <a name="input_folder_id"></a> [folder\_id](#input\_folder\_id) | Folder ID containing list of Projects to examine | `string` | `null` | no |
+| <a name="input_host_project_id"></a> [host\_project\_id](#input\_host\_project\_id) | For Shared VPC, Project ID of the Host Network Project | `string` | n/a | yes |
+| <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | Name Prefix for Regional Networks | `string` | `null` | no |
+| <a name="input_network"></a> [network](#input\_network) | Name of a specific VPC Network | `string` | `null` | no |
+| <a name="input_org_id"></a> [org\_id](#input\_org\_id) | Organization ID containing list of Projects to examine | `string` | `null` | no |
+| <a name="input_project_ids"></a> [project\_ids](#input\_project\_ids) | List of specific Project IDs to include | `list(string)` | `null` | no |
+| <a name="input_regional_labels"></a> [regional\_labels](#input\_regional\_labels) | List of Fields to search for region | `list(string)` | `[]` | no |
+| <a name="input_regions"></a> [regions](#input\_regions) | List of Regions to limit Scope to | `list(string)` | `[]` | no |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| <a name="output_active_projects"></a> [active\_projects](#output\_active\_projects) | output "shared\_subnets" { value = local.shared\_subnets } output "subnets" { value = local.subnets } output "service\_accounts" { value = local.service\_accounts } |
+| <a name="output_active_regions"></a> [active\_regions](#output\_active\_regions) | n/a |
+| <a name="output_attached_projects"></a> [attached\_projects](#output\_attached\_projects) | n/a |
+| <a name="output_available_networks"></a> [available\_networks](#output\_available\_networks) | output "all\_networks" { value = local.all\_networks } |
+<!-- END_TF_DOCS -->

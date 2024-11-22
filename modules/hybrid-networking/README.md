@@ -189,3 +189,62 @@ vpns = [
   },
 ]
 ```
+
+<!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5.7 |
+| <a name="requirement_google"></a> [google](#requirement\_google) | >= 5.16, < 7.0 |
+| <a name="requirement_null"></a> [null](#requirement\_null) | >= 3.1.0 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.4.0 |
+
+## Providers
+
+| Name | Version |
+|------|---------|
+| <a name="provider_google"></a> [google](#provider\_google) | >= 5.16, < 7.0 |
+| <a name="provider_null"></a> [null](#provider\_null) | >= 3.1.0 |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [google_compute_external_vpn_gateway.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_external_vpn_gateway) | resource |
+| [google_compute_ha_vpn_gateway.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_ha_vpn_gateway) | resource |
+| [google_compute_interconnect_attachment.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_interconnect_attachment) | resource |
+| [google_compute_router_interface.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_router_interface) | resource |
+| [google_compute_router_peer.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_router_peer) | resource |
+| [google_compute_vpn_tunnel.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_vpn_tunnel) | resource |
+| [null_resource.peer_vpn_gateways](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
+| [null_resource.vpn_tunnels](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
+| [google_compute_ha_vpn_gateway.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_ha_vpn_gateway) | data source |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_cloud_router"></a> [cloud\_router](#input\_cloud\_router) | Default Cloud Router Name (can be overridden at resource level) | `string` | `null` | no |
+| <a name="input_cloud_vpn_gateways"></a> [cloud\_vpn\_gateways](#input\_cloud\_vpn\_gateways) | GCP Cloud VPN Gateways | <pre>list(object({<br/>    create       = optional(bool, true)<br/>    project_id   = optional(string)<br/>    name         = optional(string)<br/>    network      = optional(string)<br/>    network_name = optional(string)<br/>    region       = string<br/>    stack_type   = optional(string)<br/>  }))</pre> | `[]` | no |
+| <a name="input_defaults"></a> [defaults](#input\_defaults) | n/a | <pre>object({<br/>    cloud_router_bgp_asn                = optional(number, 64512)<br/>    cloud_router_bgp_keepalive_interval = optional(number, 20)<br/>    vpn_ike_version                     = optional(number, 2)<br/>    vpn_ike_psk_length                  = optional(number, 20)<br/>    vpn_ike_psk                         = optional(string)<br/>  })</pre> | `{}` | no |
+| <a name="input_interconnects"></a> [interconnects](#input\_interconnects) | Dedicated and Partner Interconnects | <pre>list(object({<br/>    create              = optional(bool, true)<br/>    project_id          = optional(string)<br/>    type                = string<br/>    name_prefix         = optional(string)<br/>    region              = optional(string)<br/>    cloud_router        = optional(string)<br/>    advertised_priority = optional(number)<br/>    advertised_groups   = optional(list(string))<br/>    advertised_ip_ranges = optional(list(object({<br/>      range       = string<br/>      description = optional(string)<br/>    })))<br/>    mtu            = optional(number)<br/>    enable         = optional(bool)<br/>    enable_bfd     = optional(bool)<br/>    bfd_parameters = optional(list(number))<br/>    attachments = list(object({<br/>      name                = optional(string)<br/>      description         = optional(string)<br/>      mtu                 = optional(number)<br/>      interface_index     = optional(number)<br/>      interface_name      = optional(string)<br/>      cloud_router_ip     = optional(string)<br/>      peer_bgp_name       = optional(string)<br/>      peer_bgp_ip         = optional(string)<br/>      peer_bgp_asn        = optional(number)<br/>      advertised_priority = optional(number)<br/>      advertised_groups   = optional(list(string))<br/>      advertised_ip_ranges = optional(list(object({<br/>        range       = string<br/>        description = optional(string)<br/>      })))<br/>    }))<br/>  }))</pre> | `[]` | no |
+| <a name="input_network"></a> [network](#input\_network) | Default VPC Network Name to attach to | `string` | `"default"` | no |
+| <a name="input_peer_vpn_gateways"></a> [peer\_vpn\_gateways](#input\_peer\_vpn\_gateways) | Peer (External) VPN Gateways | <pre>list(object({<br/>    create       = optional(bool, true)<br/>    project_id   = optional(string)<br/>    name         = optional(string)<br/>    description  = optional(string)<br/>    ip_addresses = optional(list(string))<br/>    labels       = optional(map(string))<br/>  }))</pre> | `[]` | no |
+| <a name="input_project_id"></a> [project\_id](#input\_project\_id) | Default GCP Project ID (can be overridden at resource level) | `string` | `null` | no |
+| <a name="input_region"></a> [region](#input\_region) | Default GCP Region Name (can be overridden at resource level) | `string` | `"us-central1"` | no |
+| <a name="input_vpns"></a> [vpns](#input\_vpns) | HA VPNs | <pre>list(object({<br/>    create                          = optional(bool, true)<br/>    project_id                      = optional(string)<br/>    name                            = optional(string)<br/>    description                     = optional(string)<br/>    ike_version                     = optional(number)<br/>    region                          = optional(string)<br/>    cloud_router                    = optional(string)<br/>    cloud_vpn_gateway               = optional(string)<br/>    peer_vpn_gateway                = optional(string)<br/>    peer_gcp_vpn_gateway_project_id = optional(string)<br/>    peer_gcp_vpn_gateway            = optional(string)<br/>    peer_bgp_asn                    = optional(number)<br/>    advertised_priority             = optional(number)<br/>    advertised_groups               = optional(list(string))<br/>    advertised_ip_ranges = optional(list(object({<br/>      range       = string<br/>      description = optional(string)<br/>    })))<br/>    enable_bfd     = optional(bool)<br/>    bfd_multiplier = optional(number)<br/>    tunnels = list(object({<br/>      create               = optional(bool)<br/>      name                 = optional(string)<br/>      interface_index      = optional(number)<br/>      interface_name       = optional(string)<br/>      description          = optional(string)<br/>      ike_version          = optional(number)<br/>      ike_psk              = optional(string)<br/>      cloud_router_ip      = optional(string)<br/>      peer_bgp_name        = optional(string)<br/>      peer_bgp_ip          = optional(string)<br/>      peer_bgp_asn         = optional(number)<br/>      peer_interface_index = optional(number)<br/>      advertised_priority  = optional(number)<br/>      advertised_groups    = optional(list(string))<br/>      advertised_ip_ranges = optional(list(object({<br/>        range       = string<br/>        description = optional(string)<br/>      })))<br/>      enable      = optional(bool)<br/>      enable_bfd  = optional(bool)<br/>      enable_ipv6 = optional(bool)<br/>    }))<br/>  }))</pre> | `[]` | no |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| <a name="output_cloud_vpn_gateways"></a> [cloud\_vpn\_gateways](#output\_cloud\_vpn\_gateways) | n/a |
+| <a name="output_interconnect_attachments"></a> [interconnect\_attachments](#output\_interconnect\_attachments) | n/a |
+| <a name="output_peer_vpn_gateways"></a> [peer\_vpn\_gateways](#output\_peer\_vpn\_gateways) | n/a |
+| <a name="output_vpn_tunnels"></a> [vpn\_tunnels](#output\_vpn\_tunnels) | n/a |
+<!-- END_TF_DOCS -->

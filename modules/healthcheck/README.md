@@ -7,7 +7,7 @@ Healthchecks in GCP
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5.7 |
-| <a name="requirement_google"></a> [google](#requirement\_google) | >= 4.49.0, < 7.0.0 |
+| <a name="requirement_google"></a> [google](#requirement\_google) | >= 4.49.0, < 7.0 |
 | <a name="requirement_null"></a> [null](#requirement\_null) | >= 3.1.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.4.0 |
 
@@ -15,7 +15,7 @@ Healthchecks in GCP
 
 | Name | Version |
 |------|---------|
-| <a name="provider_google"></a> [google](#provider\_google) | 6.9.0 |
+| <a name="provider_google"></a> [google](#provider\_google) | 5.44.2 |
 | <a name="provider_null"></a> [null](#provider\_null) | 3.2.3 |
 | <a name="provider_random"></a> [random](#provider\_random) | 3.6.3 |
 
