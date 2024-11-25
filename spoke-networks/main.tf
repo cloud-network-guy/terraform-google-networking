@@ -3,6 +3,12 @@ provider "google" {
   region  = var.region
 }
 
+provider "google-beta" {
+  project               = var.project_id
+  billing_project       = var.project_id
+  user_project_override = true
+}
+
 # Get list of zones for this region, if required
 data "google_compute_zones" "all_zones" {
   count   = var.require_regional_network_tag == true ? 1 : 0
@@ -62,13 +68,15 @@ locals {
   cloud_routers = [
     {
       name    = local.name
+      region  = var.region
       bgp_asn = var.cloud_router_bgp_asn
     }
   ]
   cloud_nats = [
     {
-      name              = local.name
-      cloud_router_name = local.name
+      name   = local.name
+      region = var.region
+      router = local.name
       static_ips = [for i, v in range(0, var.cloud_nat_num_static_ips) :
         {
           description = "External Static IP for Cloud NAT"
@@ -82,21 +90,21 @@ locals {
   routes = concat(
     var.enable_private_access == true ? [
       {
-        name        = "private-google-access-${local.name}"
-        description = "Explicitly Route PGA range via Default Internet Gateway"
-        priority    = 0
-        dest_range  = "199.36.153.8/30"
-        next_hop    = "default-internet-gateway"
+        name             = "private-google-access-${local.name}"
+        description      = "Explicitly Route PGA range via Default Internet Gateway"
+        priority         = 0
+        dest_range       = "199.36.153.8/30"
+        next_hop_gateway = "default-internet-gateway"
       }
     ] : [],
     [for i, v in var.routes :
       {
-        name        = "${v.name}-${local.name}"
-        description = v.description
-        priority    = coalesce(v.priority, 1000)
-        dest_range  = v.dest_range
-        dest_ranges = v.dest_ranges
-        next_hop    = v.next_hop
+        name             = "${v.name}-${local.name}"
+        description      = v.description
+        priority         = coalesce(v.priority, 1000)
+        dest_range       = v.dest_range
+        dest_ranges      = v.dest_ranges
+        next_hop_gateway = v.next_hop
       }
   ])
   ip_ranges = concat(
@@ -226,22 +234,44 @@ locals {
 
 # Create VPC network and related resources
 module "vpc-network" {
-  source     = "../modules/vpc-networks"
-  project_id = var.project_id
-  region     = var.region
-  vpc_networks = [
+  source                  = "../modules/vpc-network"
+  project_id              = var.project_id
+  name                    = local.name
+  description             = null
+  mtu                     = var.mtu
+  auto_create_subnetworks = false
+  global_routing          = false
+  default_region          = var.region
+  subnets                 = local.subnets
+  cloud_routers           = local.cloud_routers
+  cloud_nats              = local.cloud_nats
+  peerings                = []
+  routes                  = local.routes
+  ip_ranges               = local.ip_ranges
+  service_connections     = local.service_connections
+  firewall_rules          = local.firewall_rules
+}
+
+# Shared VPC Permissions
+locals {
+  shared_subnetworks = [for subnet in local.subnets :
     {
-      name                = local.name
-      subnets             = local.subnets
-      mtu                 = var.mtu
-      cloud_routers       = local.cloud_routers
-      cloud_nats          = local.cloud_nats
-      routes              = local.routes
-      ip_ranges           = local.ip_ranges
-      service_connections = local.service_connections
-      firewall_rules      = local.firewall_rules
+      id                = one([for s in module.vpc-network.subnets : s.id if s.name == subnet.name && s.region == var.region])
+      name              = one([for s in module.vpc-network.subnets : s.name if s.name == subnet.name && s.region == var.region])
+      region            = one([for s in module.vpc-network.subnets : s.region if s.name == subnet.name && s.region == var.region])
+      purpose           = one([for s in module.vpc-network.subnets : s.purpose if s.name == subnet.name && s.region == var.region])
+      attached_projects = lookup(subnet, "attached_projects", [])
+      shared_accounts   = lookup(subnet, "shared_accounts", [])
+      viewer_accounts   = lookup(subnet, "viewer_accounts", [])
     }
   ]
+}
+module "shared-vpc" {
+  source          = "../../../terraform-google-networking/modules/shared-vpc"
+  host_project_id = var.project_id
+  network         = module.vpc-network.name
+  region          = var.region
+  subnetworks     = [for s in local.shared_subnetworks : s if s.purpose == "PRIVATE"]
 }
 
 # Generate a random 20-character string to be used for the IKE shared secret

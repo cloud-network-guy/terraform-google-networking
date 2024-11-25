@@ -1,0 +1,9 @@
+#output "all_networks" { value = local.all_networks }
+output "available_networks" { value = local.available_networks }
+#output "shared_subnets" { value = local.shared_subnets }
+#output "subnets" { value = local.subnets }
+#output "service_accounts" { value = local.service_accounts }
+output "active_projects" { value = local.active_projects }
+output "active_regions" { value = local.active_regions }
+output "attached_projects" { value = local.attached_projects }
+#output "subnet_iam_bindings" { value = local.subnet_iam_bindings }
