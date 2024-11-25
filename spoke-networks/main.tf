@@ -267,7 +267,7 @@ locals {
   ]
 }
 module "shared-vpc" {
-  source          = "../../../terraform-google-networking/modules/shared-vpc"
+  source          = "../modules/shared-vpc"
   host_project_id = var.project_id
   network         = module.vpc-network.name
   region          = var.region
