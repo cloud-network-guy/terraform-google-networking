@@ -92,7 +92,8 @@ locals {
   viewable_subnets = { for s in local.subnetworks :
     "${var.region}/${s.name}" => {
       subnetwork = s.id
-      purpose    = coalesce(s.purpose, "PRIVATE")
+      region     = s.region
+      purpose    = s.purpose
       members    = toset(s.viewer_accounts)
     } if length(lookup(s, "viewer_accounts", [])) > 0
   }
