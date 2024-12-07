@@ -214,3 +214,8 @@ variable "smart_1_cloud_token_b" {
   description = "(Optional) Smart-1 cloud token for member B to connect this Gateway to Check Point's Security Management as a Service"
   default     = ""
 }
+variable "flip_members" {
+  type        = bool
+  description = "For H/A Clusters, set member-b as active rather than member-a"
+  default     = false
+}

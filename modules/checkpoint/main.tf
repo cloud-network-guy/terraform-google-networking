@@ -16,6 +16,12 @@ locals {
   network_project_id      = coalesce(var.network_project_id, var.project_id)
 }
 
+
+provider "google" {
+  project = var.project_id
+  region  = var.region
+}
+
 # If Admin password not provided, create random 16 character one
 resource "random_string" "admin_password" {
   count   = local.generate_admin_password ? 1 : 0
@@ -155,7 +161,7 @@ resource "google_compute_instance" "default" {
     dynamic "access_config" {
       for_each = local.create_nic0_external_ips && (local.is_cluster ? data.google_compute_address.nic0_external_ips[count.index].status == "IN_USE" : true) ? [true] : []
       content {
-        nat_ip = google_compute_address.nic0_external_ips[count.index].address
+        nat_ip = google_compute_address.nic0_external_ips[var.flip_members ? abs(count.index - 1 % 2) : count.index].address
       }
     }
   }
