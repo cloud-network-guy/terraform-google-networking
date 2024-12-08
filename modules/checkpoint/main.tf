@@ -106,15 +106,13 @@ locals {
   image_type        = local.is_gateway ? "-gw" : ""
   image_prefix      = "${local.checkpoint_prefix}${local.image_type}-${local.license_type}"
   image_versions = {
-    "R81.20" = "631-${local.is_manual || local.is_management_only ? "991001243-v20230112" : "991001245-v20230117"}"
-    "R81.10" = "335-${local.is_manual || local.is_management_only ? "991001174-v20221110" : "991001300-v20230509"}"
-    "R81"    = "392-${local.is_manual || local.is_management_only ? "991001174-v20221108" : "991001234-v20230117"}"
-    "R80.40" = "294-${local.is_manual || local.is_management_only ? "991001174-v20221107" : "991001234-v20230117"}"
+    "R81.20" = local.is_manual || local.is_management_only ? "634-991001641-v20240807" : "631-991001709-v20241105"
+    "R81.10" = local.is_manual || local.is_management_only ? "335-991001174-v20221110" : "335-991001300-v20230509"
   }
   image_version         = lookup(local.image_versions, local.software_version, "error")
   default_image         = "${local.image_prefix}-${local.install_code}${local.image_version}"
   image                 = coalesce(var.software_image, local.default_image)
-  template_version      = "20230117"
+  template_version      = "20241105"
   startup_script_file   = local.is_management_only ? "cloud-config.sh" : "startup-script.sh"
   admin_password        = local.generate_admin_password ? random_string.admin_password[0].result : var.admin_password
   sic_key               = local.generate_sic_key ? random_string.sic_key[0].result : var.sic_key
@@ -222,6 +220,7 @@ resource "google_compute_instance" "default" {
     name                           = local.instances[count.index].name
     zoneConfig                     = local.instances[count.index].zone
     region                         = var.region
+    MaintenanceModePassword        = ""
     /* TODO - Need to add these parameters to bash startup script
     domain_name = var.domain_name
     expert_password                = var.expert_password

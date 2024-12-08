@@ -58,15 +58,15 @@ locals {
     ])
   }
   shared_subnetworks = { for s in local.subnetworks :
-    "${var.region}/${s.name}" => {
+    "${s.region}/${s.name}" => {
       subnetwork = s.id
       region     = s.region
       purpose    = s.purpose
       members = toset(flatten(concat(
-        [for service_project_id in s.attached_projects : lookup(local.service_accounts, service_project_id, [])],
-        [for shared_account in s.shared_accounts : trimspace(shared_account)]
+        [for service_project_id in lookup(s, "attached_projects", []) : lookup(local.service_accounts, service_project_id, [])],
+        [for shared_account in lookup(s, "shared_accounts", []) : trimspace(shared_account)]
       )))
-    } if length(lookup(s, "attached_projects", [])) > 0
+    } if length(lookup(s, "attached_projects", [])) > 0 || length(lookup(s, "shared_accounts", [])) > 0
   }
 }
 resource "google_compute_subnetwork_iam_binding" "default" {
@@ -78,19 +78,25 @@ resource "google_compute_subnetwork_iam_binding" "default" {
   role       = "roles/compute.networkUser"
 }
 
-
+locals {
+  shared_gke_subnetworks = { for k, v in local.shared_subnetworks :
+    k=> merge(v, {
+      members = [for m in v.members : m if endswith(m, "container-engine-robot.iam.gserviceaccount.com")]
+    })
+  }
+}
 resource "google_compute_subnetwork_iam_binding" "gke" {
-  for_each   = { for k, v in local.shared_subnetworks : k => v if v.purpose == "PRIVATE" }
+  for_each   = { for k, v in local.shared_gke_subnetworks : k => v if v.purpose == "PRIVATE" && length(v.members) > 0 }
   project    = local.project
   region     = each.value.region
   subnetwork = each.value.subnetwork
-  members    = [for member in each.value.members : member if endswith(member, "container-engine-robot.iam.gserviceaccount.com")]
+  members    = each.value.members
   role       = "roles/container.serviceAgent"
 }
 
 locals {
   viewable_subnets = { for s in local.subnetworks :
-    "${var.region}/${s.name}" => {
+    "${s.region}/${s.name}" => {
       subnetwork = s.id
       region     = s.region
       purpose    = s.purpose
