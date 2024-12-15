@@ -93,7 +93,15 @@ variable "ports" {
   type    = list(number)
   default = null
 }
+variable "create_service_label" {
+  type    = bool
+  default = null
+}
 variable "port_range" {
+  type    = string
+  default = null
+}
+variable "service_label" {
   type    = string
   default = null
 }

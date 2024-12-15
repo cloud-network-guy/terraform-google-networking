@@ -7,15 +7,16 @@ resource "random_string" "name" {
 }
 
 locals {
-  api_prefix  = "https://www.googleapis.com/compute/v1"
-  create      = coalesce(var.create, true)
-  project     = lower(trimspace(var.project_id))
-  name        = lower(trimspace(var.name != null ? var.name : one(random_string.name).result))
-  description = var.description
-  dns_name    = lower(trimspace(endswith(var.dns_name, ".") ? var.dns_name : "${var.dns_name}."))
-  logging     = coalesce(var.logging, false)
-  visibility  = lower(coalesce(var.visibility, length(local.networks) > 0 ? "private" : "public"))
-  is_private  = lower(trimspace(local.visibility)) == "private" ? true : false
+  api_prefix   = "https://www.googleapis.com/compute/v1"
+  create       = coalesce(var.create, true)
+  project      = lower(trimspace(coalesce(var.project, var.project_id)))
+  host_project = lower(trimspace(coalesce(var.host_project, var.host_project_id, local.project)))
+  name         = lower(trimspace(var.name != null ? var.name : one(random_string.name).result))
+  description  = var.description
+  dns_name     = lower(trimspace(endswith(var.dns_name, ".") ? var.dns_name : "${var.dns_name}."))
+  logging      = coalesce(var.logging, false)
+  visibility   = lower(coalesce(var.visibility, length(local.networks) > 0 ? "private" : "public"))
+  is_private   = lower(trimspace(local.visibility)) == "private" ? true : false
   target_name_servers = [for ns in coalesce(var.target_name_servers, []) :
     {
       ipv4_address    = ns.ipv4_address
@@ -25,7 +26,7 @@ locals {
   networks = [for n in coalesce(var.networks, []) : coalesce(
     startswith(n, "${local.api_prefix}/projects/") ? n : null,
     startswith(n, "projects/") ? "${local.api_prefix}/${n}" : null,
-    "${local.api_prefix}/projects/${local.project}/global/networks/${n}"
+    "${local.api_prefix}/projects/${local.host_project}/global/networks/${n}"
     )
   ]
   force_destroy = coalesce(var.force_destroy, false)
@@ -85,7 +86,7 @@ resource "google_dns_managed_zone" "default" {
     }
   }
   timeouts {
-    
+
   }
 }
 

@@ -103,6 +103,9 @@ locals {
     local.is_regional ? one(google_compute_address.default).self_link : one(google_compute_global_address.default).self_link
   ) : null
   labels                 = { for k, v in coalesce(var.labels, {}) : k => lower(replace(v, " ", "_")) }
+  create_service_label   = coalesce(var.create_service_label, false)
+  service_label          = local.create_service_label || var.service_label != null ? coalesce(var.service_label, local.name) : null
+  service_name           = null
   is_mirroring_collector = false # TODO
   source_ip_ranges       = []    # TODO
 }
@@ -130,8 +133,8 @@ resource "google_compute_forwarding_rule" "default" {
   project                 = local.project
   recreate_closed_psc     = local.is_psc ? false : null
   region                  = local.region
-  service_label           = null
-  service_name            = null
+  service_label           = local.service_label
+  service_name            = local.service_name
   source_ip_ranges        = local.source_ip_ranges
   subnetwork              = local.is_internal && !local.is_psc ? local.subnetwork : null
   target                  = local.target

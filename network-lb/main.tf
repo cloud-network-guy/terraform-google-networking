@@ -98,40 +98,44 @@ module "backends" {
 locals {
   frontends = { for k, v in var.frontends :
     k => {
-      create          = coalesce(v.create, true)
-      project_id      = coalesce(v.project_id, var.project_id)
-      host_project_id = coalesce(v.host_project_id, var.host_project_id, var.project_id)
-      region          = coalesce(v.region, var.region, "global")
-      name            = coalesce(v.name, var.name_prefix != null ? "${var.name_prefix}-${k}" : k)
-      network         = coalesce(v.network, var.network, "default")
-      subnetwork      = coalesce(v.subnetwork, var.subnetwork, "default")
-      address         = v.ip_address
-      address_name    = coalesce(v.ip_address_name, "${var.name_prefix}-${k}-ilb")
-      ports           = coalesce(v.ports, [])
-      global_access   = coalesce(v.global_access, var.global_access, false)
-      psc             = v.psc
-      enable_ipv4     = true
-      enable_ipv6     = false
+      create               = coalesce(v.create, true)
+      project_id           = coalesce(v.project_id, var.project_id)
+      host_project_id      = coalesce(v.host_project_id, var.host_project_id, var.project_id)
+      region               = coalesce(v.region, var.region, "global")
+      name                 = coalesce(v.name, var.name_prefix != null ? "${var.name_prefix}-${k}" : k)
+      network              = coalesce(v.network, var.network, "default")
+      subnetwork           = coalesce(v.subnetwork, var.subnetwork, "default")
+      address              = v.ip_address
+      address_name         = coalesce(v.ip_address_name, var.name_prefix != null ? "${var.name_prefix}-${k}-ilb" : "${k}-ilb")
+      ports                = coalesce(v.ports, [])
+      global_access        = coalesce(v.global_access, var.global_access, false)
+      create_service_label = coalesce(v.create_service_label, var.create_service_label, false)
+      service_label        = v.service_label
+      psc                  = v.psc
+      enable_ipv4          = true
+      enable_ipv6          = false
     }
   }
 }
 
 module "frontends" {
-  source          = "../modules/forwarding-rule"
-  for_each        = { for k, v in local.frontends : k => v }
-  create          = each.value.create
-  project_id      = each.value.project_id
-  host_project_id = each.value.host_project_id
-  protocol        = local.protocol
-  type            = local.type
-  name            = each.value.name
-  region          = each.value.region
-  network         = each.value.network
-  subnetwork      = each.value.subnetwork
-  address         = each.value.address
-  address_name    = each.value.address_name
-  ports           = each.value.ports
-  global_access   = each.value.global_access
-  psc             = each.value.psc
-  backend_service = module.backends[lookup(each.value, "backend", each.key)].id
+  source               = "../modules/forwarding-rule"
+  for_each             = { for k, v in local.frontends : k => v }
+  create               = each.value.create
+  project_id           = each.value.project_id
+  host_project_id      = each.value.host_project_id
+  protocol             = local.protocol
+  type                 = local.type
+  name                 = each.value.name
+  region               = each.value.region
+  network              = each.value.network
+  subnetwork           = each.value.subnetwork
+  address              = each.value.address
+  address_name         = each.value.address_name
+  ports                = each.value.ports
+  global_access        = each.value.global_access
+  create_service_label = each.value.create_service_label
+  service_label        = each.value.service_label
+  psc                  = each.value.psc
+  backend_service      = module.backends[lookup(each.value, "backend", each.key)].id
 }

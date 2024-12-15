@@ -73,6 +73,10 @@ variable "preserve_ip_addresses" {
   type    = bool
   default = null
 }
+variable "create_service_label" {
+  type    = bool
+  default = null
+}
 
 variable "health_checks" {
   type = map(object({
@@ -178,6 +182,8 @@ variable "frontends" {
     ipv6_address_name     = optional(string)
     preserve_ip_addresses = optional(bool)
     global_access         = optional(string)
+    create_service_label  = optional(bool)
+    service_label         = optional(string)
     psc = optional(object({
       create                   = optional(bool)
       project_id               = optional(string)

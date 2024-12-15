@@ -1,6 +1,18 @@
 variable "project_id" {
   type = string
 }
+variable "project" {
+  type    = string
+  default = null
+}
+variable "host_project_id" {
+  type    = string
+  default = null
+}
+variable "host_project" {
+  type    = string
+  default = null
+}
 variable "create" {
   type    = bool
   default = true
