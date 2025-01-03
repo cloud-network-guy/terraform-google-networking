@@ -126,7 +126,15 @@ locals {
     "Cluster"   = "CloudGuard Highly Available Security Cluster"
     "AutoScale" = "None"
   }
-  description = coalesce(var.description, lookup(local.descriptions, local.install_type, "Check Point Security Gateway"))
+  description        = coalesce(var.description, lookup(local.descriptions, local.install_type, "Check Point Security Gateway"))
+  enable_serial_port = coalesce(var.enable_serial_port, false)
+  metadata = merge(
+    {
+      instanceSSHKey              = var.admin_ssh_key
+      adminPasswordSourceMetadata = local.is_management_only ? null : local.admin_password
+    },
+    local.enable_serial_port ? { serial-port-enable = "true" } : {},
+  )
 }
 
 # Create Compute Engine Instances
@@ -191,10 +199,7 @@ resource "google_compute_instance" "default" {
     email  = var.service_account_email
     scopes = local.service_account_scopes
   }
-  metadata = {
-    instanceSSHKey              = var.admin_ssh_key
-    adminPasswordSourceMetadata = local.is_management_only ? null : local.admin_password
-  }
+  metadata = local.metadata
   metadata_startup_script = local.is_manual ? null : templatefile("${path.module}/${local.startup_script_file}", {
     // script's arguments
     generatePassword               = local.is_management_only ? "false" : "true"

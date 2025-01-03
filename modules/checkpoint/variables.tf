@@ -219,3 +219,7 @@ variable "flip_members" {
   description = "For H/A Clusters, set member-b as active rather than member-a"
   default     = false
 }
+variable "enable_serial_port" {
+  type    = bool
+  default = null
+}

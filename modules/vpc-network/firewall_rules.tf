@@ -41,7 +41,9 @@ locals {
       destination_ranges = rule.direction == "EGRESS" ? coalesce(
         rule.destination_ranges,
         rule.ranges,
-        flatten([for range_type in rule.range_types : data.google_netblock_ip_ranges.default[range_type].cidr_blocks]),
+        flatten([for range_type in rule.range_types :
+          data.google_netblock_ip_ranges.default[range_type].cidr_blocks if rule.create
+        ]),
       ) : null
       traffic = coalesce(
         rule.action == "ALLOW" && rule.allow != null ? [for allow in rule.allow :
