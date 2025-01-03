@@ -19,6 +19,7 @@ data "google_compute_zones" "all_zones" {
 
 # Set the VPC name prefix and subnet information
 locals {
+  create     = coalesce(var.create, true)
   url_prefix = "https://www.googleapis.com/compute/v1"
   name       = "${var.name_prefix}-${var.region}"
   subnets = flatten(concat(
@@ -48,7 +49,7 @@ locals {
         viewer_accounts   = concat(v.viewer_accounts, var.viewer_accounts)
       }
     ],
-    var.create_proxy_only_subnet == true && var.proxy_only_cidr != null ? [
+    local.create && var.create_proxy_only_subnet == true && var.proxy_only_cidr != null ? [
       {
         # Proxy-only subnet for Application ILBs
         name     = "${local.name}-x-proxy-only"
@@ -56,7 +57,7 @@ locals {
         purpose  = var.proxy_only_purpose
       }
     ] : [],
-    var.psc_prefix_base != null ? [for p in range(var.num_psc_subnets) :
+    local.create && var.psc_prefix_base != null ? [for p in range(var.num_psc_subnets) :
       {
         # Also add PSC subnets
         name     = "${local.name}-x-psc-${format("%02s", p)}"
@@ -108,13 +109,13 @@ locals {
       }
   ])
   ip_ranges = concat(
-    var.enable_service_networking == true ? [
+    local.create && var.enable_service_networking == true ? [
       {
         name     = "servicenetworking-${local.name}"
         ip_range = var.servicenetworking_cidr
       }
     ] : [],
-    var.enable_netapp_cv == true ? [
+    local.create && var.enable_netapp_cv == true ? [
       {
         name     = "netapp-cv-${local.name}"
         ip_range = var.netapp_cidr
@@ -122,21 +123,21 @@ locals {
     ] : [],
   )
   service_connections = concat(
-    var.enable_service_networking == true ? [
+    local.create && var.enable_service_networking == true ? [
       {
         name      = "service-networking"
         service   = "servicenetworking.googleapis.com"
         ip_ranges = ["servicenetworking-${local.name}"]
       }
     ] : [],
-    var.enable_netapp_cv == true ? [
+    local.create && var.enable_netapp_cv == true ? [
       {
         name      = "netapp-cv"
         service   = "cloudvolumesgcp-api-network.netapp.com"
         ip_ranges = ["netapp-cv-${local.name}"]
       }
     ] : [],
-    var.enable_netapp_gcnv == true ? [
+    local.create && var.enable_netapp_gcnv == true ? [
       {
         name      = "netapp-gcnv"
         service   = "netapp.servicenetworking.goog"
@@ -236,6 +237,7 @@ locals {
 module "vpc-network" {
   source                  = "../modules/vpc-network"
   project_id              = var.project_id
+  create                  = local.create
   name                    = local.name
   description             = null
   mtu                     = var.mtu
@@ -271,7 +273,7 @@ module "shared-vpc" {
   host_project_id = var.project_id
   network         = module.vpc-network.name
   region          = var.region
-  subnetworks     = [for s in local.shared_subnetworks : s if s.purpose == "PRIVATE"]
+  subnetworks     = local.create ? [for s in local.shared_subnetworks : s if s.purpose == "PRIVATE"] : []
 }
 
 # Generate a random 20-character string to be used for the IKE shared secret
@@ -294,14 +296,14 @@ resource "random_integer" "tunnel_fourth_octet_base" {
 locals {
   tunnel_third_octet       = random_integer.tunnel_third_octet.result
   tunnel_fourth_octet_base = random_integer.tunnel_fourth_octet_base.result * 8
-  cloud_vpn_gateways = [
+  cloud_vpn_gateways = local.create ? [
     {
       name    = local.name
       network = local.name
       region  = var.region
     }
-  ]
-  local_vpns = [
+  ] : []
+  local_vpns = local.create ? [
     {
       cloud_router                    = one(local.cloud_routers).name
       cloud_vpn_gateway               = one(local.cloud_vpn_gateways).name
@@ -327,9 +329,8 @@ locals {
           advertised_priority = 100 + i
         }
       ]
-      create = true
     }
-  ]
+  ] : []
 }
 # Create VPN connection from Spoke to Hub
 module "vpn-to-hub" {
@@ -342,7 +343,7 @@ module "vpn-to-hub" {
 }
 
 locals {
-  remote_vpn_tunnels = [
+  remote_vpn_tunnels = local.create ? [
     {
       cloud_router                    = coalesce(var.hub_vpc.cloud_router, "${var.hub_vpc.network}-${var.region}")
       cloud_vpn_gateway               = coalesce(var.hub_vpc.cloud_vpn_gateway, "${var.hub_vpc.network}-${var.region}")
@@ -361,9 +362,8 @@ locals {
           advertised_priority = 100 + i
         }
       ]
-      create = true
     }
-  ]
+  ] : []
 }
 
 # Create VPN from Hub to Spoke
@@ -372,7 +372,7 @@ module "vpn-to-spoke" {
   project_id = var.hub_vpc.project_id
   region     = var.region
   vpns       = local.remote_vpn_tunnels
-  depends_on = [module.vpn-to-hub]
+  depends_on = [module.vpc-network, module.vpn-to-hub]
 }
 
 # PSC Consumer Endpoints
@@ -391,6 +391,7 @@ locals {
 module "psc-endpoints" {
   source              = "../modules/forwarding-rule"
   for_each            = { for k, v in local.psc_endpoints : "${v.project_id}/${v.region}/${v.name}" => v }
+  create              = local.create
   project_id          = each.value.project_id
   host_project_id     = each.value.host_project_id
   name                = each.value.name

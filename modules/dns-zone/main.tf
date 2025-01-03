@@ -17,26 +17,26 @@ locals {
   logging      = coalesce(var.logging, false)
   visibility   = lower(coalesce(var.visibility, length(local.networks) > 0 ? "private" : "public"))
   is_private   = lower(trimspace(local.visibility)) == "private" ? true : false
-  target_name_servers = [for ns in coalesce(var.target_name_servers, []) :
+  target_name_servers = [for target_name_server in coalesce(var.target_name_servers, []) :
     {
-      ipv4_address    = ns.ipv4_address
-      forwarding_path = trimspace(lower(lookup(ns, "forwarding_path", "default")))
+      ipv4_address    = trimspace(target_name_server.ipv4_address)
+      forwarding_path = trimspace(lower(lookup(target_name_server, "forwarding_path", "default")))
     }
   ]
-  networks = [for n in coalesce(var.networks, []) : coalesce(
-    startswith(n, "${local.api_prefix}/projects/") ? n : null,
-    startswith(n, "projects/") ? "${local.api_prefix}/${n}" : null,
-    "${local.api_prefix}/projects/${local.host_project}/global/networks/${n}"
-    )
+  networks = [for network in coalesce(var.networks, compact([var.network])) : trimspace(coalesce(
+    startswith(network, "${local.api_prefix}/projects/") ? network : null,
+    startswith(network, "projects/") ? "${local.api_prefix}/${network}" : null,
+    "${local.api_prefix}/projects/${local.project}/global/networks/${network}"
+    ))
   ]
   force_destroy = coalesce(var.force_destroy, false)
   peer_project  = coalesce(var.peer_project_id, var.peer_project, local.project)
   _peer_network = try(coalesce(var.peer_network_id, var.peer_network), null)
-  peer_network = local._peer_network == null ? null : coalesce(
+  peer_network = local._peer_network == null ? null : trimspace(coalesce(
     startswith(local._peer_network, "${local.api_prefix}/projects/") ? local._peer_network : null,
     startswith(local._peer_network, "projects/") ? "${local.api_prefix}/${local._peer_network}" : null,
     "${local.api_prefix}/projects/${local.peer_project}/global/networks/${local._peer_network}"
-  )
+  ))
 }
 
 # The DNS Zone

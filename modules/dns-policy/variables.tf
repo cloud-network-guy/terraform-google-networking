@@ -1,6 +1,10 @@
 variable "project_id" {
   type = string
 }
+variable "project" {
+  type    = string
+  default = null
+}
 variable "create" {
   type    = bool
   default = true
@@ -36,5 +40,9 @@ variable "target_name_servers" {
 }
 variable "networks" {
   type    = list(string)
-  default = []
+  default = null
+}
+variable "network" {
+  type = string
+  default = null
 }

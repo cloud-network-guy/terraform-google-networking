@@ -7,20 +7,24 @@ resource "random_string" "name" {
 }
 
 locals {
+  api_prefix                = "https://www.googleapis.com/compute/v1"
   create                    = coalesce(var.create, true)
-  project                   = lower(trimspace(var.project_id))
+  project                   = lower(trimspace(coalesce(var.project, var.project_id)))
   name                      = lower(trimspace(var.name != null ? var.name : one(random_string.name).result))
   description               = var.description
   logging                   = coalesce(var.logging, false)
   enable_inbound_forwarding = coalesce(var.enable_inbound_forwarding, false)
-  target_name_servers = [for ns in coalesce(var.target_name_servers, []) :
+  target_name_servers = [for target_name_server in coalesce(var.target_name_servers, []) :
     {
-      ipv4_address    = ns.ipv4_address
-      forwarding_path = trimspace(lower(lookup(ns, "forwarding_path", "default")))
+      ipv4_address    = trimspace(target_name_server.ipv4_address)
+      forwarding_path = trimspace(lower(lookup(target_name_server, "forwarding_path", "default")))
     }
   ]
-  networks = [for n in var.networks :
-    strcontains(n, "projects/") ? n : "projects/${local.project}/global/networks/${n}"
+  networks = [for network in coalesce(var.networks, compact([var.network])) : trimspace(coalesce(
+    startswith(network, "${local.api_prefix}/projects/") ? network : null,
+    startswith(network, "projects/") ? "${local.api_prefix}/${network}" : null,
+    "${local.api_prefix}/projects/${local.project}/global/networks/${network}"
+    ))
   ]
 }
 

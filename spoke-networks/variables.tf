@@ -1,3 +1,7 @@
+variable "create" {
+  type    = bool
+  default = true
+}
 variable "name_prefix" {
   description = "Name Prefix to give to all resources"
   type        = string
@@ -39,7 +43,7 @@ variable "enable_netapp_cv" {
 variable "enable_netapp_gcnv" {
   description = "Enable PSA Connection NetApp Cloud Volumes"
   type        = bool
-  default     = false
+  default     = true
 }
 variable "cloud_router_bgp_asn" {
   type    = string
@@ -94,10 +98,12 @@ variable "psc_purpose" {
   default = "PRIVATE_SERVICE_CONNECT"
 }
 variable "servicenetworking_cidr" {
-  type = string
+  type    = string
+  default = null
 }
 variable "netapp_cidr" {
-  type = string
+  type    = string
+  default = null
 }
 variable "cloud_nat_routes" {
   type    = list(string)

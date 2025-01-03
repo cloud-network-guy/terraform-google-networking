@@ -47,7 +47,11 @@ variable "visibility" {
 }
 variable "networks" {
   type    = list(string)
-  default = []
+  default = null
+}
+variable "network" {
+  type = string
+  default = null
 }
 variable "peer_project_id" {
   type    = string
