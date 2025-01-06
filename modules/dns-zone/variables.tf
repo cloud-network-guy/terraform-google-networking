@@ -50,7 +50,7 @@ variable "networks" {
   default = null
 }
 variable "network" {
-  type = string
+  type    = string
   default = null
 }
 variable "peer_project_id" {

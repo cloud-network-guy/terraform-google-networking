@@ -98,7 +98,7 @@ locals {
       name    = trimspace(endswith(r.name, local.dns_name) ? r.name : r.name == "" ? local.dns_name : "${r.name}.${local.dns_name}")
       type    = upper(trimspace(coalesce(lookup(r, "type", null), "A")))
       ttl     = coalesce(lookup(r, "ttl", null), 300)
-      rrdatas = [for _ in coalesce(lookup(r, "rrdatas", null), []) : trimspace(_)]
+      rrdatas = [for _ in coalesce(lookup(r, "rrdatas", null), []) : trimspace(_) if _ != null]
     }
   ]
   dns_records = [for r in local._dns_records :
