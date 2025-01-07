@@ -24,6 +24,7 @@ locals {
       protocol    = local.lb_protocol
       port        = v.ports[0]
       interval    = var.healthcheck_interval
+      logging     = coalesce(var.healthcheck_logging, false)
     }
   }
 }
@@ -37,6 +38,7 @@ module "healthcheck" {
   protocol    = each.value.protocol
   port        = each.value.port
   interval    = each.value.interval
+  logging     = each.value.logging
 }
 
 # Iterate over deployments and set some variables for Instance Template/MIG/AutoScaler
@@ -65,13 +67,13 @@ locals {
       region                = v.region
       network               = v.network
       subnetwork            = v.subnet
+      machine_type          = coalesce(v.machine_type, var.machine_type, "e2-small")
+      disk_type             = coalesce(v.disk_type, var.disk_type, "pd-standard")
+      disk_size             = coalesce(v.disk_size, var.disk_size, 10)
+      os_project            = coalesce(v.os_project, var.os_project, "debian-cloud")
+      os                    = coalesce(v.os, var.os, "debian-12")
       service_account_email = var.service_account_email
       network_tags          = var.network_tags
-      machine_type          = var.machine_type
-      disk_size             = var.disk_size
-      image                 = var.image
-      os_project            = var.os_project
-      os                    = var.os
       labels                = var.labels
       startup_script        = var.startup_script
     } if length(v.instance_groups) == 0
@@ -91,9 +93,9 @@ module "instance-template" {
   network_tags          = each.value.network_tags
   machine_type          = each.value.machine_type
   disk = {
+    type    = each.value.disk_type
     size_gb = each.value.disk_size
   }
-  image          = each.value.image
   os_project     = each.value.os_project
   os             = each.value.os
   labels         = each.value.labels

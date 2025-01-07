@@ -9,7 +9,7 @@ variable "name_prefix" {
 variable "machine_type" {
   description = "Machine Type"
   type        = string
-  default     = "g1-small"
+  default     = "e2-small"
 }
 variable "disk_type" {
   description = "Disk Type"
@@ -21,11 +21,6 @@ variable "disk_size" {
   type        = number
   default     = 12
 }
-variable "image" {
-  description = "GCP OS Image"
-  type        = string
-  default     = null
-}
 variable "os_project" {
   description = "GCP OS Project"
   type        = string
@@ -34,7 +29,7 @@ variable "os_project" {
 variable "os" {
   description = "GCP OS Name"
   type        = string
-  default     = "debian-11"
+  default     = "debian-12"
 }
 variable "startup_script" {
   description = "Startup Script"
@@ -85,6 +80,10 @@ variable "healthcheck_interval" {
   type    = number
   default = 10
 }
+variable "healthcheck_logging" {
+  type    = bool
+  default = false
+}
 variable "target_size" {
   type    = number
   default = null
@@ -127,6 +126,11 @@ variable "deployments" {
     enabled               = optional(bool)
     create_ilb            = optional(bool)
     region                = optional(string)
+    machine_type          = optional(string)
+    disk_type             = optional(string)
+    disk_size             = optional(number)
+    os_project            = optional(string)
+    os                    = optional(string)
     network               = optional(string)
     subnet                = optional(string)
     ip_address            = optional(string)
