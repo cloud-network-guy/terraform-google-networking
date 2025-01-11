@@ -38,6 +38,10 @@ variable "auto_create_subnetworks" {
   type    = bool
   default = false
 }
+variable "delete_default_routes_on_create" {
+  type    = bool
+  default = false
+}
 variable "enable_ula_internal_ipv6" {
   type    = bool
   default = false

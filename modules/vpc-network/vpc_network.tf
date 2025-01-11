@@ -16,6 +16,7 @@ locals {
   network_firewall_policy_enforcement_order = upper(trimspace(
     coalesce(var.network_firewall_policy_enforcement_order, "AFTER_CLASSIC_FIREWALL")
   ))
+  delete_default_routes_on_create = coalesce(var.delete_default_routes_on_create, false)
 }
 
 # VPC Network
@@ -29,6 +30,7 @@ resource "google_compute_network" "default" {
   auto_create_subnetworks                   = local.auto_create_subnetworks
   enable_ula_internal_ipv6                  = local.enable_ula_internal_ipv6
   network_firewall_policy_enforcement_order = local.network_firewall_policy_enforcement_order
+  delete_default_routes_on_create           = local.delete_default_routes_on_create
   timeouts {
     create = null
     delete = null
