@@ -104,7 +104,7 @@ variable "disk" {
     size_gb      = optional(number)
     interface    = optional(string)
     mode         = optional(string)
-    labels       = optional(map(string)
+    labels       = optional(map(string))
   })
   default = {}
 }
