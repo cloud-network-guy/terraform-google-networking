@@ -38,6 +38,7 @@ locals {
     size_gb      = coalesce(var.disk.size_gb, 10)
     interface    = coalesce(var.disk.interface, "SCSI")
     mode         = coalesce(var.disk.mode, "READ_WRITE")
+    labels       = coalesce(var.disk.labels, {})
   }
   service_account = {
     email  = var.service_account_email
