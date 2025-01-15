@@ -72,14 +72,14 @@ locals {
       # If no IP ranges, use 169.254.169.254 since allowing 0.0.0.0/0 may not be intended
       source_ranges      = rule.direction == "INGRESS" && rule.source_tags == null && rule.source_service_accounts == null ? coalescelist(rule.source_ranges, ["169.254.169.254"]) : null
       destination_ranges = rule.direction == "EGRESS" ? coalescelist(rule.destination_ranges, ["169.254.169.254"]) : null
-      index_key          = "${local.project}/${rule.name}"
+      index_key          = coalesce(rule.index_key, rule.name)
     }) if local.recreate == false
   ]
 }
 
 # VPC Firewall Rules
 resource "google_compute_firewall" "default" {
-  for_each                = { for i, v in local.firewall_rules : v.name => v if v.create }
+  for_each                = { for i, v in local.firewall_rules : v.index_key => v if v.create }
   project                 = local.project
   network                 = local.network_self_link
   name                    = each.value.name

@@ -236,6 +236,7 @@ variable "firewall_rules" {
     })))
     enforcement = optional(bool)
     disabled    = optional(bool)
+    index_key   = optional(string)
   }))
   default = []
 }
