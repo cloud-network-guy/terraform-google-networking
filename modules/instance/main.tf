@@ -13,16 +13,16 @@ locals {
   name         = lower(trimspace(var.name != null ? var.name : one(random_string.name).result))
   description  = var.description != null ? trimspace(var.description) : null
   host_project = lower(trimspace(coalesce(var.host_project_id, var.host_project, local.project)))
-  network = var.network != null ? trimspace(coalesce(
-    startswith(var.network, local.api_prefix) ? var.network : null,
+  network = trimspace(coalesce(
+    startswith(var.network, "${local.api_prefix}/projects/") ? var.network : null,
     startswith(var.network, "projects/") ? "${local.api_prefix}/${var.network}" : null,
-    "projects/${local.host_project}/global/networks/${var.network}",
-  )) : null
-  subnetwork = var.subnetwork != null ? trimspace(coalesce(
+    "${local.api_prefix}/projects/${local.project}/global/networks/${var.network}"
+  ))
+  subnetwork = trimspace(coalesce(
     startswith(var.subnetwork, local.api_prefix) ? var.subnetwork : null,
     startswith(var.subnetwork, "projects/", ) ? "${local.api_prefix}/${var.subnetwork}" : null,
     "projects/${local.host_project}/regions/${local.region}/subnetworks/${var.subnetwork}",
-  )) : null
+  ))
   machine_type   = lower(trimspace(coalesce(var.machine_type, "e2-micro")))
   can_ip_forward = coalesce(var.can_ip_forward, false)
   labels = coalesce(

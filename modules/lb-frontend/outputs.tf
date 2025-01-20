@@ -38,6 +38,9 @@ output "ipv6_address" {
 output "ssl_certs" {
   value = local.ssl_certs
 }
+output "target_https_proxies" {
+  value = local.target_https_proxies
+}
 
 output "debug" {
   value = {

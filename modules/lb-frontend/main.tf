@@ -316,6 +316,7 @@ locals {
   _ssl_certs = [for i, v in var.ssl_certs :
     {
       create          = coalesce(v.create, local.create)
+      active          = coalesce(v.active, true)
       project_id      = coalesce(v.project_id, local.project_id)
       region          = local.region
       name            = lookup(v, "name", null) != null ? lower(trimspace(replace(v.name, "_", "-"))) : local.base_name
@@ -529,9 +530,10 @@ locals {
   ]
   target_https_proxies = [for i, v in local.__target_https_proxies :
     merge(v, {
-      ssl_policy = startswith(v.ssl_policy, local.url_prefix) ? v.ssl_policy : "${local.url_prefix}/${local.project_id}/${local.is_regional ? "regions/" : ""}${local.region}/sslPolicies/${v.ssl_policy}"
-      url_map    = local.is_regional ? google_compute_region_url_map.default[v.url_map_index_key].self_link : google_compute_url_map.default[v.url_map_index_key].self_link
-      index_key  = local.is_regional ? "${v.project_id}/${v.region}/${v.name}" : "${v.project_id}/${v.name}"
+      ssl_policy       = startswith(v.ssl_policy, local.url_prefix) ? v.ssl_policy : "${local.url_prefix}/${local.project_id}/${local.is_regional ? "regions/" : ""}${local.region}/sslPolicies/${v.ssl_policy}"
+      url_map          = local.is_regional ? google_compute_region_url_map.default[v.url_map_index_key].self_link : google_compute_url_map.default[v.url_map_index_key].self_link
+      ssl_certificates = [for cert in v.ssl_certificates : cert if lookup(cert, "active", true)]
+      index_key        = local.is_regional ? "${v.project_id}/${v.region}/${v.name}" : "${v.project_id}/${v.name}"
     }) if v.create == true
   ]
 }

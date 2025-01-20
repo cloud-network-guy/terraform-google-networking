@@ -13,16 +13,16 @@ locals {
   name_prefix  = lower(trimspace(var.name_prefix != null ? var.name_prefix : "template-${one(random_string.name_prefix).result}"))
   region       = lower(trimspace(var.region))
   host_project = lower(trimspace(coalesce(var.host_project_id, var.host_project, local.project)))
-  network = coalesce(
-    startswith(var.network, "projects/") ? var.network : null,
-    startswith(var.network, local.api_prefix) ? replace(var.network, local.api_prefix, "") : null,
-    "projects/${local.host_project}/global/networks/${var.network}",
-  )
-  subnetwork = coalesce(
-    startswith(var.subnetwork, "projects/", ) ? var.subnetwork : null,
-    startswith(var.subnetwork, local.api_prefix) ? replace(var.subnetwork, local.api_prefix, "") : null,
+  network = trimspace(coalesce(
+    startswith(var.network, "${local.api_prefix}/projects/") ? var.network : null,
+    startswith(var.network, "projects/") ? "${local.api_prefix}/${var.network}" : null,
+    "${local.api_prefix}/projects/${local.project}/global/networks/${var.network}"
+  ))
+  subnetwork = trimspace(coalesce(
+    startswith(var.subnetwork, local.api_prefix) ? var.subnetwork : null,
+    startswith(var.subnetwork, "projects/", ) ? "${local.api_prefix}/${var.subnetwork}" : null,
     "projects/${local.host_project}/regions/${local.region}/subnetworks/${var.subnetwork}",
-  )
+  ))
   base_instance_name = try(coalesce(var.base_instance_name, var.name_prefix), null)
   version_name       = "${local.name_prefix}-0"
   machine_type       = lower(trimspace(coalesce(var.machine_type, "e2-micro")))
