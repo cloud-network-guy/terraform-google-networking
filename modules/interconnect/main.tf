@@ -23,7 +23,7 @@ locals {
 
 # Call Hybrid Networking Child Module
 module "interconnect" {
-  source        = "../modules/hybrid-networking"
+  source        = "../hybrid-networking"
   project_id    = var.project_id
   region        = var.region
   interconnects = [local.interconnect]

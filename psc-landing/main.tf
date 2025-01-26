@@ -1,10 +1,10 @@
 provider "google" {
-  project = var.project_id
+  project = local.project_id
 }
 
 provider "google-beta" {
-  project               = var.project_id
-  billing_project       = var.project_id
+  project               = local.project_id
+  billing_project       = local.project_id
   user_project_override = true
 }
 
@@ -19,6 +19,7 @@ resource "random_string" "name" {
 # Set the VPC name prefix and subnet information
 locals {
   create     = coalesce(var.create, true)
+  project_id = lower(trimspace(var.project_id))
   url_prefix = "https://www.googleapis.com/compute/v1"
   regions    = [for region in coalesce(var.regions, []) : lower(trimspace(region))]
   name       = lower(trimspace(var.name != null ? var.name : one(random_string.name).result))
@@ -34,10 +35,10 @@ locals {
   }]
 }
 
-# Create VPC network and related resources
+# VPC network and related resources
 module "vpc-network" {
   source                  = "../modules/vpc-network"
-  project_id              = var.project_id
+  project_id              = local.project_id
   create                  = local.create
   name                    = local.name
   description             = null
@@ -49,10 +50,21 @@ module "vpc-network" {
   peerings                = []
 }
 
+# DNS Policy w/ Inbound Forwarding enabled
+module "dns-policy" {
+  source                    = "../modules/dns-policy"
+  project_id                = local.project_id
+  create                    = local.create
+  name                      = local.name
+  logging                   = true
+  enable_inbound_forwarding = true
+  networks                  = [module.vpc-network.self_link]
+}
+
 locals {
   cloud_vpn_gateways = local.create ? [for region in local.regions :
     {
-      name    = local.name
+      name    = "psc-landing" #local.name
       network = local.name
       region  = region
     }
@@ -62,7 +74,7 @@ locals {
 # Create VPN connection
 module "vpns" {
   source             = "../modules/hybrid-networking"
-  project_id         = var.project_id
+  project_id         = local.project_id
   cloud_vpn_gateways = local.cloud_vpn_gateways
   vpns               = local.vpns
   depends_on         = [module.vpc-network]
@@ -83,7 +95,7 @@ module "psc-endpoints" {
   source              = "../modules/forwarding-rule"
   for_each            = { for k, v in local.psc_endpoints : "${v.project_id}/${v.region}/${v.name}" => v }
   create              = local.create
-  project_id          = var.project_id
+  project_id          = local.project_id
   name                = each.value.name
   description         = each.value.description
   region              = each.value.region

@@ -19,5 +19,5 @@ COPY *.yaml $APP_DIR/
 COPY templates/ $APP_DIR/templates/
 COPY id_* /root/.ssh/
 #CMD ["pip", "list"]
-ENTRYPOINT gunicorn -b 0.0.0.0:$PORT -w 1 --access-logfile '-' $WSGI_APP
+ENTRYPOINT cd $APP_DIR && gunicorn -b 0.0.0.0:$PORT -w 1 --access-logfile '-' $WSGI_APP
 EXPOSE $PORT/tcp
