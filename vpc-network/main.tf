@@ -100,7 +100,7 @@ locals {
     # Auto Created Cloud NATs
     [for k, region in var.regions :
       {
-        name             = "${var.cloud_nat_name_prefix != null ? var.cloud_nat_name_prefix : local.name_prefix}-${k}"
+        name             = coalesce(var.cloud_nat_name_prefix, "${local.name_prefix}-${k}")
         region           = k
         router           = "${local.name_prefix}-${k}"
         min_ports_per_vm = var.cloud_nat_min_ports_per_vm
