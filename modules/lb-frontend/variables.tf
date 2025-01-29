@@ -220,7 +220,6 @@ variable "ssl_certs" {
   description = "List of SSL Certificates to upload to Google Certificate Manager"
   type = list(object({
     create          = optional(bool, true)
-    active          = optional(bool, true)
     project_id      = optional(string)
     name            = optional(string)
     description     = optional(string)
