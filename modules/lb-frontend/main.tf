@@ -316,6 +316,7 @@ locals {
   _ssl_certs = [for i, v in var.ssl_certs :
     {
       create          = coalesce(v.create, local.create)
+      active          = coalesce(v.active, true)
       project_id      = coalesce(v.project_id, local.project_id)
       region          = local.region
       name            = lookup(v, "name", null) != null ? lower(trimspace(replace(v.name, "_", "-"))) : local.base_name
@@ -522,8 +523,12 @@ locals {
       )
       ssl_certificates = concat(
         local.existing_ssl_certs,
-        local.is_global ? [for _ in local.ssl_certs : google_compute_ssl_certificate.default[_.index_key].self_link] : [],
-        local.is_regional ? [for _ in local.ssl_certs : google_compute_region_ssl_certificate.default[_.index_key].self_link] : [],
+        local.is_global ? [for cert in local.ssl_certs :
+          google_compute_ssl_certificate.default[cert.index_key].self_link if cert.active
+        ] : [],
+        local.is_regional ? [for cert in local.ssl_certs :
+          google_compute_region_ssl_certificate.default[cert.index_key].self_link if cert.active
+        ] : [],
       )
     })
   ]

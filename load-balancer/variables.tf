@@ -196,6 +196,7 @@ variable "frontends" {
     global_access              = optional(string)
     ssl_certs = optional(map(object({
       create          = optional(bool)
+      active          = optional(bool)
       project_id      = optional(string)
       name            = optional(string)
       description     = optional(string)
