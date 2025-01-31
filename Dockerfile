@@ -1,4 +1,3 @@
-#FROM python:3.12-alpine
 FROM hashicorp/terraform:1.9.8
 WORKDIR /tmp
 RUN apk add --no-cache bash git make python3 py3-pip
@@ -15,7 +14,6 @@ ENV WSGI_APP=wsgi:app
 RUN terraform init
 COPY *.py $APP_DIR/
 COPY *.yaml $APP_DIR/
-#COPY static/ $APP_DIR/static/
 COPY templates/ $APP_DIR/templates/
 COPY id_* /root/.ssh/
 #CMD ["pip", "list"]
