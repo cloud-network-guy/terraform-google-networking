@@ -1,8 +1,6 @@
-
 [Environments]
 name = "Environment Name"
 num_modules = "Number of Modules"
-
 
 [Modules]
 name = "Module Name"
