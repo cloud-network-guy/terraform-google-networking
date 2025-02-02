@@ -37,6 +37,7 @@ resource "google_compute_network" "default" {
     update = null
   }
 }
+
 resource "null_resource" "network" {
   for_each = toset(local.create ? [join("/", local.network_fields)] : [])
 }

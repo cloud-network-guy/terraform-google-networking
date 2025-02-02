@@ -21,7 +21,7 @@ locals {
   subnetwork = trimspace(coalesce(
     startswith(var.subnetwork, local.api_prefix) ? var.subnetwork : null,
     startswith(var.subnetwork, "projects/", ) ? "${local.api_prefix}/${var.subnetwork}" : null,
-    "projects/${local.host_project}/regions/${local.region}/subnetworks/${var.subnetwork}",
+    "${local.api_prefix}/projects/${local.host_project}/regions/${local.region}/subnetworks/${var.subnetwork}",
   ))
   machine_type   = lower(trimspace(coalesce(var.machine_type, "e2-micro")))
   can_ip_forward = coalesce(var.can_ip_forward, false)
@@ -36,9 +36,27 @@ locals {
   metadata                  = coalesce(var.metadata, { enable-osconfig = "true" })
   delete_protection         = coalesce(var.delete_protection, false)
   allow_stopping_for_update = coalesce(var.allow_stopping_for_update, true)
-  os_project                = lower(trimspace(coalesce(var.os_project, "debian-cloud")))
   os                        = lower(trimspace(coalesce(var.os, "debian-12")))
-  tags                      = [for tag in coalesce(var.network_tags, var.tags, []) : lower(trimspace(tag))]
+  os_projects = {
+    debian     = "debian-cloud"
+    ubuntu-pro = "ubutnu-os-pro-cloud"
+    ubuntu     = "ubuntu-os-cloud"
+    windows    = "window-cloud"
+    checkpoint = "checkpoint-public"
+    sql        = "windows-sql-cloud"
+    fedora     = "fedora-coreos-cloud"
+    rocky      = "rocky-linux-cloud"
+    rhel       = "rhel-cloud"
+    opensuse   = "opensuse-cloud"
+    centos     = "centos-cloud"
+    cos        = "cos-cloud"
+    sles       = "suse-sap-cloud"
+  }
+  os_project = lower(trimspace(coalesce(
+    var.os_project,
+    one([for k, v in local.os_projects : v if startswith(local.os, k)])
+  )))
+  tags = [for tag in coalesce(var.network_tags, var.tags, []) : lower(trimspace(tag))]
   boot_disk = {
     type  = coalesce(lookup(var.disk, "type", null), "pd-standard")
     size  = coalesce(lookup(var.disk, "size", null), 10)
@@ -57,18 +75,25 @@ locals {
     }
   ]
   nat_ips = []
-  _region = lower(trimspace(coalesce(var.region, "us-central1")))
+  _region = lower(trimspace(coalesce(
+    var.zone != null ? trimsuffix(var.zone, substr(var.zone, -2, 2)) : null,
+    var.region,
+    "us-central1"
+  )))
 }
 
 # Get a list of available zones, if required
 data "google_compute_zones" "available" {
-  count   = var.zone == null ? 1 : 0
+  count   = 1
   project = local.project
   region  = local._region
 }
 
 locals {
-  zone   = lower(trimspace(coalesce(var.zone, element(one(data.google_compute_zones.available).names, 1))))
+  zone = lower(trimspace(coalesce(
+    var.zone,
+    element(one(data.google_compute_zones.available).names, 1)
+  )))
   region = trimsuffix(local.zone, substr(local.zone, -2, 2))
 }
 

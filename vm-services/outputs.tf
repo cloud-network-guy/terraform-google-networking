@@ -1,9 +1,10 @@
 output "instances" {
-  value = { for i, v in module.instances.instances :
-    v.index_key => {
-      name        = v.name
-      zone        = v.zone
-      internal_ip = v.internal_ip
-    }
+  value = { for i, v in local.instances :
+    coalesce(v.zone, v.region) => {
+      #name        = module.instance[coalesce(v.zone, v.region)].name
+      #zone        = module.instance[coalesce(v.zone, v.region)].zone
+      #internal_ip = v.internal_ip
+    } if v.create
   }
+  #sensitive = false
 }

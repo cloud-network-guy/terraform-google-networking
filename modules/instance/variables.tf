@@ -79,7 +79,7 @@ variable "os_project" {
 }
 variable "os" {
   type    = string
-  default = null
+  default = "debian-12"
 }
 variable "image" {
   type    = string
