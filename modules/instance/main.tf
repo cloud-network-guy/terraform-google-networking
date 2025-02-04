@@ -33,7 +33,10 @@ locals {
       machine_type = local.machine_type
     }
   )
-  metadata                  = coalesce(var.metadata, { enable-osconfig = "true" })
+  metadata = merge(
+    var.metadata,
+    { startup-script = var.startup_script }
+  )
   delete_protection         = coalesce(var.delete_protection, false)
   allow_stopping_for_update = coalesce(var.allow_stopping_for_update, true)
   os                        = lower(trimspace(coalesce(var.os, "debian-12")))
