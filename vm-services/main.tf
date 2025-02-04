@@ -14,7 +14,7 @@ locals {
       startup_script         = coalesce(v.startup_script, var.startup_script, "")
       network_tags           = coalesce(v.network_tags, var.network_tags, [])
       service_account_email  = try(coalesce(v.service_account_email, var.service_account_email), null)
-      service_account_scopes = try(coalesce(v.service_account_scopes, var.service_account_scopes), null)
+      service_account_scopes = coalesce(v.service_account_scopes, var.service_account_scopes)
       os                     = coalesce(v.os, var.os)
       os_project             = try(coalesce(v.os_project, var.os_project), null)
       disk_image             = try(coalesce(v.disk_image, var.disk_image), null)
@@ -23,7 +23,7 @@ locals {
       labels                 = var.labels
     }
   ]
-    region_codes = {
+  region_codes = {
     northamerica-northeast1 = "nane1"
     northamerica-northeast2 = "nane2"
     us-central1             = "usce1"
@@ -64,13 +64,14 @@ module "instance" {
     each.value.name,
     "${var.name_prefix}-${lookup(local.region_codes, each.value.region, "error")}"
   )))
-  region                = substr(each.value.region, -2, 1) != "-" ? each.value.region : null
-  zone                  = each.value.zone
-  service_account_email = each.value.service_account_email
-  network               = each.value.network
-  subnetwork            = each.value.subnetwork
-  network_tags          = each.value.network_tags
-  machine_type          = each.value.machine_type
+  region                 = substr(each.value.region, -2, 1) != "-" ? each.value.region : null
+  zone                   = each.value.zone
+  service_account_email  = each.value.service_account_email
+  service_account_scopes = each.value.service_account_scopes
+  network                = each.value.network
+  subnetwork             = each.value.subnetwork
+  network_tags           = each.value.network_tags
+  machine_type           = each.value.machine_type
   disk = {
     type    = each.value.disk_type
     size_gb = each.value.disk_size

@@ -9,7 +9,7 @@ variable "project_id" {
 variable "name_prefix" {
   description = "Name prefix for the instances"
   type        = string
-  default = "instance"
+  default     = "instance"
 }
 variable "machine_type" {
   description = "Machine Type"
