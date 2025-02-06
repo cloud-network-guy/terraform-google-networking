@@ -27,15 +27,17 @@ locals {
       local.is_regional ? "${local.api_prefix}/projects/${local.project}/regions/${local.region}/healthChecks/${hc}" : null,
     )
   ]
+  _network = lower(trimspace(coalesce(var.network, "default")))
   network = coalesce(
-    startswith(var.network, local.api_prefix) ? var.network : null,
-    startswith(var.network, "projects/") ? "${local.api_prefix}/${var.network}" : null,
-    "projects/${local.host_project}/global/networks/${var.network}",
+    startswith(local._network, local.api_prefix) ? local._network : null,
+    startswith(local._network, "projects/") ? "${local.api_prefix}/${local._network}" : null,
+    "projects/${local.host_project}/global/networks/${local._network}",
   )
+  _subnetwork = lower(trimspace(coalesce(var.subnetwork, "default")))
   subnetwork = coalesce(
-    startswith(var.subnetwork, local.api_prefix) ? var.subnetwork : null,
-    startswith(var.subnetwork, "projects/", ) ? "${local.api_prefix}/${var.subnetwork}" : null,
-    "projects/${local.host_project}/regions/${local.region}/subnetworks/${coalesce(var.subnetwork, "default")}",
+    startswith(local._subnetwork, local.api_prefix) ? local._subnetwork : null,
+    startswith(local._subnetwork, "projects/", ) ? "${local.api_prefix}/${local._subnetwork}" : null,
+    "projects/${local.host_project}/regions/${local.region}/subnetworks/${coalesce(local._subnetwork, "default")}",
   )
   backend = {
     capacity_scaler              = local.is_tcp ? 0 : null
