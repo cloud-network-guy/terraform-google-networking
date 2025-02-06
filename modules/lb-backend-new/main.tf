@@ -13,8 +13,8 @@ locals {
   host_project   = lower(trimspace(coalesce(var.host_project_id, var.host_project, local.project)))
   name           = lower(trimspace(var.name != null ? var.name : one(random_string.name).result))
   description    = var.description != null ? trimspace(var.description) : null
-  is_regional    = var.region != null ? true : false
-  region         = local.is_regional ? var.region : "global"
+  region         = lower(trimspace(coalesce(var.region, "global")))
+  is_regional    = local.region != "global" ? true : false
   type           = upper(coalesce(var.type, "INTERNAL"))
   is_internal    = local.type == "INTERNAL" || local.subnetwork != null ? true : false
   protocol       = var.protocol != null ? upper(trimspace(var.protocol)) : "TCP"
