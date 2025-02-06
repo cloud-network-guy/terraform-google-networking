@@ -59,7 +59,7 @@ locals {
     (startswith(group, local.api_prefix) ? group : "${local.api_prefix}/${group}")
   ]
   is_classic                      = coalesce(var.classic, false)
-  is_application                  = false
+  is_application                  = startswith(local.protocol, "HTTP") ? true : false
   load_balancing_scheme           = local.is_application && !local.is_classic ? "${local.type}_MANAGED" : local.type
   locality_lb_policy              = local.is_tcp ? "" : "ROUND_ROBIN"
   session_affinity                = local.is_tcp ? coalesce(var.session_affinity, "NONE") : null
