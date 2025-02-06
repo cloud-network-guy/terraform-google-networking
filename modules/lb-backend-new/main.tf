@@ -35,7 +35,7 @@ locals {
   subnetwork = coalesce(
     startswith(var.subnetwork, local.api_prefix) ? var.subnetwork : null,
     startswith(var.subnetwork, "projects/", ) ? "${local.api_prefix}/${var.subnetwork}" : null,
-    "projects/${local.host_project}/regions/${local.region}/subnetworks/${var.subnetwork}",
+    "projects/${local.host_project}/regions/${local.region}/subnetworks/${coalesce(var.subnetwork, "default")}",
   )
   backend = {
     capacity_scaler              = local.is_tcp ? 0 : null
