@@ -15,7 +15,7 @@ locals {
   description    = var.description != null ? trimspace(var.description) : null
   region         = lower(trimspace(coalesce(var.region, "global")))
   is_regional    = local.region != "global" ? true : false
-  type           = upper(coalesce(var.type, "INTERNAL"))
+  type           = upper(trimspace(coalesce(var.type, "INTERNAL")))
   is_internal    = local.type == "INTERNAL" ? true : false
   protocol       = var.protocol != null ? upper(trimspace(var.protocol)) : "TCP"
   is_tcp         = local.protocol == "TCP" ? true : false
@@ -58,11 +58,11 @@ locals {
   groups = [for group in coalesce(var.groups, []) :
     (startswith(group, local.api_prefix) ? group : "${local.api_prefix}/${group}")
   ]
-  is_classic                      = coalesce(var.classic, false)
-  is_application                  = startswith(local.protocol, "HTTP") ? true : false
-  load_balancing_scheme           = local.is_application && !local.is_classic ? "${local.type}_MANAGED" : local.type
-  locality_lb_policy              = local.is_tcp ? "" : "ROUND_ROBIN"
-  session_affinity                = local.is_tcp ? coalesce(var.session_affinity, "NONE") : null
+  is_classic            = coalesce(var.classic, false)
+  is_application        = startswith(local.protocol, "HTTP") ? true : false
+  load_balancing_scheme = local.is_application && !local.is_classic ? "${local.type}_MANAGED" : local.type
+  locality_lb_policy              = local.is_application && !local.is_classic ? upper(coalesce(var.locality_lb_policy, "ROUND_ROBIN")) : ""
+  session_affinity                = local.is_tcp ? trimspace(coalesce(var.session_affinity, "NONE")) : null
   connection_draining_timeout_sec = coalesce(var.connection_draining_timeout_sec, 300)
   timeout_sec                     = local.is_tcp ? null : coalesce(var.timeout, 30)
 }
