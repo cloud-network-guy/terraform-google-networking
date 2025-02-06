@@ -16,7 +16,7 @@ locals {
   region         = lower(trimspace(coalesce(var.region, "global")))
   is_regional    = local.region != "global" ? true : false
   type           = upper(coalesce(var.type, "INTERNAL"))
-  is_internal    = local.type == "INTERNAL" || local.subnetwork != null ? true : false
+  is_internal    = local.type == "INTERNAL" ? true : false
   protocol       = var.protocol != null ? upper(trimspace(var.protocol)) : "TCP"
   is_tcp         = local.protocol == "TCP" ? true : false
   _health_checks = var.health_check != null ? [var.health_check] : coalesce(var.health_checks, [])
