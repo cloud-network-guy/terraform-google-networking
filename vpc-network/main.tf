@@ -2,6 +2,13 @@ provider "google" {
   project = var.project_id
 }
 
+
+# Enable Shared VPC Host Project, if not already done
+resource "google_compute_shared_vpc_host_project" "default" {
+  count   = var.enable_shared_vpc_host_project ? 1 : 0
+  project = var.project_id
+}
+
 # Form locals to pass to the VPC network module
 locals {
   name_prefix = coalesce(var.name_prefix, var.name)

@@ -26,6 +26,11 @@ variable "mtu" {
   type        = number
   default     = 0
 }
+variable "enable_shared_vpc_host_project" {
+  description = "Enable Shared VPC Host Project"
+  type        = bool
+  default     = false
+}
 variable "enable_global_routing" {
   description = "Enable Global Routing (default is Regional)"
   type        = bool
