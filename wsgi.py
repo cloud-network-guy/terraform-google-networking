@@ -6,7 +6,7 @@ from flask import Flask, request, Response, jsonify, render_template
 from main import *
 from classes import *
 
-app = Flask(__name__, static_url_path='/static')
+app = Flask(__name__)
 app.config['JSON_SORT_KEYS'] = False
 app.config['SESSION_COOKIE_SAMESITE'] = "Strict"
 

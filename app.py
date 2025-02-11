@@ -4,9 +4,8 @@ from traceback import format_exc
 from datetime import datetime
 from quart import Quart, request, Response, jsonify, render_template
 from main import get_environments, get_fields, get_modules, get_workspaces
-#from classes import TFWorkSpace
 
-app = Quart(__name__, static_url_path='/static')
+app = Quart(__name__)
 app.config['JSON_SORT_KEYS'] = False
 app.config['SESSION_COOKIE_SAMESITE'] = "Strict"
 

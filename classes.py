@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from os.path import *
+from os.path import realpath, dirname, join, exists, isfile, isdir
 from os import environ, chdir, scandir, access, R_OK
 from sys import platform
 from time import time
@@ -175,21 +175,19 @@ class TFModule:
 
     async def set_credentials(self, authentication_file: str = None):
 
-        if not authentication_file and self.backend['type'] in ['s3', 'gcs']:
+        backend_type = self.backend['type'] 
+        if not authentication_file and backend_type in ['s3', 'gcs']:
             # Try to auto-detect local authentication file
-            match(self.backend['type']):
-                case 'gcs':
-                    if not (authentication_file := environ.get(GOOGLE_ADC_VAR)):
-                        if home := environ.get('HOME'):
-                            authentication_file = f"{home}/.config/gcloud/application_default_credentials.json"
-                        if userprofile := environ.get("USERPROFILE"):
-                            authentication_file = f"{userprofile}\\AppData\\Roaming\\gcloud\\application_default_credentials.json"
-                            fp = open(authentication_file, 'r')
-                case 's3':
+            if backend_type == 'gcs':
+                if not (authentication_file := environ.get(GOOGLE_ADC_VAR)):
                     if home := environ.get('HOME'):
+                        authentication_file = f"{home}/.config/gcloud/application_default_credentials.json"
+                    if userprofile := environ.get("USERPROFILE"):
+                        authentication_file = f"{userprofile}\\AppData\\Roaming\\gcloud\\application_default_credentials.json"
+                        fp = open(authentication_file, 'r')
+            if backend_type == 's3':
+                if home := environ.get('HOME'):
                         credentials_file = f"{home}/.aws/credentials"
-                case _:
-                    pass
 
         if authentication_file:
             if self.backend['type'] == "gcs":
