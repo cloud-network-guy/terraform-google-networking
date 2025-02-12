@@ -55,7 +55,7 @@ locals {
 }
 resource "google_service_networking_connection" "default" {
   for_each                = { for i, v in local.service_connections : v.service => v if v.create == true }
-  network                 = local.network_name
+  network                 = local.network
   service                 = each.value.service
   reserved_peering_ranges = each.value.ip_ranges
 }
