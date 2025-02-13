@@ -80,7 +80,7 @@ No providers.
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_interconnect"></a> [interconnect](#module\_interconnect) | ../modules/hybrid-networking | n/a |
+| <a name="module_interconnect"></a> [interconnect](#module\_interconnect) | ../hybrid-networking | n/a |
 
 ## Resources
 

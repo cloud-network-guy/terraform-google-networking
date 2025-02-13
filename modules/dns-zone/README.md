@@ -12,8 +12,8 @@
 
 | Name | Version |
 |------|---------|
-| <a name="provider_google"></a> [google](#provider\_google) | 6.7.0 |
-| <a name="provider_null"></a> [null](#provider\_null) | 3.2.3 |
+| <a name="provider_google"></a> [google](#provider\_google) | >= 5.16, < 7.0 |
+| <a name="provider_null"></a> [null](#provider\_null) | >= 3.1 |
 | <a name="provider_random"></a> [random](#provider\_random) | >= 3.4 |
 
 ## Modules
@@ -37,13 +37,17 @@ No modules.
 | <a name="input_description"></a> [description](#input\_description) | n/a | `string` | `null` | no |
 | <a name="input_dns_name"></a> [dns\_name](#input\_dns\_name) | n/a | `string` | n/a | yes |
 | <a name="input_force_destroy"></a> [force\_destroy](#input\_force\_destroy) | n/a | `bool` | `false` | no |
+| <a name="input_host_project"></a> [host\_project](#input\_host\_project) | n/a | `string` | `null` | no |
+| <a name="input_host_project_id"></a> [host\_project\_id](#input\_host\_project\_id) | n/a | `string` | `null` | no |
 | <a name="input_logging"></a> [logging](#input\_logging) | n/a | `bool` | `false` | no |
 | <a name="input_name"></a> [name](#input\_name) | n/a | `string` | `null` | no |
-| <a name="input_networks"></a> [networks](#input\_networks) | n/a | `list(string)` | `[]` | no |
+| <a name="input_network"></a> [network](#input\_network) | n/a | `string` | `null` | no |
+| <a name="input_networks"></a> [networks](#input\_networks) | n/a | `list(string)` | `null` | no |
 | <a name="input_peer_network"></a> [peer\_network](#input\_peer\_network) | n/a | `string` | `null` | no |
 | <a name="input_peer_network_id"></a> [peer\_network\_id](#input\_peer\_network\_id) | n/a | `string` | `null` | no |
 | <a name="input_peer_project"></a> [peer\_project](#input\_peer\_project) | n/a | `string` | `null` | no |
 | <a name="input_peer_project_id"></a> [peer\_project\_id](#input\_peer\_project\_id) | n/a | `string` | `null` | no |
+| <a name="input_project"></a> [project](#input\_project) | n/a | `string` | `null` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | n/a | `string` | n/a | yes |
 | <a name="input_records"></a> [records](#input\_records) | n/a | <pre>list(object({<br/>    create  = optional(bool, true)<br/>    name    = string<br/>    type    = optional(string)<br/>    ttl     = optional(number)<br/>    rrdatas = list(string)<br/>  }))</pre> | `[]` | no |
 | <a name="input_target_name_servers"></a> [target\_name\_servers](#input\_target\_name\_servers) | n/a | <pre>list(object({<br/>    ipv4_address    = string<br/>    forwarding_path = optional(string)<br/>  }))</pre> | `[]` | no |

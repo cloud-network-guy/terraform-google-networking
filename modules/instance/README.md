@@ -11,8 +11,8 @@
 
 | Name | Version |
 |------|---------|
-| <a name="provider_google"></a> [google](#provider\_google) | 6.10.0 |
-| <a name="provider_random"></a> [random](#provider\_random) | 3.6.3 |
+| <a name="provider_google"></a> [google](#provider\_google) | >= 4.49, < 7.0 |
+| <a name="provider_random"></a> [random](#provider\_random) | >= 3.4 |
 
 ## Modules
 
@@ -46,7 +46,7 @@ No modules.
 | <a name="input_network"></a> [network](#input\_network) | n/a | `string` | `"default"` | no |
 | <a name="input_network_tags"></a> [network\_tags](#input\_network\_tags) | n/a | `list(string)` | `null` | no |
 | <a name="input_networks"></a> [networks](#input\_networks) | n/a | `list(string)` | `[]` | no |
-| <a name="input_os"></a> [os](#input\_os) | n/a | `string` | `null` | no |
+| <a name="input_os"></a> [os](#input\_os) | n/a | `string` | `"debian-12"` | no |
 | <a name="input_os_project"></a> [os\_project](#input\_os\_project) | n/a | `string` | `null` | no |
 | <a name="input_project"></a> [project](#input\_project) | n/a | `string` | `null` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | n/a | `string` | n/a | yes |

@@ -151,10 +151,10 @@ Examples
 
 | Name | Version |
 |------|---------|
-| <a name="provider_google"></a> [google](#provider\_google) | 5.44.2 |
-| <a name="provider_google-beta"></a> [google-beta](#provider\_google-beta) | 5.44.2 |
-| <a name="provider_null"></a> [null](#provider\_null) | 3.2.3 |
-| <a name="provider_random"></a> [random](#provider\_random) | 3.6.3 |
+| <a name="provider_google"></a> [google](#provider\_google) | >= 5.16.0, < 6.0.0 |
+| <a name="provider_google-beta"></a> [google-beta](#provider\_google-beta) | >= 5.16.0, < 6.0.0 |
+| <a name="provider_null"></a> [null](#provider\_null) | >= 3.1.0 |
+| <a name="provider_random"></a> [random](#provider\_random) | >= 3.4.0 |
 
 ## Modules
 

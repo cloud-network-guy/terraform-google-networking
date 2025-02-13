@@ -136,14 +136,14 @@ machine_type      = "n2d-standard-4"
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.4 |
-| <a name="requirement_google"></a> [google](#requirement\_google) | >= 4.49, < 7.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5.7 |
+| <a name="requirement_google"></a> [google](#requirement\_google) | >= 5.16, < 7.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_google"></a> [google](#provider\_google) | >= 4.49, < 7.0 |
+| <a name="provider_google"></a> [google](#provider\_google) | >= 5.16, < 7.0 |
 | <a name="provider_random"></a> [random](#provider\_random) | n/a |
 
 ## Modules
@@ -182,7 +182,9 @@ No modules.
 | <a name="input_disk_type"></a> [disk\_type](#input\_disk\_type) | n/a | `string` | `null` | no |
 | <a name="input_domain_name"></a> [domain\_name](#input\_domain\_name) | n/a | `string` | `null` | no |
 | <a name="input_enable_monitoring"></a> [enable\_monitoring](#input\_enable\_monitoring) | n/a | `bool` | `null` | no |
+| <a name="input_enable_serial_port"></a> [enable\_serial\_port](#input\_enable\_serial\_port) | n/a | `bool` | `null` | no |
 | <a name="input_expert_password"></a> [expert\_password](#input\_expert\_password) | n/a | `string` | `null` | no |
+| <a name="input_flip_members"></a> [flip\_members](#input\_flip\_members) | For H/A Clusters, set member-b as active rather than member-a | `bool` | `false` | no |
 | <a name="input_install_type"></a> [install\_type](#input\_install\_type) | n/a | `string` | `null` | no |
 | <a name="input_instance_suffixes"></a> [instance\_suffixes](#input\_instance\_suffixes) | n/a | `list(string)` | `null` | no |
 | <a name="input_internal_routes"></a> [internal\_routes](#input\_internal\_routes) | n/a | `list(string)` | `[]` | no |

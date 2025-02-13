@@ -143,7 +143,7 @@ Examples
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5.7 |
 | <a name="requirement_google"></a> [google](#requirement\_google) | >= 6.5, < 7.0 |
-| <a name="requirement_google-beta"></a> [google-beta](#requirement\_google-beta) | >= 5.16, < 6.0 |
+| <a name="requirement_google-beta"></a> [google-beta](#requirement\_google-beta) | >= 6.12, < 7.0 |
 | <a name="requirement_null"></a> [null](#requirement\_null) | >= 3.1 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.4 |
 
@@ -151,9 +151,9 @@ Examples
 
 | Name | Version |
 |------|---------|
-| <a name="provider_google"></a> [google](#provider\_google) | 6.8.0 |
-| <a name="provider_null"></a> [null](#provider\_null) | 3.2.3 |
-| <a name="provider_random"></a> [random](#provider\_random) | 3.6.3 |
+| <a name="provider_google"></a> [google](#provider\_google) | >= 6.5, < 7.0 |
+| <a name="provider_null"></a> [null](#provider\_null) | >= 3.1 |
+| <a name="provider_random"></a> [random](#provider\_random) | >= 3.4 |
 
 ## Modules
 
@@ -190,9 +190,10 @@ No modules.
 | <a name="input_cloud_routers"></a> [cloud\_routers](#input\_cloud\_routers) | n/a | <pre>list(object({<br/>    create                        = optional(bool, true)<br/>    name                          = optional(string)<br/>    description                   = optional(string)<br/>    encrypted_interconnect_router = optional(bool)<br/>    region                        = optional(string)<br/>    enable_bgp                    = optional(bool)<br/>    bgp_asn                       = optional(number)<br/>    bgp_keepalive_interval        = optional(number)<br/>    advertised_groups             = optional(list(string))<br/>    advertised_ip_ranges = optional(list(object({<br/>      create      = optional(bool)<br/>      range       = string<br/>      description = optional(string)<br/>    })))<br/>  }))</pre> | `[]` | no |
 | <a name="input_create"></a> [create](#input\_create) | n/a | `bool` | `true` | no |
 | <a name="input_default_region"></a> [default\_region](#input\_default\_region) | n/a | `string` | `null` | no |
+| <a name="input_delete_default_routes_on_create"></a> [delete\_default\_routes\_on\_create](#input\_delete\_default\_routes\_on\_create) | n/a | `bool` | `false` | no |
 | <a name="input_description"></a> [description](#input\_description) | n/a | `string` | `null` | no |
 | <a name="input_enable_ula_internal_ipv6"></a> [enable\_ula\_internal\_ipv6](#input\_enable\_ula\_internal\_ipv6) | n/a | `bool` | `false` | no |
-| <a name="input_firewall_rules"></a> [firewall\_rules](#input\_firewall\_rules) | n/a | <pre>list(object({<br/>    create                  = optional(bool, true)<br/>    network                 = optional(string)<br/>    name                    = optional(string)<br/>    description             = optional(string)<br/>    priority                = optional(number)<br/>    logging                 = optional(bool)<br/>    direction               = optional(string)<br/>    ranges                  = optional(list(string))<br/>    range                   = optional(string)<br/>    source_ranges           = optional(list(string))<br/>    destination_ranges      = optional(list(string))<br/>    range_types             = optional(list(string))<br/>    range_type              = optional(string)<br/>    protocol                = optional(string)<br/>    protocols               = optional(list(string))<br/>    port                    = optional(number)<br/>    ports                   = optional(list(number))<br/>    source_tags             = optional(list(string))<br/>    source_service_accounts = optional(list(string))<br/>    target_tags             = optional(list(string))<br/>    target_service_accounts = optional(list(string))<br/>    action                  = optional(string)<br/>    allow = optional(list(object({<br/>      protocol = string<br/>      ports    = optional(list(string))<br/>    })))<br/>    deny = optional(list(object({<br/>      protocol = string<br/>      ports    = optional(list(string))<br/>    })))<br/>    enforcement = optional(bool)<br/>    disabled    = optional(bool)<br/>  }))</pre> | `[]` | no |
+| <a name="input_firewall_rules"></a> [firewall\_rules](#input\_firewall\_rules) | n/a | <pre>list(object({<br/>    create                  = optional(bool, true)<br/>    network                 = optional(string)<br/>    name                    = optional(string)<br/>    description             = optional(string)<br/>    priority                = optional(number)<br/>    logging                 = optional(bool)<br/>    direction               = optional(string)<br/>    ranges                  = optional(list(string))<br/>    range                   = optional(string)<br/>    source_ranges           = optional(list(string))<br/>    destination_ranges      = optional(list(string))<br/>    range_types             = optional(list(string))<br/>    range_type              = optional(string)<br/>    protocol                = optional(string)<br/>    protocols               = optional(list(string))<br/>    port                    = optional(number)<br/>    ports                   = optional(list(number))<br/>    source_tags             = optional(list(string))<br/>    source_service_accounts = optional(list(string))<br/>    target_tags             = optional(list(string))<br/>    target_service_accounts = optional(list(string))<br/>    action                  = optional(string)<br/>    allow = optional(list(object({<br/>      protocol = string<br/>      ports    = optional(list(string))<br/>    })))<br/>    deny = optional(list(object({<br/>      protocol = string<br/>      ports    = optional(list(string))<br/>    })))<br/>    enforcement = optional(bool)<br/>    disabled    = optional(bool)<br/>    index_key   = optional(string)<br/>  }))</pre> | `[]` | no |
 | <a name="input_global_routing"></a> [global\_routing](#input\_global\_routing) | n/a | `bool` | `false` | no |
 | <a name="input_ip_ranges"></a> [ip\_ranges](#input\_ip\_ranges) | n/a | <pre>list(object({<br/>    create      = optional(bool, true)<br/>    name        = optional(string)<br/>    description = optional(string)<br/>    ip_range    = string<br/>    purpose     = optional(string, "VPC_PEERING")<br/>  }))</pre> | `[]` | no |
 | <a name="input_mtu"></a> [mtu](#input\_mtu) | n/a | `number` | `0` | no |

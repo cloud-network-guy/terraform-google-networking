@@ -4,18 +4,18 @@
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5.7 |
-| <a name="requirement_google"></a> [google](#requirement\_google) | >= 5.16, < 6.0 |
-| <a name="requirement_null"></a> [null](#requirement\_null) | >= 3.1 |
-| <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.4 |
+| <a name="requirement_google"></a> [google](#requirement\_google) | >= 4.49.0, < 7.0 |
+| <a name="requirement_null"></a> [null](#requirement\_null) | >= 3.1.0 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.4.0 |
 | <a name="requirement_tls"></a> [tls](#requirement\_tls) | >= 4.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_google"></a> [google](#provider\_google) | >= 5.16, < 6.0 |
-| <a name="provider_null"></a> [null](#provider\_null) | >= 3.1 |
-| <a name="provider_random"></a> [random](#provider\_random) | >= 3.4 |
+| <a name="provider_google"></a> [google](#provider\_google) | >= 4.49.0, < 7.0 |
+| <a name="provider_null"></a> [null](#provider\_null) | >= 3.1.0 |
+| <a name="provider_random"></a> [random](#provider\_random) | >= 3.4.0 |
 | <a name="provider_tls"></a> [tls](#provider\_tls) | >= 4.0 |
 
 ## Modules
@@ -96,7 +96,7 @@ No modules.
 | <a name="input_redirect_http_to_https"></a> [redirect\_http\_to\_https](#input\_redirect\_http\_to\_https) | n/a | `bool` | `null` | no |
 | <a name="input_region"></a> [region](#input\_region) | GCP region name for the IP address and forwarding rule | `string` | `null` | no |
 | <a name="input_routing_rules"></a> [routing\_rules](#input\_routing\_rules) | List of Routing Rules for the URL Map | <pre>list(object({<br/>    create                    = optional(bool, true)<br/>    project_id                = optional(string)<br/>    name                      = optional(string)<br/>    priority                  = optional(number)<br/>    hosts                     = list(string)<br/>    backend                   = optional(string)<br/>    path                      = optional(string)<br/>    request_headers_to_remove = optional(list(string))<br/>    redirect = optional(object({<br/>      code        = optional(string)<br/>      host        = optional(string)<br/>      https       = optional(string)<br/>      strip_query = optional(bool)<br/>    }))<br/>    path_rules = optional(list(object({<br/>      paths        = list(string)<br/>      backend_name = optional(string)<br/>      backend      = string<br/>    })))<br/>  }))</pre> | `[]` | no |
-| <a name="input_ssl_certs"></a> [ssl\_certs](#input\_ssl\_certs) | List of SSL Certificates to upload to Google Certificate Manager | <pre>list(object({<br/>    create          = optional(bool, true)<br/>    project_id      = optional(string)<br/>    name            = optional(string)<br/>    description     = optional(string)<br/>    certificate     = optional(string)<br/>    private_key     = optional(string)<br/>    region          = optional(string)<br/>    domains         = optional(list(string))<br/>    ca_organization = optional(string)<br/>    ca_valid_years  = optional(number)<br/>  }))</pre> | `[]` | no |
+| <a name="input_ssl_certs"></a> [ssl\_certs](#input\_ssl\_certs) | List of SSL Certificates to upload to Google Certificate Manager | <pre>list(object({<br/>    create          = optional(bool, true)<br/>    active          = optional(bool, true)<br/>    project_id      = optional(string)<br/>    name            = optional(string)<br/>    description     = optional(string)<br/>    certificate     = optional(string)<br/>    private_key     = optional(string)<br/>    region          = optional(string)<br/>    domains         = optional(list(string))<br/>    ca_organization = optional(string)<br/>    ca_valid_years  = optional(number)<br/>  }))</pre> | `[]` | no |
 | <a name="input_ssl_policy"></a> [ssl\_policy](#input\_ssl\_policy) | Custom TLS policy | <pre>object({<br/>    create          = optional(bool)<br/>    project_id      = optional(string)<br/>    name            = optional(string)<br/>    description     = optional(string)<br/>    min_tls_version = optional(string)<br/>    tls_profile     = optional(string)<br/>    region          = optional(string)<br/>  })</pre> | `null` | no |
 | <a name="input_subnet"></a> [subnet](#input\_subnet) | n/a | `string` | `null` | no |
 | <a name="input_target"></a> [target](#input\_target) | n/a | `string` | `null` | no |
