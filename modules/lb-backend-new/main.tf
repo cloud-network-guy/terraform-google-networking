@@ -13,10 +13,10 @@ locals {
   host_project   = lower(trimspace(coalesce(var.host_project_id, var.host_project, local.project)))
   name           = lower(trimspace(var.name != null ? var.name : one(random_string.name).result))
   description    = var.description != null ? trimspace(var.description) : null
-  region         = lower(trimspace(coalesce(var.region, "global")))
-  is_regional    = local.region != "global" ? true : false
-  type           = upper(trimspace(coalesce(var.type, "INTERNAL")))
-  is_internal    = local.type == "INTERNAL" ? true : false
+  is_regional    = var.region != null ? true : false
+  region         = local.is_regional ? var.region : "global"
+  type           = upper(coalesce(var.type, "INTERNAL"))
+  is_internal    = local.type == "INTERNAL" || local.subnetwork != null ? true : false
   protocol       = var.protocol != null ? upper(trimspace(var.protocol)) : "TCP"
   is_tcp         = local.protocol == "TCP" ? true : false
   _health_checks = var.health_check != null ? [var.health_check] : coalesce(var.health_checks, [])
@@ -27,17 +27,15 @@ locals {
       local.is_regional ? "${local.api_prefix}/projects/${local.project}/regions/${local.region}/healthChecks/${hc}" : null,
     )
   ]
-  _network = lower(trimspace(coalesce(var.network, "default")))
   network = coalesce(
-    startswith(local._network, local.api_prefix) ? local._network : null,
-    startswith(local._network, "projects/") ? "${local.api_prefix}/${local._network}" : null,
-    "projects/${local.host_project}/global/networks/${local._network}",
+    startswith(var.network, local.api_prefix) ? var.network : null,
+    startswith(var.network, "projects/") ? "${local.api_prefix}/${var.network}" : null,
+    "projects/${local.host_project}/global/networks/${var.network}",
   )
-  _subnetwork = lower(trimspace(coalesce(var.subnetwork, "default")))
   subnetwork = coalesce(
-    startswith(local._subnetwork, local.api_prefix) ? local._subnetwork : null,
-    startswith(local._subnetwork, "projects/", ) ? "${local.api_prefix}/${local._subnetwork}" : null,
-    "projects/${local.host_project}/regions/${local.region}/subnetworks/${coalesce(local._subnetwork, "default")}",
+    startswith(var.subnetwork, local.api_prefix) ? var.subnetwork : null,
+    startswith(var.subnetwork, "projects/", ) ? "${local.api_prefix}/${var.subnetwork}" : null,
+    "projects/${local.host_project}/regions/${local.region}/subnetworks/${var.subnetwork}",
   )
   backend = {
     capacity_scaler              = local.is_tcp ? 0 : null
@@ -58,11 +56,16 @@ locals {
   groups = [for group in coalesce(var.groups, []) :
     (startswith(group, local.api_prefix) ? group : "${local.api_prefix}/${group}")
   ]
-  is_classic            = coalesce(var.classic, false)
-  is_application        = startswith(local.protocol, "HTTP") ? true : false
-  load_balancing_scheme = local.is_application && !local.is_classic ? "${local.type}_MANAGED" : local.type
-  locality_lb_policy              = local.is_application && !local.is_classic ? upper(coalesce(var.locality_lb_policy, "ROUND_ROBIN")) : ""
-  session_affinity                = local.is_tcp ? trimspace(coalesce(var.session_affinity, "NONE")) : null
+  is_igs                          = length([for _ in local.groups : _ if strcontains(_, "/instanceGroups/")]) > 0 ? true : false
+  is_negs                         = length([for _ in local.groups : _ if strcontains(_, "/networkEndpointGroups/")]) > 0 ? true : false
+  is_gnegs                        = length([for _ in local.groups : _ if local.is_negs && strcontains(_, "/global/")]) > 0 ? true : false
+  is_rnegs                        = length([for _ in local.groups : _ if local.is_negs && strcontains(_, "/regions/")]) > 0 ? true : false
+  is_znegs                        = length([for _ in local.groups : _ if local.is_negs && strcontains(_, "/zones/")]) > 0 ? true : false
+  is_classic                      = coalesce(var.classic, false)
+  is_application                  = false
+  load_balancing_scheme           = local.is_application && !local.is_classic ? "${local.type}_MANAGED" : local.type
+  locality_lb_policy              = local.is_tcp || local.is_gnegs ? "" : "ROUND_ROBIN"
+  session_affinity                = local.is_tcp ? coalesce(var.session_affinity, "NONE") : null
   connection_draining_timeout_sec = coalesce(var.connection_draining_timeout_sec, 300)
   timeout_sec                     = local.is_tcp ? null : coalesce(var.timeout, 30)
 }
@@ -81,7 +84,7 @@ resource "google_compute_region_backend_service" "default" {
   load_balancing_scheme           = local.load_balancing_scheme
   locality_lb_policy              = local.locality_lb_policy
   session_affinity                = local.session_affinity
-  health_checks                   = local.health_checks
+  health_checks                   = local.is_gnegs ? null : local.health_checks
   timeout_sec                     = local.timeout_sec
   connection_draining_timeout_sec = local.connection_draining_timeout_sec
   dynamic "backend" {
@@ -127,7 +130,7 @@ resource "google_compute_backend_service" "default" {
   load_balancing_scheme           = local.load_balancing_scheme
   locality_lb_policy              = local.locality_lb_policy
   session_affinity                = local.session_affinity
-  health_checks                   = local.health_checks
+  health_checks                   = local.is_gnegs ? null : local.health_checks
   timeout_sec                     = local.timeout_sec
   connection_draining_timeout_sec = local.connection_draining_timeout_sec
   dynamic "backend" {
