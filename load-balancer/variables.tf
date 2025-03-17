@@ -21,7 +21,7 @@ variable "network" {
   type    = string
   default = null
 }
-variable "subnet" {
+variable "subnetwork" {
   type    = string
   default = null
 }
@@ -118,7 +118,7 @@ variable "backends" {
     locality_lb_policy       = optional(string)
     classic                  = optional(bool)
     network                  = optional(string)
-    subnet                   = optional(string)
+    subnetwork               = optional(string)
     groups                   = optional(list(string))
     ip_address               = optional(string)
     fqdn                     = optional(string)
@@ -133,7 +133,7 @@ variable "backends" {
     negs = optional(list(object({
       name              = optional(string)
       network           = optional(string)
-      subnet            = optional(string)
+      subnetwork        = optional(string)
       region            = optional(string)
       zone              = optional(string)
       instance          = optional(string)
@@ -166,7 +166,7 @@ variable "frontends" {
     name                       = optional(string)
     description                = optional(string)
     network                    = optional(string)
-    subnet                     = optional(string)
+    subnetwork                 = optional(string)
     default_service            = optional(string)
     classic                    = optional(bool)
     existing_ssl_certs         = optional(list(string))
@@ -244,7 +244,7 @@ variable "frontends" {
       description              = optional(string)
       forwarding_rule_name     = optional(string)
       target_service_id        = optional(string)
-      nat_subnets              = optional(list(string))
+      nat_subnetworks          = optional(list(string))
       enable_proxy_protocol    = optional(bool)
       auto_accept_all_projects = optional(bool)
       accept_project_ids = optional(list(object({

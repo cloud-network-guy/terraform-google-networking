@@ -54,16 +54,16 @@ locals {
           host_project_id = v.host_project_id
           name            = coalesce(neg.name, v.name)
           network         = try(coalesce(neg.network, v.network, var.network), null)
-          subnet          = try(coalesce(neg.subnet, v.subnet, var.subnet), null)
+          subnetwork      = try(coalesce(neg.subnetwork, v.subnetwork, var.subnetwork), null)
           default_port    = try(coalesce(lookup(neg, "default_port", null), lookup(neg, "port", null), v.port), null)
           backend_key     = k
           endpoints = concat(
             # Explicit Endpoints
-            [for e in coalesce(lookup(neg, "endpoints", null), []) :
+            [for endpoint in coalesce(lookup(neg, "endpoints", null), []) :
               {
-                ip_address = try(coalesce(lookup(e, "ip_address", null), lookup(neg, "ip_address", null)), null)
-                fqdn       = try(coalesce(lookup(e, "fqdn", null), lookup(neg, "fqdn", null)), null)
-                instance   = lookup(e, "instance", null)
+                ip_address = try(coalesce(lookup(endpoint, "ip_address", null), lookup(neg, "ip_address", null)), null)
+                fqdn       = try(coalesce(lookup(endpoint, "fqdn", null), lookup(neg, "fqdn", null)), null)
+                instance   = lookup(endpoint, "instance", null)
               }
             ],
             # Implicit Endpoints derived from the NEG object
@@ -85,7 +85,7 @@ locals {
         host_project_id   = v.host_project_id
         name              = v.name
         network           = try(coalesce(v.network, var.network), null)
-        subnet            = try(coalesce(v.subnet, var.subnet), null)
+        subnetwork        = try(coalesce(v.subnetwork, var.subnetwork), null)
         default_port      = v.port
         psc_target        = v.psc_target
         cloud_run_service = v.cloud_run_service
@@ -99,7 +99,7 @@ locals {
             port       = v.port
           }
         ]
-      } if v.ip_address != null || v.fqdn != null || v.psc_target != null || v.cloud_run_service != null
+      } if length(compact([for _ in ["ip_address", "fqdn", "psc_target", "cloud_run_service"] : lookup(v, _, null)])) > 0
     ]
   ))
 }
@@ -112,7 +112,7 @@ module "negs" {
   region            = each.value.region
   zone              = each.value.zone
   network           = each.value.network
-  subnet            = each.value.subnet
+  subnetwork        = each.value.subnetwork
   default_port      = each.value.default_port
   psc_target        = each.value.psc_target
   cloud_run_service = each.value.cloud_run_service
@@ -160,14 +160,14 @@ locals {
       health_checks      = [for hc in keys(local.health_checks) : module.healthchecks[hc].self_link if hc == v.health_check]
       negs               = v.negs
       network            = try(coalesce(v.network, var.network), null)
-      subnet             = try(coalesce(v.subnet, var.subnet), null)
+      subnetwork         = try(coalesce(v.subnetwork, var.subnetwork), null)
       logging            = try(coalesce(v.logging, var.logging), null)
     })
   }
 }
 # Backend Services, Buckets, and Network Endpoint Groups
 module "backends" {
-  source             = "../modules/lb-backend"
+  source             = "../modules/lb-backend-new"
   for_each           = { for k, v in local.backends : k => v }
   project_id         = each.value.project_id
   host_project_id    = each.value.host_project_id
@@ -178,7 +178,7 @@ module "backends" {
   port               = each.value.port
   protocol           = each.value.protocol
   network            = each.value.network
-  subnet             = each.value.subnet
+  subnetwork         = each.value.subnetwork
   groups             = each.value.groups
   cdn                = each.value.cdn
   security_policy    = each.value.security_policy
@@ -218,8 +218,8 @@ locals {
           backend = rule.backend != null ? module.backends[rule.backend].name : null
         })
       ]
-      network = try(coalesce(v.network, var.network), null)
-      subnet  = try(coalesce(v.subnet, var.subnet), null)
+      network    = try(coalesce(v.network, var.network), null)
+      subnetwork = try(coalesce(v.subnetwork, var.subnetwork), null)
     })
   }
 }
@@ -236,7 +236,7 @@ module "frontends" {
   name                      = each.value.name
   description               = each.value.description
   network                   = each.value.network
-  subnet                    = each.value.subnet
+  subnetwork                    = each.value.subnetwork
   create_static_ip          = each.value.create_static_ip
   ip_address                = each.value.ip_address
   ip_address_name           = each.value.ip_address_name

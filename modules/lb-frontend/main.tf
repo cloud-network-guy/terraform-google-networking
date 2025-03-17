@@ -8,22 +8,32 @@ resource "random_string" "random_name" {
 }
 
 locals {
-  url_prefix             = "https://www.googleapis.com/compute/v1/projects"
-  create                 = coalesce(var.create, true)
-  project_id             = lower(trimspace(var.project_id))
-  host_project_id        = lower(trimspace(coalesce(var.host_project_id, local.project_id)))
-  name_prefix            = var.name_prefix != null ? lower(trimspace(var.name_prefix)) : null
-  name                   = var.name != null ? lower(trimspace(var.name)) : null
-  description            = coalesce(var.description, "Managed by Terraform")
-  is_regional            = var.region != null && var.region != "global" ? true : false
-  region                 = local.is_regional ? var.region : "global"
-  is_global              = !local.is_regional
-  port                   = var.port
-  protocol               = upper(coalesce(var.protocol, length(local.ports) > 0 || local.all_ports || local.is_psc ? "TCP" : "HTTP"))
-  is_application         = startswith(local.protocol, "HTTP") ? true : false
-  is_tcp                 = local.protocol == "TCP" && !local.is_application ? true : false
-  network                = lower(trimspace(coalesce(var.network, "default")))
-  subnet                 = lower(trimspace(coalesce(var.subnet, "default")))
+  api_prefix     = "https://www.googleapis.com/compute/v1"
+  create         = coalesce(var.create, true)
+  project_id     = lower(trimspace(var.project_id))
+  host_project   = lower(trimspace(coalesce(var.host_project_id, local.project_id)))
+  name_prefix    = var.name_prefix != null ? lower(trimspace(var.name_prefix)) : null
+  name           = var.name != null ? lower(trimspace(var.name)) : null
+  description    = coalesce(var.description, "Managed by Terraform")
+  is_regional    = var.region != null && var.region != "global" ? true : false
+  region         = local.is_regional ? var.region : "global"
+  is_global      = !local.is_regional
+  port           = var.port
+  protocol       = upper(coalesce(var.protocol, length(local.ports) > 0 || local.all_ports || local.is_psc ? "TCP" : "HTTP"))
+  is_application = startswith(local.protocol, "HTTP") ? true : false
+  is_tcp         = local.protocol == "TCP" && !local.is_application ? true : false
+  _network       = lower(trimspace(coalesce(var.network, "default")))
+  network = coalesce(
+    startswith(local._network, local.api_prefix) ? local._network : null,
+    startswith(local._network, "projects/") ? "${local.api_prefix}/${local._network}" : null,
+    "projects/${local.host_project}/global/networks/${local._network}",
+  )
+  _subnetwork = lower(trimspace(coalesce(var.subnetwork, "default")))
+  subnetwork = coalesce(
+    startswith(local._subnetwork, local.api_prefix) ? local._subnetwork : null,
+    startswith(local._subnetwork, "projects/", ) ? "${local.api_prefix}/${local._subnetwork}" : null,
+    "projects/${local.host_project}/regions/${local.region}/subnetworks/${coalesce(local._subnetwork, "default")}",
+  )
   is_internal            = startswith(local.type, "INTERNAL") ? true : false
   type                   = upper(coalesce(var.type != null ? var.type : "EXTERNAL"))
   is_classic             = coalesce(var.classic, false)
@@ -50,9 +60,9 @@ locals {
   default_service        = var.default_service
   existing_ssl_certs = var.existing_ssl_certs != null ? [for _ in var.existing_ssl_certs :
     coalesce(
-      startswith(_, local.url_prefix) ? _ : null,
-      startswith(_, "projects/") ? "${local.url_prefix}/${_}" : null,
-      "${local.url_prefix}/${local.project_id}/${local.is_regional ? "regions/" : ""}${local.region}/sslCertificates/${_}"
+      startswith(_, local.api_prefix) ? _ : null,
+      startswith(_, "projects/") ? "${local.api_prefix}/${_}" : null,
+      "${local.api_prefix}/${local.project_id}/${local.is_regional ? "regions/" : ""}${local.region}/sslCertificates/${_}"
     )
   ] : []
   port_names = {
@@ -63,7 +73,7 @@ locals {
     {
       create                  = local.create
       project_id              = local.project_id
-      host_project_id         = local.host_project_id
+      host_project_id         = local.host_project
       target_name             = coalesce(var.target_name, "none")
       target_project_id       = local.project_id
       target                  = local.target
@@ -75,7 +85,7 @@ locals {
       ports                   = local.ports
       all_ports               = local.is_psc || length(local.ports) > 0 ? false : local.all_ports
       network                 = local.network
-      subnet                  = local.subnet
+      subnetwork              = local.subnetwork
       network_tier            = local.protocol == "HTTP" && !local.is_internal ? "STANDARD" : null
       labels                  = length(local.labels) > 0 ? local.labels : null
       ip_address              = local.ip_address
@@ -102,7 +112,7 @@ locals {
         port_range  = local.is_application ? ip_port[1] : null
         name        = local.is_application ? "${v.name}${local.enable_ipv6 ? "-${lower(ip_port[0])}" : ""}-${lookup(local.port_names, ip_port[1], "error")}" : v.name
         address_key = one([for _ in local.ip_addresses : _.index_key if _.forwarding_rule_name == v.name && _.region == v.region && _.ip_version == upper(ip_port[0])])
-        target      = startswith(v.target, local.url_prefix) ? v.target : "${local.url_prefix}/${v.project_id}/${local.is_regional ? "regions/" : ""}${local.region}/targetHttp${(ip_port[1] != 80 ? "s" : "")}Proxies/${v.name}-${lookup(local.port_names, ip_port[1], "error")}"
+        target      = startswith(v.target, local.api_prefix) ? v.target : "${local.api_prefix}/projects/${v.project_id}/${local.is_regional ? "regions/" : ""}${local.region}/targetHttp${(ip_port[1] != 80 ? "s" : "")}Proxies/${v.name}-${lookup(local.port_names, ip_port[1], "error")}"
         ip_version  = ip_port[0]
       })
     ]
@@ -121,7 +131,7 @@ locals {
   forwarding_rules = [for i, v in local.___forwarding_rules :
     merge(v, {
       load_balancing_scheme = local.is_psc ? "" : v.load_balancing_scheme # null doesn't work with PSC forwarding rules
-      subnetwork            = local.is_psc ? null : local.is_internal ? local.subnet : null
+      subnetwork            = local.is_psc ? null : local.is_internal ? local.subnetwork: null
       index_key             = local.is_regional ? "${v.project_id}/${v.region}/${v.name}" : "${v.project_id}/${v.name}"
     }) if v.create == true
   ]
@@ -186,10 +196,22 @@ locals {
       name                 = local.ip_address_name
       description          = var.ip_address_description
       region               = v.region
-      network              = "projects/${local.host_project_id}/global/networks/${v.network}"
-      subnetwork           = local.is_regional && local.is_internal ? "projects/${local.host_project_id}/regions/${local.region}/subnetworks/${v.subnet}" : null
-      purpose              = local.is_psc ? "GCE_ENDPOINT" : local.is_application && local.is_internal && local.redirect_http_to_https ? "SHARED_LOADBALANCER_VIP" : null
-      network_tier         = local.is_psc ? null : v.network_tier
+      #network              = "projects/${local.host_project_id}/global/networks/${v.network}"
+      #subnetwork           = local.is_regional && local.is_internal ? "projects/${local.host_project_id}/regions/${local.region}/subnetworks/${v.subnet}" : null
+      _network = lower(trimspace(coalesce(var.network, "default")))
+      network = coalesce(
+        startswith(local._network, local.api_prefix) ? local._network : null,
+        startswith(local._network, "projects/") ? "${local.api_prefix}/${local._network}" : null,
+        "projects/${local.host_project}/global/networks/${local._network}",
+      )
+      _subnetwork = lower(trimspace(coalesce(var.subnetwork, "default")))
+      subnetwork = coalesce(
+        startswith(local._subnetwork, local.api_prefix) ? local._subnetwork : null,
+        startswith(local._subnetwork, "projects/", ) ? "${local.api_prefix}/${local._subnetwork}" : null,
+        "projects/${local.host_project}/regions/${local.region}/subnetworks/${coalesce(local._subnetwork, "default")}",
+      )
+      purpose      = local.is_psc ? "GCE_ENDPOINT" : local.is_application && local.is_internal && local.redirect_http_to_https ? "SHARED_LOADBALANCER_VIP" : null
+      network_tier = local.is_psc ? null : v.network_tier
     } if v.create_static_ip == true
   ]
   __ip_addresses = flatten([for i, v in local._ip_addresses :
@@ -534,7 +556,7 @@ locals {
   ]
   target_https_proxies = [for i, v in local.__target_https_proxies :
     merge(v, {
-      ssl_policy = startswith(v.ssl_policy, local.url_prefix) ? v.ssl_policy : "${local.url_prefix}/${local.project_id}/${local.is_regional ? "regions/" : ""}${local.region}/sslPolicies/${v.ssl_policy}"
+      ssl_policy = startswith(v.ssl_policy, local.api_prefix) ? v.ssl_policy : "${local.api_prefix}/projects/${local.project_id}/${local.is_regional ? "regions/" : ""}${local.region}/sslPolicies/${v.ssl_policy}"
       url_map    = local.is_regional ? google_compute_region_url_map.default[v.url_map_index_key].self_link : google_compute_url_map.default[v.url_map_index_key].self_link
       index_key  = local.is_regional ? "${v.project_id}/${v.region}/${v.name}" : "${v.project_id}/${v.name}"
     }) if v.create == true

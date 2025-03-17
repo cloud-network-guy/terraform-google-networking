@@ -89,6 +89,7 @@ variable "security_policy" {
   type    = string
   default = null
 }
+/*
 variable "bucket_name" {
   type    = string
   default = null
@@ -101,6 +102,7 @@ variable "bucket_location" {
   type    = string
   default = null
 }
+*/
 variable "locality_lb_policy" {
   type    = string
   default = null
@@ -134,8 +136,10 @@ variable "bucket" {
 }
 variable "iap" {
   type = object({
+    create            = optional(bool)
     application_title = optional(string)
     support_email     = optional(string)
+    display_name      = optional(string)
     members           = optional(list(string))
   })
   default = null

@@ -3,7 +3,7 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = ">= 4.49.0, < 7.0"
+      version = ">= 5.16.0, < 7.0.0"
     }
     random = {
       source  = "hashicorp/random"
@@ -15,7 +15,7 @@ terraform {
     }
     tls = {
       source  = "hashicorp/tls"
-      version = ">= 4.0"
+      version = ">= 4.0.0"
     }
   }
 }

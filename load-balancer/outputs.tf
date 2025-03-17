@@ -2,6 +2,7 @@ output "backend_services" {
   value = { for k, v in local.backends :
     k => { for _ in ["name", "id", "self_link"] : _ => lookup(module.backends[k], _, null) }
   }
+  sensitive = true
 }
 output "forwarding_rules" {
   value = { for k, v in local.frontends :
