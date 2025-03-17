@@ -53,7 +53,7 @@ variable "network" {
   type    = string
   default = null
 }
-variable "subnet" {
+variable "subnetwork" {
   type    = string
   default = null
 }

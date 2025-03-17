@@ -105,7 +105,7 @@ locals {
     merge(v, {
       network_endpoint_type = local.is_psc ? "PRIVATE_SERVICE_CONNECT" : "SERVERLESS"
       network               = local.is_psc ? null : coalesce(var.network, "default")
-      subnetwork            = local.is_psc ? coalesce(var.subnet, "default") : null
+      subnetwork            = local.is_psc ? coalesce(var.subnetwork, "default") : null
       psc_target_service    = local.is_psc ? lower(trimspace(var.psc_target)) : null
       cloud_run_service     = var.cloud_run_service != null ? lower(trimspace(var.cloud_run_service)) : null
     }) if local.is_regional
@@ -165,7 +165,7 @@ locals {
       network_endpoint_type = local.default_port == null ? "GCE_VM_IP" : "GCE_VM_IP_PORT"
       zone                  = local.zone
       network               = coalesce(var.network, "default")
-      subnetwork            = coalesce(var.subnet, "default")
+      subnetwork            = coalesce(var.subnetwork, "default")
       default_port          = local.default_port
       endpoints = [for e in v.endpoints :
         merge(e, {
