@@ -265,6 +265,7 @@ resource "google_compute_global_address" "default" {
   for_each     = { for i, v in local.ip_addresses : v.index_key => v if local.is_global }
   project      = each.value.project_id
   name         = each.value.name
+  description  = each.value.description
   address_type = each.value.address_type
   ip_version   = each.value.ip_version
   address      = each.value.address
