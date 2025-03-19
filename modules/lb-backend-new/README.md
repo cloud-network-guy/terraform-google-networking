@@ -36,6 +36,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_balancing_mode"></a> [balancing\_mode](#input\_balancing\_mode) | n/a | `string` | `null` | no |
 | <a name="input_bucket"></a> [bucket](#input\_bucket) | n/a | <pre>object({<br/>    name     = optional(string)<br/>    location = optional(string)<br/>  })</pre> | `null` | no |
 | <a name="input_capacity_scaler"></a> [capacity\_scaler](#input\_capacity\_scaler) | n/a | `number` | `null` | no |
 | <a name="input_cdn"></a> [cdn](#input\_cdn) | n/a | <pre>object({<br/>    cache_mode = optional(string)<br/>  })</pre> | `null` | no |

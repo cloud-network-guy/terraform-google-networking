@@ -47,23 +47,27 @@ locals {
   groups = [for group in coalesce(var.groups, []) :
     (startswith(group, local.api_prefix) ? group : "${local.api_prefix}/${group}")
   ]
-  is_psc             = false # TODO
-  is_igs             = length([for _ in local.groups : _ if strcontains(_, "/instanceGroups/")]) > 0 ? true : false
-  is_negs            = length([for _ in local.groups : _ if strcontains(_, "/networkEndpointGroups/")]) > 0 ? true : false
-  is_gnegs           = length([for _ in local.groups : _ if local.is_negs && strcontains(_, "/global/")]) > 0 ? true : false
-  is_rnegs           = length([for _ in local.groups : _ if local.is_negs && strcontains(_, "/regions/")]) > 0 ? true : false
-  is_znegs           = length([for _ in local.groups : _ if local.is_negs && strcontains(_, "/zones/")]) > 0 ? true : false
-  alb_balancing_mode = local.is_gnegs ? null : local.is_negs ? "RATE" : "UTILIZATION"
+  is_psc                    = false # TODO
+  is_igs                    = length([for _ in local.groups : _ if strcontains(_, "/instanceGroups/")]) > 0 ? true : false
+  is_negs                   = length([for _ in local.groups : _ if strcontains(_, "/networkEndpointGroups/")]) > 0 ? true : false
+  is_gnegs                  = length([for _ in local.groups : _ if local.is_negs && strcontains(_, "/global/")]) > 0 ? true : false
+  is_rnegs                  = length([for _ in local.groups : _ if local.is_negs && strcontains(_, "/regions/")]) > 0 ? true : false
+  is_znegs                  = length([for _ in local.groups : _ if local.is_negs && strcontains(_, "/zones/")]) > 0 ? true : false
+  balancing_mode            = var.balancing_mode != null ? upper(trimspace(var.balancing_mode, "CONNECTION")) : null
+  alb_balancing_mode        = local.is_gnegs ? null : local.is_negs ? "RATE" : coalesce(local.balancing_mode, "UTILIZATION")
+  use_connection_balancing  = local.is_tcp ? true : false
+  use_rate_balancing        = local.alb_balancing_mode != null && local.alb_balancing_mode == "RATE" ? true : false
+  use_utilization_balancing = local.alb_balancing_mode != null && local.alb_balancing_mode == "UTILIZATION" ? true : false
   backend = {
     capacity_scaler              = local.is_tcp ? 0 : null
-    balancing_mode               = local.is_tcp ? "CONNECTION" : local.alb_balancing_mode
-    max_connections              = local.is_tcp && local.is_internal ? 0 : null
-    max_connections_per_endpoint = coalesce(var.max_connections_per_endpoint, 0)
-    max_connections_per_instance = coalesce(var.max_connections_per_instance, 0)
-    max_rate                     = coalesce(var.max_rate, 0)
-    max_rate_per_endpoint        = coalesce(var.max_rate_per_endpoint, 0)
-    max_rate_per_instance        = coalesce(var.max_rate_per_instance, 0)
-    max_utilization              = coalesce(var.max_utilization, 0)
+    balancing_mode               = local.use_connection_balancing ? "CONNECTION" : local.alb_balancing_mode
+    max_connections              = local.use_connection_balancing && local.is_internal ? 0 : null
+    max_connections_per_endpoint = local.use_connection_balancing ? coalesce(var.max_connections_per_endpoint, 0) : null
+    max_connections_per_instance = local.use_connection_balancing ? coalesce(var.max_connections_per_instance, 0) : null
+    max_rate                     = local.use_rate_balancing ? coalesce(var.max_rate, 0) : null
+    max_rate_per_endpoint        = local.use_rate_balancing ? coalesce(var.max_rate_per_endpoint, 0) : null
+    max_rate_per_instance        = local.use_rate_balancing ? coalesce(var.max_rate_per_instance, 0) : null
+    max_utilization              = local.use_utilization_balancing ? coalesce(var.max_utilization, 0) : null
   }
   is_classic                      = coalesce(var.classic, false)
   is_application                  = startswith(local.protocol, "HTTP") ? true : false

@@ -191,6 +191,7 @@ module "backends" {
   logging                      = each.value.logging
   classic                      = each.value.classic
   health_checks                = each.value.health_checks
+  balancing_mode               = each.value.balancing_mode
   capacity_scaler              = each.value.capacity_scaler
   max_utilization              = each.value.max_utilization
   max_rate                     = each.value.max_rate

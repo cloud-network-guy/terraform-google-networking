@@ -153,6 +153,7 @@ variable "backends" {
     cdn = optional(object({
       cache_mode = optional(string)
     }))
+    balancing_mode               = optional(string)
     capacity_scaler              = optional(number)
     max_utilization              = optional(number)
     max_connections              = optional(number)

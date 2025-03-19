@@ -89,21 +89,11 @@ variable "security_policy" {
   type    = string
   default = null
 }
-/*
-variable "bucket_name" {
-  type    = string
-  default = null
-}
-variable "create_bucket" {
-  type    = bool
-  default = null
-}
-variable "bucket_location" {
-  type    = string
-  default = null
-}
-*/
 variable "locality_lb_policy" {
+  type    = string
+  default = null
+}
+variable "balancing_mode" {
   type    = string
   default = null
 }
