@@ -224,8 +224,9 @@ locals {
       ]
       routing_rules = [for rule_key, rule in coalesce(v.routing_rules, {}) :
         merge(rule, {
-          name    = coalesce(rule.name, rule_key)
-          backend = rule.backend != null ? module.backends[rule.backend].name : null
+          name = coalesce(rule.name, rule_key)
+          #backend = rule.backend != null ? module.backends[rule.backend].name : null
+          backend = rule.backend != null ? module.backends[rule_key].name : null
         })
       ]
       network    = try(coalesce(v.network, var.network), null)
@@ -250,7 +251,6 @@ module "frontends" {
   create_static_ip          = each.value.create_static_ip
   ip_address                = each.value.ip_address
   ip_address_name           = each.value.ip_address_name
-  ip_address_description    = each.value.ip_address_description
   ipv4_address_name         = each.value.ipv4_address_name
   ipv6_address_name         = each.value.ipv6_address_name
   forwarding_rule_name      = each.value.forwarding_rule_name

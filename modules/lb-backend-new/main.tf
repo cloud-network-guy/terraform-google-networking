@@ -53,13 +53,13 @@ locals {
   is_gnegs                  = length([for _ in local.groups : _ if local.is_negs && strcontains(_, "/global/")]) > 0 ? true : false
   is_rnegs                  = length([for _ in local.groups : _ if local.is_negs && strcontains(_, "/regions/")]) > 0 ? true : false
   is_znegs                  = length([for _ in local.groups : _ if local.is_negs && strcontains(_, "/zones/")]) > 0 ? true : false
-  balancing_mode            = var.balancing_mode != null ? upper(trimspace(var.balancing_mode, "CONNECTION")) : null
+  balancing_mode            = var.balancing_mode != null ? upper(trimspace(coalesce(var.balancing_mode, "CONNECTION"))) : null
   alb_balancing_mode        = local.is_gnegs ? null : local.is_negs ? "RATE" : coalesce(local.balancing_mode, "UTILIZATION")
   use_connection_balancing  = local.is_tcp ? true : false
   use_rate_balancing        = local.alb_balancing_mode != null && local.alb_balancing_mode == "RATE" ? true : false
   use_utilization_balancing = local.alb_balancing_mode != null && local.alb_balancing_mode == "UTILIZATION" ? true : false
   backend = {
-    capacity_scaler              = local.is_tcp ? 0 : null
+    capacity_scaler              = local.is_tcp ? 0 : local.is_managed ? coalesce(var.capacity_scaler, 1.0) : null
     balancing_mode               = local.use_connection_balancing ? "CONNECTION" : local.alb_balancing_mode
     max_connections              = local.use_connection_balancing && local.is_internal ? 0 : null
     max_connections_per_endpoint = local.use_connection_balancing ? coalesce(var.max_connections_per_endpoint, 0) : null
@@ -76,11 +76,12 @@ locals {
   create_bucket                   = local.bucket != null ? lookup(local.bucket, "create", false) : false
   is_service                      = !local.is_bucket ? true : false
   load_balancing_scheme           = local.is_application && !local.is_classic ? "${local.type}_MANAGED" : local.type
+  is_managed                      = endswith(local.load_balancing_scheme, "_MANAGED")
   locality_lb_policy              = local.is_application && !local.is_classic ? upper(coalesce(var.locality_lb_policy, "ROUND_ROBIN")) : ""
   session_affinity                = local.is_tcp ? trimspace(coalesce(var.session_affinity, "NONE")) : null
   connection_draining_timeout_sec = coalesce(var.connection_draining_timeout_sec, 300)
   timeout_sec                     = local.is_tcp ? null : coalesce(var.timeout, 30)
-  security_policy                 = local.is_application && var.security_policy != null ? lower(trimspace(var.security_policy)) : null
+  security_policy                 = local.is_application && !local.is_internal && var.security_policy != null ? lower(trimspace(var.security_policy)) : null
   enable_cdn                      = var.cdn != null && local.is_application && !local.is_regional && !local.is_internal ? true : false
   cdn_cache_mode                  = local.enable_cdn ? upper(lookup(var.cdn, "cache_mode", "CACHE_ALL_STATIC")) : "NONE"
   cdn = local.enable_cdn ? {
@@ -165,7 +166,7 @@ resource "google_compute_region_backend_service" "default" {
   }
   depends_on = [null_resource.backend_service]
   region     = local.region
-  network    = local.is_tcp ? null : local.network
+  network    = local.is_tcp || local.is_internal ? null : local.network
 }
 
 # Global Backend Service
