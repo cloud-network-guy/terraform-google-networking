@@ -20,7 +20,7 @@ locals {
   protocol       = var.protocol != null ? upper(trimspace(var.protocol)) : "TCP"
   is_tcp         = local.protocol == "TCP" ? true : false
   _health_checks = var.health_check != null ? [var.health_check] : coalesce(var.health_checks, [])
-  health_checks = [for hc in local._health_checks :
+  health_checks = local.is_gnegs || local.is_psc ? null : [for hc in local._health_checks :
     coalesce(
       startswith(hc, local.api_prefix) ? hc : null,
       startswith(hc, "projects/", ) ? "${local.api_prefix}/${hc}" : null,
@@ -29,7 +29,7 @@ locals {
   ]
   _network = lower(trimspace(coalesce(var.network, "default")))
   network = coalesce(
-      startswith(local._network, local.api_prefix) ? local._network : null,
+    startswith(local._network, local.api_prefix) ? local._network : null,
     startswith(local._network, "projects/") ? "${local.api_prefix}/${local._network}" : null,
     "projects/${local.host_project}/global/networks/${local._network}",
   )
@@ -47,6 +47,7 @@ locals {
   groups = [for group in coalesce(var.groups, []) :
     (startswith(group, local.api_prefix) ? group : "${local.api_prefix}/${group}")
   ]
+  is_psc             = false # TODO
   is_igs             = length([for _ in local.groups : _ if strcontains(_, "/instanceGroups/")]) > 0 ? true : false
   is_negs            = length([for _ in local.groups : _ if strcontains(_, "/networkEndpointGroups/")]) > 0 ? true : false
   is_gnegs           = length([for _ in local.groups : _ if local.is_negs && strcontains(_, "/global/")]) > 0 ? true : false
@@ -57,12 +58,12 @@ locals {
     capacity_scaler              = local.is_tcp ? 0 : null
     balancing_mode               = local.is_tcp ? "CONNECTION" : local.alb_balancing_mode
     max_connections              = local.is_tcp && local.is_internal ? 0 : null
-    max_connections_per_endpoint = 0
-    max_connections_per_instance = 0
-    max_rate                     = 0
-    max_rate_per_endpoint        = 42
-    max_rate_per_instance        = 0
-    max_utilization              = 0
+    max_connections_per_endpoint = coalesce(var.max_connections_per_endpoint, 0)
+    max_connections_per_instance = coalesce(var.max_connections_per_instance, 0)
+    max_rate                     = coalesce(var.max_rate, 0)
+    max_rate_per_endpoint        = coalesce(var.max_rate_per_endpoint, 0)
+    max_rate_per_instance        = coalesce(var.max_rate_per_instance, 0)
+    max_utilization              = coalesce(var.max_utilization, 0)
   }
   is_classic                      = coalesce(var.classic, false)
   is_application                  = startswith(local.protocol, "HTTP") ? true : false
@@ -76,7 +77,16 @@ locals {
   connection_draining_timeout_sec = coalesce(var.connection_draining_timeout_sec, 300)
   timeout_sec                     = local.is_tcp ? null : coalesce(var.timeout, 30)
   security_policy                 = local.is_application && var.security_policy != null ? lower(trimspace(var.security_policy)) : null
-  uses_iap                        = var.iap != null && local.is_service ? true : false
+  enable_cdn                      = var.cdn != null && local.is_application && !local.is_regional && !local.is_internal ? true : false
+  cdn_cache_mode                  = local.enable_cdn ? upper(lookup(var.cdn, "cache_mode", "CACHE_ALL_STATIC")) : "NONE"
+  cdn = local.enable_cdn ? {
+    cache_mode      = local.cdn_cache_mode
+    cdn_default_ttl = local.cdn_cache_mode == "CACHE_ALL_STATIC" ? 3600 : 0
+    cdn_min_ttl     = local.cdn_cache_mode == "CACHE_ALL_STATIC" ? 60 : 0
+    cdn_max_ttl     = local.cdn_cache_mode == "CACHE_ALL_STATIC" ? 14400 : 0
+    cdn_client_ttl  = local.cdn_cache_mode == "CACHE_ALL_STATIC" ? 3600 : 0
+  } : null
+  uses_iap = var.iap != null && local.is_service ? true : false
   iap = local.uses_iap ? {
     create              = lookup(var.iap, "create", local.create)
     name                = lookup(var.iap, "name", "iap-${local.name}")
@@ -132,7 +142,7 @@ resource "google_compute_region_backend_service" "default" {
       max_connections_per_instance = local.backend.max_connections_per_instance
       max_rate                     = local.backend.max_rate
       max_rate_per_endpoint        = local.backend.max_rate_per_endpoint
-      max_rate_per_instance        = local.backend.max_connections_per_instance
+      max_rate_per_instance        = local.backend.max_rate_per_instance
       max_utilization              = local.backend.max_utilization
     }
   }
@@ -147,14 +157,6 @@ resource "google_compute_region_backend_service" "default" {
     for_each = local.locality_lb_policy == "RING_HASH" ? [true] : []
     content {
       minimum_ring_size = 1
-    }
-  }
-  dynamic "iap" {
-    for_each = local.uses_iap ? [true] : []
-    content {
-      enabled              = true
-      oauth2_client_id     = one(google_iap_client.default).client_id
-      oauth2_client_secret = one(google_iap_client.default).secret
     }
   }
   depends_on = [null_resource.backend_service]
@@ -187,7 +189,7 @@ resource "google_compute_backend_service" "default" {
       max_connections_per_instance = local.backend.max_connections_per_instance
       max_rate                     = local.backend.max_rate
       max_rate_per_endpoint        = local.backend.max_rate_per_endpoint
-      max_rate_per_instance        = local.backend.max_connections_per_instance
+      max_rate_per_instance        = local.backend.max_rate_per_instance
       max_utilization              = local.backend.max_utilization
     }
   }
@@ -202,6 +204,33 @@ resource "google_compute_backend_service" "default" {
     for_each = local.locality_lb_policy == "RING_HASH" ? [true] : []
     content {
       minimum_ring_size = 1
+    }
+  }
+  enable_cdn = local.enable_cdn
+  dynamic "cdn_policy" {
+    for_each = local.enable_cdn ? [true] : []
+    content {
+      cache_mode                   = lookup(local.cdn, "cache_mode", null)
+      default_ttl                  = lookup(local.cdn, "default_ttl", null)
+      client_ttl                   = lookup(local.cdn, "client_ttl", null)
+      max_ttl                      = lookup(local.cdn, "max_ttl", null)
+      signed_url_cache_max_age_sec = 3600
+      negative_caching             = false
+      cache_key_policy {
+        include_host           = true
+        include_protocol       = true
+        include_query_string   = true
+        query_string_blacklist = []
+        query_string_whitelist = []
+      }
+    }
+  }
+  dynamic "iap" {
+    for_each = local.uses_iap ? [true] : []
+    content {
+      enabled              = true
+      oauth2_client_id     = one(google_iap_client.default).client_id
+      oauth2_client_secret = one(google_iap_client.default).secret
     }
   }
   depends_on = [null_resource.backend_service]

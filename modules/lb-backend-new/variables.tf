@@ -113,15 +113,31 @@ variable "capacity_scaler" {
 }
 variable "max_utilization" {
   type    = number
-  default = null
+  default = 0
+}
+variable "max_rate" {
+  type    = number
+  default = 0
 }
 variable "max_rate_per_instance" {
   type    = number
-  default = null
+  default = 0
+}
+variable "max_rate_per_endpoint" {
+  type    = number
+  default = 0
 }
 variable "max_connections" {
   type    = number
-  default = null
+  default = 0
+}
+variable "max_connections_per_endpoint" {
+  type    = number
+  default = 0
+}
+variable "max_connections_per_instance" {
+  type    = number
+  default = 0
 }
 variable "connection_draining_timeout_sec" {
   type    = number

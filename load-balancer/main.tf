@@ -1,10 +1,12 @@
 # Healthchecks
 locals {
+  type = lower(trimspace(coalesce(var.type, "external")))
   health_checks = { for k, v in var.health_checks : k =>
     merge(v, {
-      project_id = coalesce(v.project_id, var.project_id)
-      name       = coalesce(v.name, var.name_prefix != null ? "${var.name_prefix}-${k}" : k)
-      logging    = try(coalesce(v.logging, var.logging), null)
+      project_id  = coalesce(v.project_id, var.project_id)
+      name        = coalesce(v.name, var.name_prefix != null ? "${var.name_prefix}-${k}" : k)
+      description = trimspace(coalesce(v.description, "Managed by Terraform"))
+      logging     = try(coalesce(v.logging, var.logging), null)
     })
   }
 }
@@ -145,9 +147,10 @@ locals {
   backends = { for k, v in local._backends : k =>
     merge(v, {
       name        = coalesce(v.name, k)
-      type        = var.type
+      description = trimspace(coalesce(v.description, "Managed by Terraform"))
+      type        = local.type
       name_prefix = var.name_prefix
-      groups      = concat(coalesce(v.groups, [for i, v in local.negs : module.negs[v.backend_key].self_link if v.backend_key == k]))
+      groups      = concat(coalesce(v.groups, [for neg in local.negs : module.negs[neg.backend_key].self_link if neg.backend_key == k]))
       timeout     = try(coalesce(v.timeout, var.backend_timeout), null)
       security_policy = one(coalescelist(
         [v.existing_security_policy],
@@ -167,29 +170,35 @@ locals {
 }
 # Backend Services, Buckets, and Network Endpoint Groups
 module "backends" {
-  source             = "../modules/lb-backend-new"
-  for_each           = { for k, v in local.backends : k => v }
-  project_id         = each.value.project_id
-  host_project_id    = each.value.host_project_id
-  region             = each.value.region
-  type               = each.value.type
-  name               = each.value.name
-  description        = each.value.description
-  port               = each.value.port
-  protocol           = each.value.protocol
-  network            = each.value.network
-  subnetwork         = each.value.subnetwork
-  groups             = each.value.groups
-  cdn                = each.value.cdn
-  security_policy    = each.value.security_policy
-  timeout            = each.value.timeout
-  session_affinity   = each.value.session_affinity
-  locality_lb_policy = each.value.locality_lb_policy
-  logging            = each.value.logging
-  classic            = each.value.classic
-  #health_check       = try(coalesce(each.value.existing_health_check, each.value.health_checks), null)
-  health_checks = each.value.health_checks
-  depends_on    = [module.healthchecks]
+  source                       = "../modules/lb-backend-new"
+  for_each                     = { for k, v in local.backends : k => v }
+  project_id                   = each.value.project_id
+  host_project_id              = each.value.host_project_id
+  region                       = each.value.region
+  type                         = each.value.type
+  name                         = each.value.name
+  description                  = each.value.description
+  port                         = each.value.port
+  protocol                     = each.value.protocol
+  network                      = each.value.network
+  subnetwork                   = each.value.subnetwork
+  groups                       = each.value.groups
+  cdn                          = each.value.cdn
+  security_policy              = each.value.security_policy
+  timeout                      = each.value.timeout
+  session_affinity             = each.value.session_affinity
+  locality_lb_policy           = each.value.locality_lb_policy
+  logging                      = each.value.logging
+  classic                      = each.value.classic
+  health_checks                = each.value.health_checks
+  capacity_scaler              = each.value.capacity_scaler
+  max_utilization              = each.value.max_utilization
+  max_rate                     = each.value.max_rate
+  max_rate_per_instance        = each.value.max_rate_per_instance
+  max_rate_per_endpoint        = each.value.max_rate_per_endpoint
+  max_connections              = each.value.max_connections
+  max_connections_per_instance = each.value.max_connections_per_instance
+  max_connections_per_endpoint = each.value.max_connections_per_endpoint
 }
 
 locals {
@@ -199,7 +208,7 @@ locals {
       project_id             = coalesce(v.project_id, var.project_id)
       host_project_id        = try(coalesce(v.host_project_id, var.host_project_id), null)
       region                 = try(coalesce(v.region, var.region), null)
-      type                   = var.type
+      type                   = local.type
       name_prefix            = k == "default" ? null : var.name_prefix
       redirect_http_to_https = try(coalesce(v.redirect_http_to_https, var.redirect_http_to_https), null)
       existing_ssl_certs     = v.existing_ssl_certs
@@ -236,7 +245,7 @@ module "frontends" {
   name                      = each.value.name
   description               = each.value.description
   network                   = each.value.network
-  subnetwork                    = each.value.subnetwork
+  subnetwork                = each.value.subnetwork
   create_static_ip          = each.value.create_static_ip
   ip_address                = each.value.ip_address
   ip_address_name           = each.value.ip_address_name

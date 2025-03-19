@@ -62,7 +62,7 @@ locals {
     coalesce(
       startswith(_, local.api_prefix) ? _ : null,
       startswith(_, "projects/") ? "${local.api_prefix}/${_}" : null,
-      "${local.api_prefix}/${local.project_id}/${local.is_regional ? "regions/" : ""}${local.region}/sslCertificates/${_}"
+      "${local.api_prefix}/projects/${local.project_id}/${local.is_regional ? "regions/" : ""}${local.region}/sslCertificates/${_}"
     )
   ] : []
   port_names = {
