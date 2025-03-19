@@ -251,6 +251,7 @@ module "frontends" {
   create_static_ip          = each.value.create_static_ip
   ip_address                = each.value.ip_address
   ip_address_name           = each.value.ip_address_name
+  ip_address_description    = each.value.ip_address_description
   ipv4_address_name         = each.value.ipv4_address_name
   ipv6_address_name         = each.value.ipv6_address_name
   forwarding_rule_name      = each.value.forwarding_rule_name
