@@ -64,7 +64,7 @@ locals {
     max_connections              = local.use_connection_balancing && local.is_internal ? 0 : null
     max_connections_per_endpoint = local.use_connection_balancing ? coalesce(var.max_connections_per_endpoint, 0) : null
     max_connections_per_instance = local.use_connection_balancing ? coalesce(var.max_connections_per_instance, 0) : null
-    max_rate                     = local.use_rate_balancing ? coalesce(var.max_rate, 0) : null
+    max_rate                     = local.use_rate_balancing ? coalesce(var.max_rate, 1024) : null
     max_rate_per_endpoint        = local.use_rate_balancing ? coalesce(var.max_rate_per_endpoint, 0) : null
     max_rate_per_instance        = local.use_rate_balancing ? coalesce(var.max_rate_per_instance, 0) : null
     max_utilization              = local.use_utilization_balancing ? coalesce(var.max_utilization, 0) : null
