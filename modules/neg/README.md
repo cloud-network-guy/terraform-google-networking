@@ -54,7 +54,7 @@ No modules.
 | <a name="input_protocol"></a> [protocol](#input\_protocol) | n/a | `string` | `null` | no |
 | <a name="input_psc_target"></a> [psc\_target](#input\_psc\_target) | n/a | `string` | `null` | no |
 | <a name="input_region"></a> [region](#input\_region) | n/a | `string` | `null` | no |
-| <a name="input_subnet"></a> [subnet](#input\_subnet) | n/a | `string` | `null` | no |
+| <a name="input_subnetwork"></a> [subnetwork](#input\_subnetwork) | n/a | `string` | `null` | no |
 | <a name="input_type"></a> [type](#input\_type) | n/a | `string` | `null` | no |
 | <a name="input_zone"></a> [zone](#input\_zone) | n/a | `string` | `null` | no |
 

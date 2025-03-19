@@ -53,9 +53,13 @@ No modules.
 | <a name="input_locality_lb_policy"></a> [locality\_lb\_policy](#input\_locality\_lb\_policy) | n/a | `string` | `null` | no |
 | <a name="input_logging"></a> [logging](#input\_logging) | n/a | `bool` | `false` | no |
 | <a name="input_logging_sample_rate"></a> [logging\_sample\_rate](#input\_logging\_sample\_rate) | n/a | `number` | `1` | no |
-| <a name="input_max_connections"></a> [max\_connections](#input\_max\_connections) | n/a | `number` | `null` | no |
-| <a name="input_max_rate_per_instance"></a> [max\_rate\_per\_instance](#input\_max\_rate\_per\_instance) | n/a | `number` | `null` | no |
-| <a name="input_max_utilization"></a> [max\_utilization](#input\_max\_utilization) | n/a | `number` | `null` | no |
+| <a name="input_max_connections"></a> [max\_connections](#input\_max\_connections) | n/a | `number` | `0` | no |
+| <a name="input_max_connections_per_endpoint"></a> [max\_connections\_per\_endpoint](#input\_max\_connections\_per\_endpoint) | n/a | `number` | `0` | no |
+| <a name="input_max_connections_per_instance"></a> [max\_connections\_per\_instance](#input\_max\_connections\_per\_instance) | n/a | `number` | `0` | no |
+| <a name="input_max_rate"></a> [max\_rate](#input\_max\_rate) | n/a | `number` | `0` | no |
+| <a name="input_max_rate_per_endpoint"></a> [max\_rate\_per\_endpoint](#input\_max\_rate\_per\_endpoint) | n/a | `number` | `0` | no |
+| <a name="input_max_rate_per_instance"></a> [max\_rate\_per\_instance](#input\_max\_rate\_per\_instance) | n/a | `number` | `0` | no |
+| <a name="input_max_utilization"></a> [max\_utilization](#input\_max\_utilization) | n/a | `number` | `0` | no |
 | <a name="input_name"></a> [name](#input\_name) | n/a | `string` | `null` | no |
 | <a name="input_network"></a> [network](#input\_network) | n/a | `string` | `"default"` | no |
 | <a name="input_port"></a> [port](#input\_port) | n/a | `number` | `null` | no |
