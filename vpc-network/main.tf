@@ -95,7 +95,7 @@ locals {
     flatten([for k, region in var.regions :
       [for cloud_nat in coalesce(region.cloud_nats, []) :
         merge(cloud_nat, {
-          name             = coalesce(cloud_nat.name, "${local.name_prefix}-${k}")
+          name             = coalesce(cloud_nat.name, "${coalesce(var.cloud_nat_name_prefix, local.name_prefix)}-${k}")
           region           = k
           router           = coalesce(cloud_nat.cloud_router_name, cloud_nat.cloud_router, "${local.name_prefix}-${k}")
           min_ports_per_vm = coalesce(cloud_nat.min_ports_per_vm, var.cloud_nat_min_ports_per_vm)
@@ -107,7 +107,7 @@ locals {
     # Auto Created Cloud NATs
     [for k, region in var.regions :
       {
-        name             = coalesce(var.cloud_nat_name_prefix, "${local.name_prefix}-${k}")
+        name             = "${coalesce(var.cloud_nat_name_prefix, local.name_prefix)}-${k}"
         region           = k
         router           = "${local.name_prefix}-${k}"
         min_ports_per_vm = var.cloud_nat_min_ports_per_vm
