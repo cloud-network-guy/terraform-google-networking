@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 
 from os import scandir, chdir, system, environ
-from os.path import realpath, dirname, join, exists, isfile, isdir, splitext
+#from os.path import realpath, dirname, join, exists, isfile, isdir, splitext
 from time import time
 from asyncio import gather
+from pathlib import Path
 import google.auth
 import google.auth.transport.requests
 from classes import TFModule, TFWorkSpace, GitRepo
 
 SCOPES = ['https://www.googleapis.com/auth/cloud-platform']
-PWD = realpath(dirname(__file__))
+#PWD = realpath(dirname(__file__))
+PWD = Path(__file__).parent
 ADC_VAR = 'GOOGLE_APPLICATION_CREDENTIALS'
 VALID_ACTIONS = ('version', 'init', 'plan', 'apply', 'providers')
 OPTIONS = {'debug': True}
@@ -20,7 +22,8 @@ FIELDS_FILE = "fields.toml"
 def get_gcp_access_token(key_file: str = None) -> str:
 
     if key_file:
-        key_file = join(PWD, key_file)  # Convert relative to full path
+        #key_file = join(PWD, key_file)  # Convert relative to full path
+        key_file = PWD.joinpath(key_file)  # Convert relative to full path
         credentials = google.oauth2.service_account.Credentials.from_service_account_file(key_file, scopes=SCOPES)
     else:
         credentials, project_id = google.auth.default(scopes=SCOPES, quota_project_id=None)
@@ -34,9 +37,10 @@ def check_file(file_name: str) -> str:
     """
     Verify a file exists
     """
-    _ = str(join(PWD, str(file_name)))
-    assert exists(_), f"File '{_}' does not exist"
-    assert isfile(_), f"File '{_}' is not a file"
+    #_ = str(join(PWD, str(file_name)))
+    _ = PWD.joinpath(file_name)
+    assert _.exists, FileNotFoundError(f"File '{_}' does not exist")
+    assert _.is_file, f"File '{_}' is not a file"
 
     #_ = Path(join(PWD, str(file_name)))
     #assert _.is_file() and _.stat().st_size > 0, f"File '{file_name}' does not exist or is empty!"
@@ -47,8 +51,9 @@ def check_directory(directory: str) -> bool:
     """
     Verify a directory exists
     """
-    assert exists(directory), f"Directory '{directory}' does not exist"
-    assert isdir(directory), f"Directory '{directory}' is not a directory"
+    _ = PWD.joinpath(directory)
+    assert _.exists, f"Directory '{directory}' does not exist"
+    assert _.is_dir, f"Directory '{directory}' is not a directory"
     return True
 
 def get_config(input_file: str) -> dict:
@@ -57,7 +62,8 @@ def get_config(input_file: str) -> dict:
     import yaml
 
     if _ := check_file(input_file):
-        file_format = splitext(input_file)[-1].lower()
+        #file_format = splitext(input_file)[-1].lower()
+        file_format = _.suffix.lower()
         with open(_, mode="rb") as fp:
             if 'yaml' in file_format:
                 _ = yaml.load(fp, Loader=yaml.FullLoader)
@@ -86,7 +92,7 @@ async def get_modules(environment: str, module: str = None) -> list[TFModule]:
     environments = get_environments()
     assert environment in environments, f"environment '{environment}' not found"
 
-    root_dir = "."
+    root_dir = PWD.joinpath(".")
 
     splits = {'start': time()}
     e = environments.get(environment)
@@ -96,10 +102,10 @@ async def get_modules(environment: str, module: str = None) -> list[TFModule]:
         repo.configure()
         repo.pull()
         sub_dir = str(e.get('sub_dir', ""))
-        root_dir = join(repo.local_path, sub_dir) if sub_dir else repo.local_path
+        root_dir = root_dir.joinpath(repo.local_path)
         print("Root directory:", root_dir)
     elif directory := e.get('directory'):
-        root_dir = join(directory)
+        root_dir = root_dir.joinpath(directory)
     splits['finish_git_init'] = time()
 
     sub_directories = get_sub_directories(root_dir)
@@ -190,7 +196,7 @@ def get_sub_directories(base_dir: str) -> dict:
 
     sub_directories = {}
     for subdir in [_.name for _ in scandir(base_dir) if _.is_dir()]:
-        _subdir = join(base_dir, subdir)
+        _subdir = Path(base_dir).joinpath(subdir)
         tf_files = [f.name for f in scandir(_subdir) if f.name.lower().endswith(".tf")]
         if len(tf_files) > 0:
             #print("Found Terraform sub-directories in base:", base_dir)
