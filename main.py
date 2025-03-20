@@ -66,7 +66,7 @@ def get_config(input_file: str) -> dict:
             return _
     return {}
 
-def get_settings(input_file: str = "settings.yaml") -> dict:
+def get_settings(input_file: str = "environments.toml") -> dict:
 
     return get_config(input_file)
 
