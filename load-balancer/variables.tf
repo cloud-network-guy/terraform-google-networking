@@ -124,13 +124,15 @@ variable "backends" {
     fqdn                     = optional(string)
     psc_target               = optional(string)
     cloud_run_service        = optional(string)
-    instance_groups = optional(list(object({
+    instance_groups = optional(map(object({
       id         = optional(string)
       project_id = optional(string)
       zone       = optional(string)
       name       = optional(string)
     })))
-    negs = optional(list(object({
+    negs = optional(map(object({
+      id                = optional(string)
+      project_id        = optional(string)
       name              = optional(string)
       network           = optional(string)
       subnetwork        = optional(string)

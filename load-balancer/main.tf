@@ -50,11 +50,12 @@ locals {
   negs = flatten(concat(
     [for k, v in local._backends :
       # Explicit NEGs defined by objects
-      [for neg in coalesce(lookup(v, "negs", null), []) :
+      [for neg_key, neg in coalesce(lookup(v, "negs", null), {}) :
         merge(neg, {
+          neg_key         = neg_key
           project_id      = v.project_id
           host_project_id = v.host_project_id
-          name            = coalesce(neg.name, v.name)
+          name            = coalesce(neg.name, neg_key)
           network         = try(coalesce(neg.network, v.network, var.network), null)
           subnetwork      = try(coalesce(neg.subnetwork, v.subnetwork, var.subnetwork), null)
           default_port    = try(coalesce(lookup(neg, "default_port", null), lookup(neg, "port", null), v.port), null)
@@ -83,6 +84,7 @@ locals {
     # Implicit NEG using IP address, FQDN, PSC, or Serverless target
     [for k, v in local._backends :
       {
+        neg_key           = k
         project_id        = v.project_id
         host_project_id   = v.host_project_id
         name              = v.name
@@ -107,7 +109,7 @@ locals {
 }
 module "negs" {
   source            = "../modules/neg"
-  for_each          = { for k, v in local.negs : v.backend_key => v }
+  for_each          = { for k, v in local.negs : "${v.backend_key}/${v.neg_key}" => v }
   project_id        = each.value.project_id
   host_project_id   = each.value.host_project_id
   name              = each.value.name
@@ -150,15 +152,18 @@ locals {
       description = trimspace(coalesce(v.description, "Managed by Terraform"))
       type        = local.type
       name_prefix = var.name_prefix
-      groups      = concat(coalesce(v.groups, [for neg in local.negs : module.negs[neg.backend_key].self_link if neg.backend_key == k]))
-      timeout     = try(coalesce(v.timeout, var.backend_timeout), null)
+      groups = concat(coalesce(
+        v.groups,
+        [for neg in local.negs : module.negs["${neg.backend_key}/${neg.neg_key}"].self_link if neg.backend_key == k]
+      ))
+      timeout = try(coalesce(v.timeout, var.backend_timeout), null)
       security_policy = one(coalescelist(
         [v.existing_security_policy],
         [for sp_key, sp in local.security_policies : module.cloudarmor[v.security_policy].self_link if v.security_policy == sp_key]
       ))
       session_affinity   = try(coalesce(v.session_affinity, var.session_affinity), null)
       locality_lb_policy = try(coalesce(v.locality_lb_policy, var.locality_lb_policy), null)
-      is_ig              = length(coalesce(v.instance_groups, [])) > 0 ? true : false
+      is_ig              = length(coalesce(v.instance_groups, {})) > 0 ? true : false
       classic            = coalesce(v.classic, var.classic)
       health_checks      = [for hc in keys(local.health_checks) : module.healthchecks[hc].self_link if hc == v.health_check]
       negs               = v.negs
