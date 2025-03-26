@@ -1,9 +1,10 @@
 # Healthchecks
 locals {
-  type = lower(trimspace(coalesce(var.type, "external")))
+  project = lower(trimspace(coalesce(var.project_id, var.project)))
+  type    = lower(trimspace(coalesce(var.type, "external")))
   health_checks = { for k, v in var.health_checks : k =>
     merge(v, {
-      project_id  = coalesce(v.project_id, var.project_id)
+      project  = coalesce(v.project_id, local.project)
       name        = coalesce(v.name, var.name_prefix != null ? "${var.name_prefix}-${k}" : k)
       description = trimspace(coalesce(v.description, "Managed by Terraform"))
       logging     = try(coalesce(v.logging, var.logging), null)
@@ -13,7 +14,7 @@ locals {
 module "healthchecks" {
   source              = "../modules/healthcheck"
   for_each            = { for k, v in local.health_checks : k => v }
-  project_id          = each.value.project_id
+  project          = each.value.project
   name                = each.value.name
   description         = each.value.description
   region              = each.value.region
@@ -32,15 +33,15 @@ module "healthchecks" {
 
 # Start walking through backends
 locals {
-  _backends = { for k, v in var.backends :
-    k => merge(v, {
-      project_id               = coalesce(v.project_id, var.project_id)
-      host_project_id          = coalesce(v.host_project_id, var.host_project_id, var.project_id)
-      region                   = coalesce(v.region, var.region, "global")
-      name                     = coalesce(v.name, var.name_prefix != null ? "${var.name_prefix}-${k}" : k)
-      protocol                 = try(coalesce(v.protocol, var.backend_protocol), null)
-      existing_security_policy = try(coalesce(v.existing_security_policy, var.existing_security_policy), null)
-      security_policy          = try(coalesce(v.security_policy, var.security_policy), null)
+  _backends = { for backend_key, backend in var.backends :
+    backend_key => merge(backend, {
+      project                  = coalesce(backend.project, local.project)
+      host_project             = backend.host_project
+      region                   = coalesce(backend.region, var.region, "global")
+      name                     = coalesce(backend.name, var.name_prefix != null ? "${var.name_prefix}-${backend_key}" : backend_key)
+      protocol                 = try(coalesce(backend.protocol, var.backend_protocol), null)
+      existing_security_policy = try(coalesce(backend.existing_security_policy, var.existing_security_policy), null)
+      security_policy          = try(coalesce(backend.security_policy, var.security_policy), null)
     })
   }
 }
@@ -48,18 +49,18 @@ locals {
 # Network Endpoint Groups
 locals {
   negs = flatten(concat(
-    [for k, v in local._backends :
+    [for backend_key, backend in local._backends :
       # Explicit NEGs defined by objects
-      [for neg_key, neg in coalesce(lookup(v, "negs", null), {}) :
+      [for neg_key, neg in coalesce(lookup(backend, "negs", null), {}) :
         merge(neg, {
-          neg_key         = neg_key
-          project_id      = v.project_id
-          host_project_id = v.host_project_id
-          name            = coalesce(neg.name, neg_key)
-          network         = try(coalesce(neg.network, v.network, var.network), null)
-          subnetwork      = try(coalesce(neg.subnetwork, v.subnetwork, var.subnetwork), null)
-          default_port    = try(coalesce(lookup(neg, "default_port", null), lookup(neg, "port", null), v.port), null)
-          backend_key     = k
+          neg_key      = neg_key
+          project      = backend.project
+          host_project = backend.host_project
+          name         = coalesce(neg.name, neg_key)
+          network      = try(coalesce(neg.network, backend.network, var.network), null)
+          subnetwork   = try(coalesce(neg.subnetwork, backend.subnetwork, var.subnetwork), null)
+          default_port = try(coalesce(lookup(neg, "default_port", null), lookup(neg, "port", null), backend.port), null)
+          backend_key  = backend_key
           endpoints = concat(
             # Explicit Endpoints
             [for endpoint in coalesce(lookup(neg, "endpoints", null), []) :
@@ -70,7 +71,7 @@ locals {
               }
             ],
             # Implicit Endpoints derived from the NEG object
-            neg.ip_address != null || neg.fqdn != null || neg.instance != null ? [
+            length(compact([for _ in ["ip_address", "fqdn", "instance"] : lookup(neg, _, null)])) > 0 ? [
               {
                 ip_address = neg.ip_address
                 fqdn       = neg.fqdn
@@ -82,36 +83,35 @@ locals {
       ]
     ],
     # Implicit NEG using IP address, FQDN, PSC, or Serverless target
-    [for k, v in local._backends :
+    [for backend_key, backend in local._backends :
       {
-        neg_key           = k
-        project_id        = v.project_id
-        host_project_id   = v.host_project_id
-        name              = v.name
-        network           = try(coalesce(v.network, var.network), null)
-        subnetwork        = try(coalesce(v.subnetwork, var.subnetwork), null)
-        default_port      = v.port
-        psc_target        = v.psc_target
-        cloud_run_service = v.cloud_run_service
-        region            = v.region
+        project           = backend.project
+        host_project      = backend.host_project
+        name              = backend.name
+        network           = try(coalesce(backend.network, var.network), null)
+        subnetwork        = try(coalesce(backend.subnetwork, var.subnetwork), null)
+        default_port      = backend.port
+        psc_target        = backend.psc_target
+        cloud_run_service = backend.cloud_run_service
+        region            = backend.region
         zone              = null
-        backend_key       = k
+        backend_key       = backend_key
         endpoints = [
           {
-            ip_address = v.ip_address
-            fqdn       = v.fqdn
-            port       = v.port
+            ip_address = backend.ip_address
+            fqdn       = backend.fqd
+            port       = backend.port
           }
         ]
-      } if length(compact([for _ in ["ip_address", "fqdn", "psc_target", "cloud_run_service"] : lookup(v, _, null)])) > 0
+      } if length(compact([for _ in ["ip_address", "fqdn", "psc_target", "cloud_run_service"] : lookup(backend, _, null)])) > 0
     ]
   ))
 }
 module "negs" {
   source            = "../modules/neg"
-  for_each          = { for k, v in local.negs : "${v.backend_key}/${v.neg_key}" => v }
-  project_id        = each.value.project_id
-  host_project_id   = each.value.host_project_id
+  for_each          = { for neg_key, neg in local.negs : "${neg.backend_key}/${neg.neg_key}" => neg }
+  project           = each.value.project
+  host_project      = each.value.host_project
   name              = each.value.name
   region            = each.value.region
   zone              = each.value.zone
@@ -146,30 +146,30 @@ module "cloudarmor" {
 }
 
 locals {
-  backends = { for k, v in local._backends : k =>
-    merge(v, {
-      name        = coalesce(v.name, k)
-      description = trimspace(coalesce(v.description, "Managed by Terraform"))
+  backends = { for backend_key, backend in local._backends : backend_key =>
+    merge(backend, {
+      name        = coalesce(backend.name, backend_key)
+      description = trimspace(coalesce(backend.description, "Managed by Terraform"))
       type        = local.type
       name_prefix = var.name_prefix
       groups = concat(coalesce(
-        v.groups,
-        [for neg in local.negs : module.negs["${neg.backend_key}/${neg.neg_key}"].self_link if neg.backend_key == k]
+        backend.groups,
+        [for neg in local.negs : module.negs["${neg.backend_key}/${neg.neg_key}"].self_link if neg.backend_key == backend_key]
       ))
-      timeout = try(coalesce(v.timeout, var.backend_timeout), null)
+      timeout = try(coalesce(backend.timeout, var.backend_timeout), null)
       security_policy = one(coalescelist(
-        [v.existing_security_policy],
-        [for sp_key, sp in local.security_policies : module.cloudarmor[v.security_policy].self_link if v.security_policy == sp_key]
+        [backend.existing_security_policy],
+        [for sp_key, sp in local.security_policies : module.cloudarmor[backend.security_policy].self_link if backend.security_policy == sp_key]
       ))
-      session_affinity   = try(coalesce(v.session_affinity, var.session_affinity), null)
-      locality_lb_policy = try(coalesce(v.locality_lb_policy, var.locality_lb_policy), null)
-      is_ig              = length(coalesce(v.instance_groups, {})) > 0 ? true : false
-      classic            = coalesce(v.classic, var.classic)
-      health_checks      = [for hc in keys(local.health_checks) : module.healthchecks[hc].self_link if hc == v.health_check]
-      negs               = v.negs
-      network            = try(coalesce(v.network, var.network), null)
-      subnetwork         = try(coalesce(v.subnetwork, var.subnetwork), null)
-      logging            = try(coalesce(v.logging, var.logging), null)
+      session_affinity   = try(coalesce(backend.session_affinity, var.session_affinity), null)
+      locality_lb_policy = try(coalesce(backend.locality_lb_policy, var.locality_lb_policy), null)
+      is_ig              = length(coalesce(backend.instance_groups, {})) > 0 ? true : false
+      classic            = coalesce(backend.classic, var.classic)
+      health_checks      = [for hc in keys(local.health_checks) : module.healthchecks[hc].self_link if hc == backend.health_check]
+      negs               = backend.negs
+      network            = try(coalesce(backend.network, var.network), null)
+      subnetwork         = try(coalesce(backend.subnetwork, var.subnetwork), null)
+      logging            = try(coalesce(backend.logging, var.logging), null)
     })
   }
 }
@@ -177,8 +177,8 @@ locals {
 module "backends" {
   source                       = "../modules/lb-backend-new"
   for_each                     = { for k, v in local.backends : k => v }
-  project_id                   = each.value.project_id
-  host_project_id              = each.value.host_project_id
+  project_id                   = each.value.project
+  host_project_id              = each.value.host_project
   region                       = each.value.region
   type                         = each.value.type
   name                         = each.value.name
@@ -229,8 +229,7 @@ locals {
       ]
       routing_rules = [for rule_key, rule in coalesce(v.routing_rules, {}) :
         merge(rule, {
-          name = coalesce(rule.name, rule_key)
-          #backend = rule.backend != null ? module.backends[rule.backend].name : null
+          name    = coalesce(rule.name, rule_key)
           backend = rule.backend != null ? module.backends[rule_key].name : null
         })
       ]

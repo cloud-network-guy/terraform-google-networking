@@ -4,8 +4,17 @@ variable "create" {
 }
 variable "project_id" {
   type = string
+  default = null
+}
+variable "project" {
+  type    = string
+  default = null
 }
 variable "host_project_id" {
+  type    = string
+  default = null
+}
+variable "host_project" {
   type    = string
   default = null
 }
@@ -51,11 +60,11 @@ variable "port" {
 }
 variable "network" {
   type    = string
-  default = null
+  default = "default"
 }
 variable "subnetwork" {
   type    = string
-  default = null
+  default = "default"
 }
 variable "cloud_run_service" {
   type    = string

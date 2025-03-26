@@ -50,7 +50,7 @@ No modules.
 | <a name="input_port"></a> [port](#input\_port) | n/a | `number` | `null` | no |
 | <a name="input_ports"></a> [ports](#input\_ports) | n/a | `list(number)` | `null` | no |
 | <a name="input_project"></a> [project](#input\_project) | n/a | `string` | `null` | no |
-| <a name="input_project_id"></a> [project\_id](#input\_project\_id) | n/a | `string` | n/a | yes |
+| <a name="input_project_id"></a> [project\_id](#input\_project\_id) | n/a | `string` | `null` | no |
 | <a name="input_protocol"></a> [protocol](#input\_protocol) | n/a | `string` | `null` | no |
 | <a name="input_proxy_header"></a> [proxy\_header](#input\_proxy\_header) | n/a | `string` | `null` | no |
 | <a name="input_region"></a> [region](#input\_region) | n/a | `string` | `null` | no |

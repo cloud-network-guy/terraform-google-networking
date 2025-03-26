@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 
-from os import scandir, chdir, system
-from os.path import realpath, dirname
+from pathlib import Path
+from os import chdir, system
 
 
-PWD = realpath(dirname(__file__))
-MODULES = [module for module in scandir(PWD) if module.is_dir()]
+PWD = Path(__file__).parent
+modules = [module for module in list(PWD.iterdir()) if module.is_dir()]
+modules.extend([module for module in list(PWD.joinpath('modules').iterdir()) if module.is_dir()])
 
-for module in MODULES:
-    tf_files = [f for f in scandir(module.path) if f.name.lower().endswith(".tf")]
+for module in modules:
+    files = list(module.iterdir())
+    tf_files = [_ for _ in files if _.suffix.lower() == ".tf"]
     if len(tf_files) > 0:
-        chdir(module.path)
+        chdir(str(module))
         system("terraform-docs markdown --output-file README.md .")

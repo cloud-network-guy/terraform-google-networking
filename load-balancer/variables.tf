@@ -1,7 +1,16 @@
 variable "project_id" {
-  type = string
+  type    = string
+  default = null
+}
+variable "project" {
+  type    = string
+  default = null
 }
 variable "host_project_id" {
+  type    = string
+  default = null
+}
+variable "host_project" {
   type    = string
   default = null
 }
@@ -98,8 +107,8 @@ variable "health_checks" {
 variable "backends" {
   type = map(object({
     create                   = optional(bool, true)
-    project_id               = optional(string)
-    host_project_id          = optional(string)
+    project               = optional(string)
+    host_project          = optional(string)
     name                     = optional(string)
     description              = optional(string)
     region                   = optional(string)
@@ -131,8 +140,6 @@ variable "backends" {
       name       = optional(string)
     })))
     negs = optional(map(object({
-      id                = optional(string)
-      project_id        = optional(string)
       name              = optional(string)
       network           = optional(string)
       subnetwork        = optional(string)

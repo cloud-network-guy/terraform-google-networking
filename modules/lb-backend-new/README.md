@@ -65,7 +65,7 @@ No modules.
 | <a name="input_network"></a> [network](#input\_network) | n/a | `string` | `"default"` | no |
 | <a name="input_port"></a> [port](#input\_port) | n/a | `number` | `null` | no |
 | <a name="input_project"></a> [project](#input\_project) | n/a | `string` | `null` | no |
-| <a name="input_project_id"></a> [project\_id](#input\_project\_id) | n/a | `string` | n/a | yes |
+| <a name="input_project_id"></a> [project\_id](#input\_project\_id) | n/a | `string` | `null` | no |
 | <a name="input_protocol"></a> [protocol](#input\_protocol) | n/a | `string` | `null` | no |
 | <a name="input_region"></a> [region](#input\_region) | n/a | `string` | `null` | no |
 | <a name="input_security_policy"></a> [security\_policy](#input\_security\_policy) | n/a | `string` | `null` | no |
