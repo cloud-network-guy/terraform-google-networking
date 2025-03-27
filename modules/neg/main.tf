@@ -11,10 +11,10 @@ resource "random_string" "name" {
 
 locals {
   api_prefix   = "https://www.googleapis.com/compute/v1"
-    create              = coalesce(var.create, true)
-  project             = lower(trimspace(coalesce(var.project_id, var.project)))
-  name                = lower(trimspace(var.name != null ? var.name : one(random_string.name).result))
-  region       = local.is_regional ? lower(trimspace(var.region)) : trimsuffix(local.zone, substr(local.zone, -2, 2))
+  create       = coalesce(var.create, true)
+  project      = lower(trimspace(coalesce(var.project_id, var.project)))
+  name         = lower(trimspace(var.name != null ? var.name : one(random_string.name).result))
+  region       = local.is_regional ? lower(trimspace(var.region)) : local.is_global ? "global" : trimsuffix(local.zone, substr(local.zone, -2, 2))
   is_zonal     = var.zone != null ? true : false
   host_project = lower(trimspace(coalesce(var.host_project_id, var.host_project, local.project)))
   description  = trimspace(coalesce(var.description, "Managed by Terraform"))
@@ -47,15 +47,17 @@ locals {
   )
   psc_target_service = local.is_psc ? lower(trimspace(var.psc_target)) : null
   cloud_run_service  = local.is_regional && var.cloud_run_service != null ? lower(trimspace(var.cloud_run_service)) : null
+  _network           = coalesce(var.network, "default")
   network = coalesce(
-    startswith(var.network, "projects/") ? var.network : null,
-    startswith(var.network, local.api_prefix) ? var.network : null,
-    "projects/${local.host_project}/global/networks/${var.network}",
+    startswith(local._network, local.api_prefix) ? local._network : null,
+    startswith(local._network, "projects/") ? "${local.api_prefix}/${local._network}" : null,
+    "${local.api_prefix}/projects/${local.host_project}/global/networks/${local._network}",
   )
+  _subnetwork = coalesce(var.subnetwork, "default")
   subnetwork = trimspace(coalesce(
-    startswith(var.subnetwork, local.api_prefix) ? var.subnetwork : null,
-    startswith(var.subnetwork, "projects/", ) ? "${local.api_prefix}/${var.subnetwork}" : null,
-    "${local.api_prefix}/projects/${local.host_project}/regions/${local.region}/subnetworks/${var.subnetwork}",
+    startswith(local._subnetwork, local.api_prefix) ? local._subnetwork : null,
+    startswith(local._subnetwork, "projects/", ) ? "${local.api_prefix}/${local._subnetwork}" : null,
+    "${local.api_prefix}/projects/${local.host_project}/regions/${local.region}/subnetworks/${local._subnetwork}",
   ))
 }
 

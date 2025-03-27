@@ -4,7 +4,7 @@ locals {
   type    = lower(trimspace(coalesce(var.type, "external")))
   health_checks = { for k, v in var.health_checks : k =>
     merge(v, {
-      project  = coalesce(v.project_id, local.project)
+      project     = coalesce(v.project_id, local.project)
       name        = coalesce(v.name, var.name_prefix != null ? "${var.name_prefix}-${k}" : k)
       description = trimspace(coalesce(v.description, "Managed by Terraform"))
       logging     = try(coalesce(v.logging, var.logging), null)
@@ -14,7 +14,7 @@ locals {
 module "healthchecks" {
   source              = "../modules/healthcheck"
   for_each            = { for k, v in local.health_checks : k => v }
-  project          = each.value.project
+  project             = each.value.project
   name                = each.value.name
   description         = each.value.description
   region              = each.value.region
@@ -36,7 +36,7 @@ locals {
   _backends = { for backend_key, backend in var.backends :
     backend_key => merge(backend, {
       project                  = coalesce(backend.project, local.project)
-      host_project             = backend.host_project
+      host_project             = coalesce(backend.host_project, var.host_project_id, var.host_project, local.project)
       region                   = coalesce(backend.region, var.region, "global")
       name                     = coalesce(backend.name, var.name_prefix != null ? "${var.name_prefix}-${backend_key}" : backend_key)
       protocol                 = try(coalesce(backend.protocol, var.backend_protocol), null)
@@ -96,10 +96,11 @@ locals {
         region            = backend.region
         zone              = null
         backend_key       = backend_key
+        neg_key           = 0
         endpoints = [
           {
             ip_address = backend.ip_address
-            fqdn       = backend.fqd
+            fqdn       = backend.fqdn
             port       = backend.port
           }
         ]
@@ -219,7 +220,7 @@ locals {
       redirect_http_to_https = try(coalesce(v.redirect_http_to_https, var.redirect_http_to_https), null)
       existing_ssl_certs     = v.existing_ssl_certs
       global_access          = try(coalesce(v.global_access, var.global_access), null)
-      default_service        = coalesce(v.default_service, length(local.backends) > 0 ? module.backends[keys(local.backends)[0]].name : "default")
+      default_service        = v.default_service != null ? module.backends[v.default_service].name : length(local.backends) > 0 ? module.backends[keys(local.backends)[0]].name : "default"
       classic                = try(coalesce(v.classic, var.classic), null)
       existing_ssl_policy    = try(coalesce(v.existing_ssl_policy, var.existing_ssl_policy), null)
       ssl_certs = [for cert_key, cert in coalesce(v.ssl_certs, {}) :
@@ -230,7 +231,7 @@ locals {
       routing_rules = [for rule_key, rule in coalesce(v.routing_rules, {}) :
         merge(rule, {
           name    = coalesce(rule.name, rule_key)
-          backend = rule.backend != null ? module.backends[rule_key].name : null
+          backend = rule.backend != null ? module.backends[rule.backend].name : lookup(module.backends, "rule_key", null) != null ? module.backends[rule_key].name : null
         })
       ]
       network    = try(coalesce(v.network, var.network), null)

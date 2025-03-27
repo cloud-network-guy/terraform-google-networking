@@ -12,9 +12,9 @@
 
 | Name | Version |
 |------|---------|
-| <a name="provider_google"></a> [google](#provider\_google) | 6.27.0 |
-| <a name="provider_null"></a> [null](#provider\_null) | 3.2.3 |
-| <a name="provider_random"></a> [random](#provider\_random) | 3.7.1 |
+| <a name="provider_google"></a> [google](#provider\_google) | >= 4.49.0, < 7.0 |
+| <a name="provider_null"></a> [null](#provider\_null) | >= 3.1.0 |
+| <a name="provider_random"></a> [random](#provider\_random) | >= 3.4.0 |
 
 ## Modules
 
@@ -49,14 +49,14 @@ No modules.
 | <a name="input_host_project_id"></a> [host\_project\_id](#input\_host\_project\_id) | n/a | `string` | `null` | no |
 | <a name="input_ip_address"></a> [ip\_address](#input\_ip\_address) | n/a | `string` | `null` | no |
 | <a name="input_name"></a> [name](#input\_name) | n/a | `string` | `null` | no |
-| <a name="input_network"></a> [network](#input\_network) | n/a | `string` | `"default"` | no |
+| <a name="input_network"></a> [network](#input\_network) | n/a | `string` | `null` | no |
 | <a name="input_port"></a> [port](#input\_port) | n/a | `number` | `null` | no |
 | <a name="input_project"></a> [project](#input\_project) | n/a | `string` | `null` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | n/a | `string` | `null` | no |
 | <a name="input_protocol"></a> [protocol](#input\_protocol) | n/a | `string` | `null` | no |
 | <a name="input_psc_target"></a> [psc\_target](#input\_psc\_target) | n/a | `string` | `null` | no |
 | <a name="input_region"></a> [region](#input\_region) | n/a | `string` | `null` | no |
-| <a name="input_subnetwork"></a> [subnetwork](#input\_subnetwork) | n/a | `string` | `"default"` | no |
+| <a name="input_subnetwork"></a> [subnetwork](#input\_subnetwork) | n/a | `string` | `null` | no |
 | <a name="input_type"></a> [type](#input\_type) | n/a | `string` | `null` | no |
 | <a name="input_zone"></a> [zone](#input\_zone) | n/a | `string` | `null` | no |
 

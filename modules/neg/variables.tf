@@ -3,7 +3,7 @@ variable "create" {
   default = null
 }
 variable "project_id" {
-  type = string
+  type    = string
   default = null
 }
 variable "project" {
@@ -60,11 +60,11 @@ variable "port" {
 }
 variable "network" {
   type    = string
-  default = "default"
+  default = null
 }
 variable "subnetwork" {
   type    = string
-  default = "default"
+  default = null
 }
 variable "cloud_run_service" {
   type    = string

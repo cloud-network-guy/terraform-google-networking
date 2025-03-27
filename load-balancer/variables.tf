@@ -107,8 +107,8 @@ variable "health_checks" {
 variable "backends" {
   type = map(object({
     create                   = optional(bool, true)
-    project               = optional(string)
-    host_project          = optional(string)
+    project                  = optional(string)
+    host_project             = optional(string)
     name                     = optional(string)
     description              = optional(string)
     region                   = optional(string)
