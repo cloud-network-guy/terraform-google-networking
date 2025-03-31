@@ -112,6 +112,7 @@ variable "disk" {
     image = optional(string)
     type  = optional(string)
     size  = optional(number)
+    size_gb  = optional(number)
   })
   default = {}
 }

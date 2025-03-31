@@ -62,7 +62,7 @@ locals {
   tags = [for tag in coalesce(var.network_tags, var.tags, []) : lower(trimspace(tag))]
   boot_disk = {
     type  = coalesce(lookup(var.disk, "type", null), "pd-standard")
-    size  = coalesce(lookup(var.disk, "size", null), 10)
+    size  = coalesce(lookup(var.disk, "size_gb", null), lookup(var.disk, "size", null), 10)
     image = coalesce(lookup(var.disk, "image", null), "${local.os_project}/${local.os}")
   }
   service_account = {
