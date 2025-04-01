@@ -29,6 +29,7 @@ module "dns-zone" {
   name                = each.value.name
   description         = each.value.description
   dns_name            = each.value.dns_name
+  visibility          = each.value.visibility
   peer_project        = each.value.peer_project
   peer_network        = each.value.peer_network
   target_name_servers = each.value.target_name_servers
