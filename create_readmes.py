@@ -5,6 +5,7 @@ from os import chdir, system
 
 
 PWD = Path(__file__).parent
+
 modules = [module for module in list(PWD.iterdir()) if module.is_dir()]
 modules.extend([module for module in list(PWD.joinpath('modules').iterdir()) if module.is_dir()])
 
