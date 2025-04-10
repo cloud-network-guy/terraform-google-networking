@@ -231,7 +231,7 @@ locals {
       routing_rules = [for rule_key, rule in coalesce(v.routing_rules, {}) :
         merge(rule, {
           name    = coalesce(rule.name, rule_key)
-          backend = rule.backend != null ? module.backends[rule.backend].name : lookup(module.backends, rule_key, null) != null ? module.backends[rule_key].name : null
+          backend = rule.backend != null ? module.backends[rule.backend].name : lookup(module.backends, "rule_key", null) != null ? module.backends[rule_key].name : null
         })
       ]
       network    = try(coalesce(v.network, var.network), null)

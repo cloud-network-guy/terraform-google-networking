@@ -131,7 +131,7 @@ locals {
   forwarding_rules = [for i, v in local.___forwarding_rules :
     merge(v, {
       load_balancing_scheme = local.is_psc ? "" : v.load_balancing_scheme # null doesn't work with PSC forwarding rules
-      subnetwork            = local.is_psc ? null : local.is_internal ? local.subnetwork : null
+      subnetwork            = local.is_psc ? null : local.is_internal ? local.subnetwork: null
       index_key             = local.is_regional ? "${v.project_id}/${v.region}/${v.name}" : "${v.project_id}/${v.name}"
     }) if v.create == true
   ]
@@ -654,10 +654,10 @@ locals {
           path_rules                = coalesce(v.path_rules, [])
           redirect                  = lookup(v, "redirect", null)
           request_headers_to_remove = lookup(v, "request_headers_to_remove", null)
-          backend                   = v.backend #var.name_prefix != null ? "${var.name_prefix}-${v.backend}" : v.backend
+          backend                   = var.name_prefix != null ? "${var.name_prefix}-${v.backend}" : v.backend
         }
       ]
-      default_service = local.default_service #var.name_prefix != null ? "${var.name_prefix}-${local.default_service}" : local.default_service
+      default_service = var.name_prefix != null ? "${var.name_prefix}-${local.default_service}" : local.default_service
     }
   ] : []
   _http_url_maps = local.redirect_http_to_https ? [for i, v in local._url_maps :
@@ -679,7 +679,7 @@ locals {
   _https_url_maps = [for i, v in local._url_maps :
     merge(v, {
       name                 = "${v.base_name}-https"
-      default_service      = local.default_service #var.name_prefix != null ? "${var.name_prefix}-${local.default_service}" : local.default_service
+      default_service      = var.name_prefix != null ? "${var.name_prefix}-${local.default_service}" : local.default_service
       default_url_redirect = false
       https_redirect       = null
       strip_query          = null
