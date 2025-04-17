@@ -131,7 +131,7 @@ locals {
   forwarding_rules = [for i, v in local.___forwarding_rules :
     merge(v, {
       load_balancing_scheme = local.is_psc ? "" : v.load_balancing_scheme # null doesn't work with PSC forwarding rules
-      subnetwork            = local.is_psc ? null : local.is_internal ? local.subnetwork: null
+      subnetwork            = local.is_psc ? null : local.is_internal ? local.subnetwork : null
       index_key             = local.is_regional ? "${v.project_id}/${v.region}/${v.name}" : "${v.project_id}/${v.name}"
     }) if v.create == true
   ]
