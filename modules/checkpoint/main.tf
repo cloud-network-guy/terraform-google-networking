@@ -1,5 +1,9 @@
 locals {
+  api_prefix              = "https://www.googleapis.com/compute/v1"
   create                  = coalesce(var.create, true)
+  project                 = lower(trimspace(coalesce(var.project_id, var.project)))
+  region                  = trimspace(coalesce(var.region))
+  host_project            = lower(trimspace(coalesce(var.network_project_id, var.host_project, local.project)))
   install_type            = coalesce(var.install_type, "Cluster")
   is_cluster              = local.install_type == "Cluster" ? true : false
   is_mig                  = local.install_type == "AutoScale" ? true : false
@@ -10,16 +14,17 @@ locals {
   is_manual               = startswith(local.install_type, "Manual") ? true : false
   install_image           = local.is_standalone ? "single" : (local.is_mig ? "mig" : "cluster")
   install_code            = local.is_manual || local.is_management_only ? "" : "${local.install_image}-"
-  name                    = coalesce(var.name, substr("chkp-${local.install_code}-${var.region}", 0, 16))
+  name                    = coalesce(var.name, substr("chkp-${local.install_code}-${local.region}", 0, 16))
   generate_admin_password = local.create && var.admin_password == null ? true : false
   generate_sic_key        = local.create && var.sic_key == null ? true : false
-  network_project_id      = coalesce(var.network_project_id, var.project_id)
+  network_project_id      = coalesce(var.network_project_id, local.project)
+  create_instance_groups  = coalesce(var.create_instance_groups, local.is_cluster ? true : false)
 }
 
 
 provider "google" {
-  project = var.project_id
-  region  = var.region
+  project = local.project
+  region  = local.region
 }
 
 # If Admin password not provided, create random 16 character one
@@ -47,7 +52,7 @@ locals {
   # Create a list of objects for the instances so it's easier to iterate over
   instances = [for i, v in local.instance_suffixes : {
     name              = local.is_standalone ? local.name : "${local.name}-${v}"
-    zone              = "${var.region}-${local.instance_zones[i]}"
+    zone              = "${local.region}-${local.instance_zones[i]}"
     nic0_address_name = "${local.address_names["nic0"][i]}-address"
     nic1_address_name = "${local.address_names["nic1"][i]}-nic1-address"
     }
@@ -59,27 +64,27 @@ locals {
 # Create External Addresses to assign to nic0
 resource "google_compute_address" "nic0_external_ips" {
   count        = local.create_nic0_external_ips ? length(local.instances) : 0
-  project      = var.project_id
+  project      = local.project
   name         = local.instances[count.index].nic0_address_name
-  region       = var.region
+  region       = local.region
   address_type = "EXTERNAL"
 }
 
 # Create External Addresses to assign to nic1, if desired
 resource "google_compute_address" "nic1_external_ips" {
   count        = local.create_nic1_external_ips ? length(local.instances) : 0
-  project      = var.project_id
+  project      = local.project
   name         = local.instances[count.index].nic1_address_name
-  region       = var.region
+  region       = local.region
   address_type = "EXTERNAL"
 }
 
 # For clusters, get status of the the primary and secondary addresses so we don't lose them after configuration
 data "google_compute_address" "nic0_external_ips" {
   count      = local.is_cluster ? length(local.instances) : 0
-  project    = var.project_id
+  project    = local.project
   name       = local.instances[count.index].nic0_address_name
-  region     = var.region
+  region     = local.region
   depends_on = [google_compute_address.nic0_external_ips]
 }
 
@@ -108,6 +113,7 @@ locals {
   image_versions = {
     "R81.20" = local.is_manual || local.is_management_only ? "634-991001641-v20240807" : "631-991001709-v20241105"
     "R81.10" = local.is_manual || local.is_management_only ? "335-991001174-v20221110" : "335-991001300-v20230509"
+    "R80.40" = local.is_manual || local.is_management_only ? "294-904-v20210715" : "294-904-v20210715"
   }
   image_version         = lookup(local.image_versions, local.software_version, "error")
   default_image         = "${local.image_prefix}-${local.install_code}${local.image_version}"
@@ -119,15 +125,17 @@ locals {
   allow_upload_download = coalesce(var.allow_upload_download, false)
   enable_monitoring     = coalesce(var.enable_monitoring, false)
   admin_shell           = coalesce(var.admin_shell, "/etc/cli.sh")
-  subnet_prefix         = "projects/${var.project_id}/regions/${var.region}/subnetworks"
+  subnet_prefix         = "projects/${local.project}/regions/${local.region}/subnetworks"
   network_names         = coalesce(var.network_names, [var.network_name])
   subnet_names          = coalesce(var.subnet_names, [var.subnet_name])
   descriptions = {
     "Cluster"   = "CloudGuard Highly Available Security Cluster"
     "AutoScale" = "None"
   }
-  description        = coalesce(var.description, lookup(local.descriptions, local.install_type, "Check Point Security Gateway"))
-  enable_serial_port = coalesce(var.enable_serial_port, false)
+  description          = coalesce(var.description, lookup(local.descriptions, local.install_type, "Check Point Security Gateway"))
+  enable_serial_port   = coalesce(var.enable_serial_port, false)
+  enable_disk_snapshot = coalesce(var.enable_disk_snapshot, local.is_management || local.is_manual ? true : false)
+  snapshot_labels      = {}
   metadata = merge(
     {
       instanceSSHKey              = var.admin_ssh_key
@@ -140,7 +148,7 @@ locals {
 # Create Compute Engine Instances
 resource "google_compute_instance" "default" {
   count                     = local.create ? length(local.instances) : 0
-  project                   = var.project_id
+  project                   = local.project
   name                      = local.instances[count.index].name
   description               = local.description
   zone                      = local.instances[count.index].zone
@@ -162,7 +170,7 @@ resource "google_compute_instance" "default" {
   # eth0 / nic0
   network_interface {
     network            = local.network_names[0]
-    subnetwork_project = var.project_id
+    subnetwork_project = local.project
     subnetwork         = "${local.subnet_prefix}/${local.subnet_names[0]}"
     dynamic "access_config" {
       for_each = local.create_nic0_external_ips && (local.is_cluster ? data.google_compute_address.nic0_external_ips[count.index].status == "IN_USE" : true) ? [true] : []
@@ -176,7 +184,7 @@ resource "google_compute_instance" "default" {
     for_each = local.is_gateway ? [true] : []
     content {
       network            = local.network_names[1]
-      subnetwork_project = var.project_id
+      subnetwork_project = local.project
       subnetwork         = "${local.subnet_prefix}/${local.subnet_names[1]}"
       dynamic "access_config" {
         for_each = local.create_nic1_external_ips ? [true] : []
@@ -191,7 +199,7 @@ resource "google_compute_instance" "default" {
     for_each = local.is_gateway ? slice(local.network_names, 2, length(local.network_names)) : []
     content {
       network            = network_interface.value
-      subnetwork_project = var.project_id
+      subnetwork_project = local.project
       subnetwork         = "${local.subnet_prefix}/${local.subnet_names[network_interface.key + 2]}"
     }
   }
@@ -203,8 +211,8 @@ resource "google_compute_instance" "default" {
   metadata_startup_script = local.is_manual ? null : templatefile("${path.module}/${local.startup_script_file}", {
     // script's arguments
     generatePassword               = local.is_management_only ? "false" : "true"
-    config_url                     = "https://runtimeconfig.googleapis.com/v1beta1/projects/${var.project_id}/configs/${local.name}-config"
-    config_path                    = "projects/${var.project_id}/configs/${local.name}-config"
+    config_url                     = "https://runtimeconfig.googleapis.com/v1beta1/projects/${local.project}/configs/${local.name}-config"
+    config_path                    = "projects/${local.project}/configs/${local.name}-config"
     sicKey                         = local.sic_key
     allowUploadDownload            = local.allow_upload_download
     templateName                   = local.template_name
@@ -224,7 +232,7 @@ resource "google_compute_instance" "default" {
     smart_1_cloud_token            = "${local.instances[count.index].name}" == "${local.name}-member-a" ? var.smart_1_cloud_token_a : var.smart_1_cloud_token_b
     name                           = local.instances[count.index].name
     zoneConfig                     = local.instances[count.index].zone
-    region                         = var.region
+    region                         = local.region
     MaintenanceModePassword        = ""
     /* TODO - Need to add these parameters to bash startup script
     domain_name = var.domain_name
@@ -239,11 +247,84 @@ resource "google_compute_instance" "default" {
 
 # Unmanaged Instance Group for each gateway
 resource "google_compute_instance_group" "default" {
-  count       = var.create_instance_groups ? length(local.instances) : 0
-  project     = var.project_id
+  count       = local.create_instance_groups ? length(local.instances) : 0
+  project     = local.project
   name        = google_compute_instance.default[count.index].name
   description = "Unmanaged Instance Group for ${local.instances[count.index].name}"
   network     = "projects/${local.network_project_id}/global/networks/${local.network_names[0]}"
   instances   = [google_compute_instance.default[count.index].self_link]
   zone        = local.instances[count.index].zone
+}
+
+# Perform one-time Snapshot for all disk
+resource "google_compute_snapshot" "default" {
+  count             = local.create && local.enable_disk_snapshot ? length(local.instances) : 0
+  project           = local.project
+  name              = "${local.instances[count.index].name}-snapshot"
+  description       = "Disk Snapshot for ${local.instances[count.index].name}"
+  source_disk       = "projects/${local.project}/zones/${local.instances[count.index].zone}/disks/${local.instances[count.index].name}"
+  zone              = local.instances[count.index].zone
+  labels            = local.snapshot_labels
+  storage_locations = [local.region]
+  depends_on        = [google_compute_instance.default]
+}
+
+# Disk Snapshot Schedule
+resource "google_compute_resource_policy" "default" {
+  count   = local.create && local.enable_disk_snapshot ? 1 : 0
+  project = local.project
+  name    = local.name
+  region  = local.region
+  snapshot_schedule_policy {
+    retention_policy {
+      max_retention_days    = 14
+      on_source_disk_delete = "KEEP_AUTO_SNAPSHOTS"
+    }
+    schedule {
+      dynamic "daily_schedule" {
+        for_each = [true]
+        content {
+          days_in_cycle = 1
+          start_time    = "04:00"
+        }
+      }
+      dynamic "hourly_schedule" {
+        for_each = []
+        content {
+          hours_in_cycle = null
+          start_time     = null
+        }
+      }
+      dynamic "weekly_schedule" {
+        for_each = []
+        content {
+          dynamic "day_of_weeks" {
+            for_each = []
+            content {
+              day        = null
+              start_time = null
+            }
+          }
+        }
+      }
+    }
+    dynamic "snapshot_properties" {
+      for_each = [true]
+      content {
+        guest_flush       = false
+        labels            = local.snapshot_labels
+        storage_locations = [local.region]
+      }
+    }
+  }
+}
+
+# Attach disk(s) to snapshot policy
+resource "google_compute_disk_resource_policy_attachment" "default" {
+  count      = local.create && local.enable_disk_snapshot ? length(local.instances) : 0
+  project    = local.project
+  name       = one(google_compute_resource_policy.default).name
+  disk       = local.instances[count.index].name
+  zone       = local.instances[count.index].zone
+  depends_on = [google_compute_instance.default]
 }

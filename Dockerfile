@@ -1,4 +1,4 @@
-FROM hashicorp/terraform:1.9.8
+FROM hashicorp/terraform:latest
 WORKDIR /tmp
 RUN apk add --no-cache bash git make python3 py3-pip
 COPY ./requirements.txt ./

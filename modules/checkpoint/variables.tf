@@ -3,6 +3,14 @@ variable "project_id" {
   type        = string
   default     = null
 }
+variable "project" {
+  type    = string
+  default = null
+}
+variable "host_project" {
+  type    = string
+  default = null
+}
 variable "network_project_id" {
   description = "Host Network's Project ID (if using Shared VPC)"
   type        = string
@@ -220,6 +228,10 @@ variable "flip_members" {
   default     = false
 }
 variable "enable_serial_port" {
+  type    = bool
+  default = null
+}
+variable "enable_disk_snapshot" {
   type    = bool
   default = null
 }
