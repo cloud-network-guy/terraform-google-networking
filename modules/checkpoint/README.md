@@ -137,13 +137,13 @@ machine_type      = "n2d-standard-4"
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5.7 |
-| <a name="requirement_google"></a> [google](#requirement\_google) | >= 5.16.0, < 7.0.0 |
+| <a name="requirement_google"></a> [google](#requirement\_google) | >= 5.16, < 7.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_google"></a> [google](#provider\_google) | >= 5.16.0, < 7.0.0 |
+| <a name="provider_google"></a> [google](#provider\_google) | >= 5.16, < 7.0 |
 | <a name="provider_random"></a> [random](#provider\_random) | n/a |
 
 ## Modules
@@ -156,8 +156,11 @@ No modules.
 |------|------|
 | [google_compute_address.nic0_external_ips](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_address) | resource |
 | [google_compute_address.nic1_external_ips](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_address) | resource |
+| [google_compute_disk_resource_policy_attachment.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_disk_resource_policy_attachment) | resource |
 | [google_compute_instance.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance) | resource |
 | [google_compute_instance_group.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance_group) | resource |
+| [google_compute_resource_policy.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_resource_policy) | resource |
+| [google_compute_snapshot.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_snapshot) | resource |
 | [random_string.admin_password](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
 | [random_string.sic_key](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
 | [google_compute_address.nic0_external_ips](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_address) | data source |
@@ -181,10 +184,12 @@ No modules.
 | <a name="input_disk_size"></a> [disk\_size](#input\_disk\_size) | n/a | `number` | `null` | no |
 | <a name="input_disk_type"></a> [disk\_type](#input\_disk\_type) | n/a | `string` | `null` | no |
 | <a name="input_domain_name"></a> [domain\_name](#input\_domain\_name) | n/a | `string` | `null` | no |
+| <a name="input_enable_disk_snapshot"></a> [enable\_disk\_snapshot](#input\_enable\_disk\_snapshot) | n/a | `bool` | `null` | no |
 | <a name="input_enable_monitoring"></a> [enable\_monitoring](#input\_enable\_monitoring) | n/a | `bool` | `null` | no |
 | <a name="input_enable_serial_port"></a> [enable\_serial\_port](#input\_enable\_serial\_port) | n/a | `bool` | `null` | no |
 | <a name="input_expert_password"></a> [expert\_password](#input\_expert\_password) | n/a | `string` | `null` | no |
 | <a name="input_flip_members"></a> [flip\_members](#input\_flip\_members) | For H/A Clusters, set member-b as active rather than member-a | `bool` | `false` | no |
+| <a name="input_host_project"></a> [host\_project](#input\_host\_project) | n/a | `string` | `null` | no |
 | <a name="input_install_type"></a> [install\_type](#input\_install\_type) | n/a | `string` | `null` | no |
 | <a name="input_instance_suffixes"></a> [instance\_suffixes](#input\_instance\_suffixes) | n/a | `list(string)` | `null` | no |
 | <a name="input_internal_routes"></a> [internal\_routes](#input\_internal\_routes) | n/a | `list(string)` | `[]` | no |
@@ -197,6 +202,7 @@ No modules.
 | <a name="input_network_names"></a> [network\_names](#input\_network\_names) | n/a | `list(string)` | `null` | no |
 | <a name="input_network_project_id"></a> [network\_project\_id](#input\_network\_project\_id) | Host Network's Project ID (if using Shared VPC) | `string` | `null` | no |
 | <a name="input_network_tags"></a> [network\_tags](#input\_network\_tags) | n/a | `list(string)` | `null` | no |
+| <a name="input_project"></a> [project](#input\_project) | n/a | `string` | `null` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | Project ID to deploy cluster in | `string` | `null` | no |
 | <a name="input_proxy_host"></a> [proxy\_host](#input\_proxy\_host) | n/a | `string` | `null` | no |
 | <a name="input_proxy_port"></a> [proxy\_port](#input\_proxy\_port) | n/a | `number` | `8080` | no |
