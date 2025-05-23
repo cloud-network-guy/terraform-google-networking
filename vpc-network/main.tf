@@ -1,8 +1,3 @@
-provider "google" {
-  project = var.project_id
-}
-
-
 # Enable Shared VPC Host Project, if not already done
 resource "google_compute_shared_vpc_host_project" "default" {
   count   = var.enable_shared_vpc_host_project ? 1 : 0

@@ -1,14 +1,3 @@
-provider "google" {
-  project = var.project_id
-  region  = var.region
-}
-
-provider "google-beta" {
-  project               = var.project_id
-  billing_project       = var.project_id
-  user_project_override = true
-}
-
 # Get list of zones for this region, if required
 data "google_compute_zones" "all_zones" {
   count   = var.require_regional_network_tag == true ? 1 : 0
