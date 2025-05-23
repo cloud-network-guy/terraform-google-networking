@@ -41,7 +41,8 @@ data "google_cloud_asset_resources_search_all" "services" {
 }
 
 locals {
-  service_projects = { for pid in local.service_project_ids :
+  service_projects = {
+    for pid in local.service_project_ids :
     pid => {
       name   = data.google_project.service_projects[pid].name
       number = data.google_project.service_projects[pid].number
@@ -50,13 +51,27 @@ locals {
       ))
     }
   }
-  service_accounts = { for k, v in local.service_projects :
+  service_accounts = {
+    for k, v in local.service_projects :
     k => compact([
-      contains(v.apis, "compute.googleapis.com") ? "serviceAccount:${v.number}@cloudservices.gserviceaccount.com" : null,
-      contains(v.apis, "compute.googleapis.com") ? "serviceAccount:${v.number}-compute@developer.gserviceaccount.com" : null,
-      contains(v.apis, "container.googleapis.com") ? "serviceAccount:service-${v.number}@container-engine-robot.iam.gserviceaccount.com" : null,
+      contains(v.apis, "compute.googleapis.com") ? "serviceAccount:${v.number}@cloudservices.gserviceaccount.com" :
+      null,
+      contains(v.apis, "compute.googleapis.com") ? "serviceAccount:${v.number}-compute@developer.gserviceaccount.com"
+      : null,
+      contains(v.apis, "container.googleapis.com") ?
+      "serviceAccount:service-${v.number}@container-engine-robot.iam.gserviceaccount.com" : null,
     ])
   }
+}
+# Give GKE Service Accounts hostServiceAgentUser role
+resource "google_project_iam_member" "gke_host_service_agent_user" {
+  for_each = { for k, v in local.service_projects : k => v if contains(v, "container-engine-robot")}
+  project  = local.project
+  member   = each.value
+  role     = "roles/container.hostServiceAgentUser"
+}
+
+locals {
   shared_subnetworks = { for s in local.subnetworks :
     "${s.region}/${s.name}" => {
       subnetwork = s.id
@@ -80,7 +95,7 @@ resource "google_compute_subnetwork_iam_binding" "default" {
 
 locals {
   shared_gke_subnetworks = { for k, v in local.shared_subnetworks :
-    k=> merge(v, {
+    k => merge(v, {
       members = [for m in v.members : m if endswith(m, "container-engine-robot.iam.gserviceaccount.com")]
     })
   }
