@@ -75,8 +75,8 @@ regions         = ["europe-west1", "europe-west4"]
 
 | Name | Version |
 |------|---------|
-| <a name="provider_google"></a> [google](#provider\_google) | >= 6.12.0, < 7.0.0 |
-| <a name="provider_google-beta"></a> [google-beta](#provider\_google-beta) | >= 6.12.0, < 7.0.0 |
+| <a name="provider_google"></a> [google](#provider\_google) | 6.36.1 |
+| <a name="provider_google-beta"></a> [google-beta](#provider\_google-beta) | 6.36.1 |
 
 ## Modules
 
@@ -90,6 +90,7 @@ No modules.
 | [google_compute_subnetwork_iam_binding.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_subnetwork_iam_binding) | resource |
 | [google_compute_subnetwork_iam_binding.gke](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_subnetwork_iam_binding) | resource |
 | [google_compute_subnetwork_iam_binding.viewer](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_subnetwork_iam_binding) | resource |
+| [google_project_iam_member.gke_host_service_agent_user](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_iam_member) | resource |
 | [google-beta_google_cloud_asset_resources_search_all.services](https://registry.terraform.io/providers/hashicorp/google-beta/latest/docs/data-sources/google_cloud_asset_resources_search_all) | data source |
 | [google_project.service_projects](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/project) | data source |
 

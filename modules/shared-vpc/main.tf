@@ -65,7 +65,7 @@ locals {
 }
 # Give GKE Service Accounts hostServiceAgentUser role
 resource "google_project_iam_member" "gke_host_service_agent_user" {
-  for_each = { for k, v in local.service_projects : k => v if contains(v, "container-engine-robot")}
+  for_each = { for k, v in local.service_accounts : k => one([for a in v : a if strcontains(a, "container-engine-robot")]) }
   project  = local.project
   member   = each.value
   role     = "roles/container.hostServiceAgentUser"
