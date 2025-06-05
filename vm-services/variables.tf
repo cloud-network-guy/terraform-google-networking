@@ -10,7 +10,7 @@ variable "project" {
   type    = string
   default = null
 }
-varible "region" {
+variable "region" {
   description = "Default Region"
   type        = string
   default     = null
