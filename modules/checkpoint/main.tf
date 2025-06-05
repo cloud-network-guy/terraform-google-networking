@@ -21,12 +21,6 @@ locals {
   create_instance_groups  = coalesce(var.create_instance_groups, local.is_cluster ? true : false)
 }
 
-
-provider "google" {
-  project = local.project
-  region  = local.region
-}
-
 # If Admin password not provided, create random 16 character one
 resource "random_string" "admin_password" {
   count   = local.generate_admin_password ? 1 : 0
