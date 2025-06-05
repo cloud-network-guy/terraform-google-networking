@@ -13,8 +13,12 @@ variable "create" {
   default     = true
 }
 variable "project_id" {
-  type        = string
-  description = "GCP Project ID"
+  type    = string
+  default = null
+}
+varible "project" {
+  type    = string
+  default = null
 }
 variable "org_id" {
   type        = string
