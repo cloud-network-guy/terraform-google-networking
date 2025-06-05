@@ -16,7 +16,7 @@ variable "project_id" {
   type    = string
   default = null
 }
-varible "project" {
+variable "project" {
   type    = string
   default = null
 }

@@ -1,13 +1,12 @@
 locals {
-  create          = coalesce(var.create, true)
-  project         = lower(trimspace(coalesce(var.project_id, var.project)))
-  host_project_id = lower(trimspace(coalesce(var.host_project_id, var.host_project, local.project)))
+  create  = coalesce(var.create, true)
+  project = lower(trimspace(coalesce(var.project_id, var.project)))
 }
 
 # Enable Shared VPC Host Project, if not already done
 resource "google_compute_shared_vpc_host_project" "default" {
   count   = var.enable_shared_vpc_host_project ? 1 : 0
-  project = var.project_id
+  project = local.project
 }
 
 # Form locals to pass to the VPC network module
@@ -151,7 +150,7 @@ locals {
 module "vpc-network" {
   source                  = "../modules/vpc-network"
   create                  = var.create
-  project_id              = var.project_id
+  project_id              = local.project
   name                    = local.name_prefix
   description             = var.description
   mtu                     = var.mtu
@@ -171,7 +170,7 @@ module "vpc-network" {
 # Cloud VPN Gateways
 module "cloud-vpn-gateway" {
   source             = "../modules/hybrid-networking"
-  project_id         = var.project_id
+  project_id         = local.project
   cloud_vpn_gateways = local.cloud_vpn_gateways
 }
 
@@ -192,7 +191,7 @@ locals {
 }
 module "shared-vpc" {
   source          = "../modules/shared-vpc"
-  host_project_id = var.project_id
+  host_project_id = local.project
   network         = module.vpc-network.name
   subnetworks     = [for s in local.shared_subnetworks : s if s.purpose == "PRIVATE"]
 }
@@ -219,7 +218,7 @@ locals {
 module "psc-endpoints" {
   source        = "../modules/forwarding-rule"
   for_each      = { for k, v in local.psc_endpoints : "${v.region}/${v.name}" => v }
-  project_id    = var.project_id
+  project_id    = local.project
   network       = module.vpc-network.self_link
   name          = each.value.name
   address       = each.value.address
