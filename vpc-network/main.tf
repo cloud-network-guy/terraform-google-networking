@@ -1,3 +1,9 @@
+locals {
+  create          = coalesce(var.create, true)
+  project         = lower(trimspace(coalesce(var.project_id, var.project)))
+  host_project_id = lower(trimspace(coalesce(var.host_project_id, var.host_project, local.project)))
+}
+
 # Enable Shared VPC Host Project, if not already done
 resource "google_compute_shared_vpc_host_project" "default" {
   count   = var.enable_shared_vpc_host_project ? 1 : 0

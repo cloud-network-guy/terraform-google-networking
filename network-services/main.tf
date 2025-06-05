@@ -1,4 +1,7 @@
 locals {
+  create              = coalesce(var.create, true)
+  project             = lower(trimspace(coalesce(var.project_id, var.project)))
+  region              = var.region != null ? lower(trimspace(var.region)) : null
   lb_type             = "INTERNAL"
   lb_protocol         = "TCP"
   lb_session_affinity = coalesce(var.session_affinity, "NONE")

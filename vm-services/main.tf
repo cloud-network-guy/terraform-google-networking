@@ -1,11 +1,14 @@
 
 locals {
+  create  = coalesce(var.create, true)
+  project = lower(trimspace(coalesce(var.project_id, var.project)))
+  region  = var.region != null ? lower(trimspace(var.region)) : null
   # Set object attributes
   instances = [for k, v in var.deployments :
     {
       create                 = coalesce(v.create, var.create, true)
       name                   = v.name
-      region                 = coalesce(v.region, k)
+      region                 = coalesce(v.region, local.region, k)
       zone                   = v.zone
       network                = try(coalesce(v.network, var.network), null)
       host_project_id        = var.host_project_id

@@ -1,10 +1,10 @@
 provider "google" {
-  project = var.project_id
+  project = local.project
 }
 
 # Set Quota/Billing Project for Cloud Asset Resource Manager queries
 provider "google-beta" {
-  project               = var.project_id
-  billing_project       = var.project_id
+  project               = local.project
+  billing_project       = local.project
   user_project_override = true
 }
