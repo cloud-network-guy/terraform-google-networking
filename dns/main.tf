@@ -3,9 +3,6 @@ locals {
   project         = lower(trimspace(coalesce(var.project_id, var.project)))
   host_project_id = lower(trimspace(coalesce(var.host_project_id, var.host_project, local.project)))
 }
-provider "google" {
-  project = local.project
-}
 
 # DNS Zones
 locals {
