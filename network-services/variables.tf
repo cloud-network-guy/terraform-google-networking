@@ -1,6 +1,18 @@
+variable "create" {
+  type    = bool
+  default = true
+}
 variable "project_id" {
-  description = "GCP Project ID of GCP"
-  type        = string
+  type    = string
+  default = null
+}
+variable "project" {
+  type    = string
+  default = null
+}
+variable "region" {
+  type    = string
+  default = null
 }
 variable "name_prefix" {
   description = "Name prefix for the instances and load balancer"
