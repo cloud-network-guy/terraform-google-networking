@@ -3,8 +3,17 @@ variable "create" {
   default = true
 }
 variable "project_id" {
-  description = "GCP Project ID of GCP"
+  type    = string
+  default = null
+}
+variable "project" {
+  type    = string
+  default = null
+}
+varible "region" {
+  description = "Default Region"
   type        = string
+  default     = null
 }
 variable "name_prefix" {
   description = "Name prefix for the instances"
