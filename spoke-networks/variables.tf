@@ -11,6 +11,10 @@ variable "project_id" {
   description = "GCP Project ID"
   type        = string
 }
+variable "project" {
+  type    = string
+  default = null
+}
 variable "network_name" {
   type        = string
   description = "Name of VPC Network"

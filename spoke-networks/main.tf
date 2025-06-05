@@ -1,16 +1,21 @@
+locals {
+  url_prefix = "https://www.googleapis.com/compute/v1"
+  create     = coalesce(var.create, true)
+  project    = lower(trimspace(coalesce(var.project_id, var.project)))
+  region     = var.region != null ? lower(trimspace(var.region)) : null
+}
+
 # Get list of zones for this region, if required
 data "google_compute_zones" "all_zones" {
   count   = var.require_regional_network_tag == true ? 1 : 0
-  project = var.project_id
-  region  = var.region
+  project = local.project
+  region  = local.region
   status  = null
 }
 
 # Set the VPC name prefix and subnet information
 locals {
-  create     = coalesce(var.create, true)
-  url_prefix = "https://www.googleapis.com/compute/v1"
-  name       = "${var.name_prefix}-${var.region}"
+  name = "${var.name_prefix}-${local.region}"
   subnets = flatten(concat(
     [for i, v in var.subnets :
       {

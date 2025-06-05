@@ -7,8 +7,8 @@ No requirements.
 
 | Name | Version |
 |------|---------|
-| <a name="provider_google"></a> [google](#provider\_google) | n/a |
-| <a name="provider_random"></a> [random](#provider\_random) | n/a |
+| <a name="provider_google"></a> [google](#provider\_google) | 6.38.0 |
+| <a name="provider_random"></a> [random](#provider\_random) | 3.7.2 |
 
 ## Modules
 
@@ -63,6 +63,7 @@ No requirements.
 | <a name="input_netapp_cidr"></a> [netapp\_cidr](#input\_netapp\_cidr) | n/a | `string` | `null` | no |
 | <a name="input_network_name"></a> [network\_name](#input\_network\_name) | Name of VPC Network | `string` | `null` | no |
 | <a name="input_num_psc_subnets"></a> [num\_psc\_subnets](#input\_num\_psc\_subnets) | n/a | `number` | `16` | no |
+| <a name="input_project"></a> [project](#input\_project) | n/a | `string` | `null` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | GCP Project ID | `string` | n/a | yes |
 | <a name="input_proxy_only_cidr"></a> [proxy\_only\_cidr](#input\_proxy\_only\_cidr) | n/a | `string` | `null` | no |
 | <a name="input_proxy_only_purpose"></a> [proxy\_only\_purpose](#input\_proxy\_only\_purpose) | n/a | `string` | `"REGIONAL_MANAGED_PROXY"` | no |
