@@ -4,13 +4,12 @@
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.8.3 |
-| <a name="requirement_google"></a> [google](#requirement\_google) | >= 6.12.0, < 7.0.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_google"></a> [google](#provider\_google) | >= 6.12.0, < 7.0.0 |
+| <a name="provider_google"></a> [google](#provider\_google) | 6.38.0 |
 
 ## Modules
 
@@ -36,6 +35,7 @@
 | <a name="input_cool_down_period"></a> [cool\_down\_period](#input\_cool\_down\_period) | n/a | `number` | `60` | no |
 | <a name="input_cpu_predictive_method"></a> [cpu\_predictive\_method](#input\_cpu\_predictive\_method) | n/a | `string` | `null` | no |
 | <a name="input_cpu_target"></a> [cpu\_target](#input\_cpu\_target) | n/a | `number` | `null` | no |
+| <a name="input_create"></a> [create](#input\_create) | n/a | `bool` | `true` | no |
 | <a name="input_deployments"></a> [deployments](#input\_deployments) | Regions to deploy instances and/or iLB to | <pre>map(object({<br/>    enabled               = optional(bool)<br/>    create_ilb            = optional(bool)<br/>    region                = optional(string)<br/>    machine_type          = optional(string)<br/>    disk_type             = optional(string)<br/>    disk_size             = optional(number)<br/>    os_project            = optional(string)<br/>    os                    = optional(string)<br/>    network               = optional(string)<br/>    subnet                = optional(string)<br/>    ip_address            = optional(string)<br/>    ip_address_name       = optional(string)<br/>    ports                 = optional(list(number))<br/>    forwarding_rule_name  = optional(string)<br/>    target_size           = optional(number)<br/>    min_replicas          = optional(number)<br/>    max_replicas          = optional(number)<br/>    global_access         = optional(bool)<br/>    cpu_target            = optional(number)<br/>    cpu_predictive_method = optional(string)<br/>    instance_groups = optional(list(object({<br/>      id        = optional(string)<br/>      name      = optional(string)<br/>      zone      = optional(string)<br/>      instances = optional(list(string))<br/>    })))<br/>    psc = optional(object({<br/>      name                        = optional(string)<br/>      nat_subnets                 = optional(list(string))<br/>      auto_accept_all_connections = optional(bool)<br/>      accept_projects = optional(list(object({<br/>        project          = string<br/>        connection_limit = optional(number)<br/>      })))<br/>    }))<br/>  }))</pre> | `{}` | no |
 | <a name="input_disk_size"></a> [disk\_size](#input\_disk\_size) | Disk size in GB | `number` | `12` | no |
 | <a name="input_disk_type"></a> [disk\_type](#input\_disk\_type) | Disk Type | `string` | `"pd-standard"` | no |
@@ -53,7 +53,9 @@
 | <a name="input_os"></a> [os](#input\_os) | GCP OS Name | `string` | `"debian-12"` | no |
 | <a name="input_os_project"></a> [os\_project](#input\_os\_project) | GCP OS Project | `string` | `"debian-cloud"` | no |
 | <a name="input_ports"></a> [ports](#input\_ports) | List of ports to forward on the frontend of the load balancer | `list(string)` | `[]` | no |
-| <a name="input_project_id"></a> [project\_id](#input\_project\_id) | GCP Project ID of GCP | `string` | n/a | yes |
+| <a name="input_project"></a> [project](#input\_project) | n/a | `string` | `null` | no |
+| <a name="input_project_id"></a> [project\_id](#input\_project\_id) | n/a | `string` | `null` | no |
+| <a name="input_region"></a> [region](#input\_region) | n/a | `string` | `null` | no |
 | <a name="input_service_account_email"></a> [service\_account\_email](#input\_service\_account\_email) | Service Account e-mail address | `string` | `null` | no |
 | <a name="input_service_account_scopes"></a> [service\_account\_scopes](#input\_service\_account\_scopes) | List of Service Account Scopes | `list(string)` | <pre>[<br/>  "compute-rw",<br/>  "storage-rw",<br/>  "logging-write",<br/>  "monitoring"<br/>]</pre> | no |
 | <a name="input_session_affinity"></a> [session\_affinity](#input\_session\_affinity) | Session affinity type for backend | `string` | `"NONE"` | no |
