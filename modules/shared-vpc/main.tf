@@ -62,10 +62,11 @@ locals {
       "serviceAccount:service-${v.number}@container-engine-robot.iam.gserviceaccount.com" : null,
     ])
   }
+  gke_service_accounts = { for k, v in local.service_accounts : k => one([for a in v : a if strcontains(a, "container-engine-robot")]) }
 }
 # Give GKE Service Accounts hostServiceAgentUser role
 resource "google_project_iam_member" "gke_host_service_agent_user" {
-  for_each = { for k, v in local.service_accounts : k => one([for a in v : a if strcontains(a, "container-engine-robot")]) }
+  for_each = { for k, v in local.gke_service_accounts : k => v if v != null }
   project  = local.project
   member   = each.value
   role     = "roles/container.hostServiceAgentUser"
@@ -127,4 +128,5 @@ resource "google_compute_subnetwork_iam_binding" "viewer" {
   members    = each.value.members
   role       = "roles/compute.networkViewer"
 }
+
 
