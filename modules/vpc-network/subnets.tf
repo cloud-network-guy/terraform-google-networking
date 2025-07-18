@@ -16,8 +16,9 @@ locals {
       viewer_accounts      = coalesce(v.viewer_accounts, [])
       secondary_ranges = [for i, r in coalesce(v.secondary_ranges, []) :
         {
-          name  = trimspace(coalesce(r.name, "secondary-range-${i}"))
-          range = r.range
+          name                    = trimspace(coalesce(r.name, "secondary-range-${i}"))
+          range                   = r.range
+          reserved_internal_range = r.reserved_internal_range
         }
       ]
       psc_endpoints = coalesce(v.psc_endpoints, [])
@@ -60,8 +61,9 @@ resource "google_compute_subnetwork" "default" {
   dynamic "secondary_ip_range" {
     for_each = each.value.secondary_ranges
     content {
-      range_name    = secondary_ip_range.value.name
-      ip_cidr_range = secondary_ip_range.value.range
+      range_name              = secondary_ip_range.value.name
+      ip_cidr_range           = secondary_ip_range.value.range
+      reserved_internal_range = secondary_ip_range.value.reserved_internal_range
     }
   }
   dynamic "log_config" {
@@ -75,3 +77,4 @@ resource "google_compute_subnetwork" "default" {
   }
   depends_on = [null_resource.subnets]
 }
+

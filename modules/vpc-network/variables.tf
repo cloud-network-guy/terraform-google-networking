@@ -80,8 +80,9 @@ variable "subnets" {
     shared_accounts          = optional(list(string))
     viewer_accounts          = optional(list(string))
     secondary_ranges = optional(list(object({
-      name  = optional(string)
-      range = string
+      name                    = optional(string)
+      range                   = string
+      reserved_internal_range = optional(string)
     })))
     psc_endpoints = optional(list(object({
       name        = optional(string)
@@ -240,4 +241,4 @@ variable "firewall_rules" {
   }))
   default = []
 }
-  
+
