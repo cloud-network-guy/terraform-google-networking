@@ -1,5 +1,5 @@
 variable "project_id" {
-  type = string
+  type    = string
   default = null
 }
 variable "project" {
@@ -95,6 +95,10 @@ variable "locality_lb_policy" {
   default = null
 }
 variable "balancing_mode" {
+  type    = string
+  default = null
+}
+variable "ip_address_selection_policy" {
   type    = string
   default = null
 }

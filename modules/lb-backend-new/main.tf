@@ -47,17 +47,18 @@ locals {
   groups = [for group in coalesce(var.groups, []) :
     (startswith(group, local.api_prefix) ? group : "${local.api_prefix}/${group}")
   ]
-  is_psc                    = false # TODO
-  is_igs                    = length([for _ in local.groups : _ if strcontains(_, "/instanceGroups/")]) > 0 ? true : false
-  is_negs                   = length([for _ in local.groups : _ if strcontains(_, "/networkEndpointGroups/")]) > 0 ? true : false
-  is_gnegs                  = length([for _ in local.groups : _ if local.is_negs && strcontains(_, "/global/")]) > 0 ? true : false
-  is_rnegs                  = length([for _ in local.groups : _ if local.is_negs && strcontains(_, "/regions/")]) > 0 ? true : false
-  is_znegs                  = length([for _ in local.groups : _ if local.is_negs && strcontains(_, "/zones/")]) > 0 ? true : false
-  balancing_mode            = var.balancing_mode != null ? upper(trimspace(coalesce(var.balancing_mode, "CONNECTION"))) : null
-  alb_balancing_mode        = local.is_gnegs ? null : local.is_negs ? "RATE" : coalesce(local.balancing_mode, "UTILIZATION")
-  use_connection_balancing  = local.is_tcp ? true : false
-  use_rate_balancing        = local.alb_balancing_mode != null && local.alb_balancing_mode == "RATE" ? true : false
-  use_utilization_balancing = local.alb_balancing_mode != null && local.alb_balancing_mode == "UTILIZATION" ? true : false
+  is_psc                      = false # TODO
+  is_igs                      = length([for _ in local.groups : _ if strcontains(_, "/instanceGroups/")]) > 0 ? true : false
+  is_negs                     = length([for _ in local.groups : _ if strcontains(_, "/networkEndpointGroups/")]) > 0 ? true : false
+  is_gnegs                    = length([for _ in local.groups : _ if local.is_negs && strcontains(_, "/global/")]) > 0 ? true : false
+  is_rnegs                    = length([for _ in local.groups : _ if local.is_negs && strcontains(_, "/regions/")]) > 0 ? true : false
+  is_znegs                    = length([for _ in local.groups : _ if local.is_negs && strcontains(_, "/zones/")]) > 0 ? true : false
+  balancing_mode              = var.balancing_mode != null ? upper(trimspace(coalesce(var.balancing_mode, "CONNECTION"))) : null
+  alb_balancing_mode          = local.is_gnegs ? null : local.is_negs ? "RATE" : coalesce(local.balancing_mode, "UTILIZATION")
+  use_connection_balancing    = local.is_tcp ? true : false
+  use_rate_balancing          = local.alb_balancing_mode != null && local.alb_balancing_mode == "RATE" ? true : false
+  use_utilization_balancing   = local.alb_balancing_mode != null && local.alb_balancing_mode == "UTILIZATION" ? true : false
+  ip_address_selection_policy = var.ip_address_selection_policy != null ? upper(trimspace(var.ip_address_selection_policy)) : null
   backend = {
     capacity_scaler              = local.is_tcp ? 0 : local.is_managed ? coalesce(var.capacity_scaler, 1.0) : null
     balancing_mode               = local.use_connection_balancing ? "CONNECTION" : local.alb_balancing_mode
@@ -136,6 +137,7 @@ resource "google_compute_region_backend_service" "default" {
   health_checks                   = local.health_checks
   timeout_sec                     = local.timeout_sec
   connection_draining_timeout_sec = local.connection_draining_timeout_sec
+  ip_address_selection_policy     = local.ip_address_selection_policy
   dynamic "backend" {
     for_each = local.groups
     content {
@@ -183,6 +185,7 @@ resource "google_compute_backend_service" "default" {
   timeout_sec                     = local.timeout_sec
   connection_draining_timeout_sec = local.connection_draining_timeout_sec
   security_policy                 = local.security_policy
+  ip_address_selection_policy     = local.ip_address_selection_policy
   dynamic "backend" {
     for_each = local.groups
     content {
