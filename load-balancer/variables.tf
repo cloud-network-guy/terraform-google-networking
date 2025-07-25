@@ -58,7 +58,7 @@ variable "backend_protocol" {
   type    = string
   default = null
 }
-varible "backend_ip_address_selection_policy" {
+variable "backend_ip_address_selection_policy" {
   type    = string
   default = null
 }
