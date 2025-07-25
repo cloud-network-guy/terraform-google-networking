@@ -164,7 +164,7 @@ locals {
       ))
       session_affinity            = try(coalesce(backend.session_affinity, var.session_affinity), null)
       locality_lb_policy          = try(coalesce(backend.locality_lb_policy, var.locality_lb_policy), null)
-      ip_address_selection_policy = try(coalesce(backend.ip_address_selection_policy, var.ip_address_selection_policy), null)
+      ip_address_selection_policy = try(coalesce(backend.ip_address_selection_policy, var.backend_ip_address_selection_policy), null)
       is_ig                       = length(coalesce(backend.instance_groups, {})) > 0 ? true : false
       classic                     = coalesce(backend.classic, var.classic)
       health_checks               = [for hc in keys(local.health_checks) : module.healthchecks[hc].self_link if hc == backend.health_check]
