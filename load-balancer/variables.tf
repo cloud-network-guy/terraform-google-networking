@@ -58,6 +58,10 @@ variable "backend_protocol" {
   type    = string
   default = null
 }
+varible "backend_ip_address_selection_policy" {
+  type    = string
+  default = null
+}
 variable "session_affinity" {
   type    = string
   default = null
@@ -106,33 +110,34 @@ variable "health_checks" {
 }
 variable "backends" {
   type = map(object({
-    create                   = optional(bool, true)
-    project                  = optional(string)
-    host_project             = optional(string)
-    name                     = optional(string)
-    description              = optional(string)
-    region                   = optional(string)
-    port                     = optional(number)
-    protocol                 = optional(string)
-    timeout                  = optional(number)
-    logging                  = optional(bool)
-    enable_cdn               = optional(bool)
-    enable_iap               = optional(bool)
-    health_check             = optional(string)
-    health_checks            = optional(list(string))
-    existing_health_check    = optional(string)
-    security_policy          = optional(string)
-    existing_security_policy = optional(string)
-    session_affinity         = optional(string)
-    locality_lb_policy       = optional(string)
-    classic                  = optional(bool)
-    network                  = optional(string)
-    subnetwork               = optional(string)
-    groups                   = optional(list(string))
-    ip_address               = optional(string)
-    fqdn                     = optional(string)
-    psc_target               = optional(string)
-    cloud_run_service        = optional(string)
+    create                      = optional(bool, true)
+    project                     = optional(string)
+    host_project                = optional(string)
+    name                        = optional(string)
+    description                 = optional(string)
+    region                      = optional(string)
+    port                        = optional(number)
+    protocol                    = optional(string)
+    timeout                     = optional(number)
+    logging                     = optional(bool)
+    enable_cdn                  = optional(bool)
+    enable_iap                  = optional(bool)
+    health_check                = optional(string)
+    health_checks               = optional(list(string))
+    existing_health_check       = optional(string)
+    security_policy             = optional(string)
+    existing_security_policy    = optional(string)
+    session_affinity            = optional(string)
+    locality_lb_policy          = optional(string)
+    classic                     = optional(bool)
+    network                     = optional(string)
+    subnetwork                  = optional(string)
+    groups                      = optional(list(string))
+    ip_address                  = optional(string)
+    fqdn                        = optional(string)
+    psc_target                  = optional(string)
+    cloud_run_service           = optional(string)
+    ip_address_selection_policy = optional(string)
     instance_groups = optional(map(object({
       id         = optional(string)
       project_id = optional(string)

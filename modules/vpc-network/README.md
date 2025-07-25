@@ -141,8 +141,8 @@ Examples
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5.7 |
-| <a name="requirement_google"></a> [google](#requirement\_google) | >= 6.12.0, < 6.37.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.8.5 |
+| <a name="requirement_google"></a> [google](#requirement\_google) | >= 6.12.0, < 6.45.0 |
 | <a name="requirement_null"></a> [null](#requirement\_null) | >= 3.1.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.4.0 |
 
@@ -150,7 +150,7 @@ Examples
 
 | Name | Version |
 |------|---------|
-| <a name="provider_google"></a> [google](#provider\_google) | >= 6.12.0, < 6.37.0 |
+| <a name="provider_google"></a> [google](#provider\_google) | >= 6.12.0, < 6.45.0 |
 | <a name="provider_null"></a> [null](#provider\_null) | >= 3.1.0 |
 | <a name="provider_random"></a> [random](#provider\_random) | >= 3.4.0 |
 
@@ -205,7 +205,7 @@ No modules.
 | <a name="input_routing_mode"></a> [routing\_mode](#input\_routing\_mode) | n/a | `string` | `"REGIONAL"` | no |
 | <a name="input_service_connections"></a> [service\_connections](#input\_service\_connections) | n/a | <pre>list(object({<br/>    create               = optional(bool, true)<br/>    name                 = optional(string)<br/>    service              = optional(string)<br/>    ip_ranges            = list(string)<br/>    import_custom_routes = optional(bool, false)<br/>    export_custom_routes = optional(bool, false)<br/>  }))</pre> | `[]` | no |
 | <a name="input_shared_accounts"></a> [shared\_accounts](#input\_shared\_accounts) | n/a | `list(string)` | `[]` | no |
-| <a name="input_subnets"></a> [subnets](#input\_subnets) | n/a | <pre>list(object({<br/>    create                   = optional(bool, true)<br/>    name                     = optional(string)<br/>    description              = optional(string)<br/>    region                   = optional(string)<br/>    stack_type               = optional(string)<br/>    ip_range                 = string<br/>    purpose                  = optional(string)<br/>    role                     = optional(string)<br/>    private_access           = optional(bool)<br/>    flow_logs                = optional(bool)<br/>    log_aggregation_interval = optional(string)<br/>    log_sampling_rate        = optional(number)<br/>    attached_projects        = optional(list(string))<br/>    shared_accounts          = optional(list(string))<br/>    viewer_accounts          = optional(list(string))<br/>    secondary_ranges = optional(list(object({<br/>      name  = optional(string)<br/>      range = string<br/>    })))<br/>    psc_endpoints = optional(list(object({<br/>      name        = optional(string)<br/>      description = optional(string)<br/>      address     = optional(string)<br/>      target      = string<br/>    })))<br/>  }))</pre> | `[]` | no |
+| <a name="input_subnets"></a> [subnets](#input\_subnets) | n/a | <pre>list(object({<br/>    create                   = optional(bool, true)<br/>    name                     = optional(string)<br/>    description              = optional(string)<br/>    region                   = optional(string)<br/>    stack_type               = optional(string)<br/>    ip_range                 = string<br/>    purpose                  = optional(string)<br/>    role                     = optional(string)<br/>    private_access           = optional(bool)<br/>    flow_logs                = optional(bool)<br/>    log_aggregation_interval = optional(string)<br/>    log_sampling_rate        = optional(number)<br/>    attached_projects        = optional(list(string))<br/>    shared_accounts          = optional(list(string))<br/>    viewer_accounts          = optional(list(string))<br/>    secondary_ranges = optional(list(object({<br/>      name                    = optional(string)<br/>      range                   = string<br/>      reserved_internal_range = optional(string)<br/>    })))<br/>    psc_endpoints = optional(list(object({<br/>      name        = optional(string)<br/>      description = optional(string)<br/>      address     = optional(string)<br/>      target      = string<br/>    })))<br/>  }))</pre> | `[]` | no |
 | <a name="input_viewer_accounts"></a> [viewer\_accounts](#input\_viewer\_accounts) | n/a | `list(string)` | `[]` | no |
 | <a name="input_vpc_access_connectors"></a> [vpc\_access\_connectors](#input\_vpc\_access\_connectors) | n/a | <pre>list(object({<br/>    create         = optional(bool, true)<br/>    name           = optional(string)<br/>    region         = optional(string)<br/>    cidr_range     = optional(string)<br/>    subnet         = optional(string)<br/>    min_throughput = optional(number)<br/>    max_throughput = optional(number)<br/>    min_instances  = optional(number)<br/>    max_instances  = optional(number)<br/>    machine_type   = optional(string)<br/>  }))</pre> | `[]` | no |
 
