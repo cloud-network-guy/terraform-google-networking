@@ -204,6 +204,7 @@ variable "regions" {
         range = string
       })))
       psc_endpoints = optional(list(object({
+        create              = optional(bool, true)
         project             = optional(string)
         target              = optional(string)
         target_project      = optional(string)

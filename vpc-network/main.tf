@@ -53,10 +53,10 @@ locals {
           region            = k
           ip_range          = subnet.ip_range
           private_access    = coalesce(subnet.private_access, var.subnet_private_access, false)
-          psc_endpoints     = coalesce(subnet.psc_endpoints, [])
           attached_projects = coalesce(subnet.attached_projects, [])
           shared_accounts   = coalesce(subnet.shared_accounts, [])
           viewer_accounts   = coalesce(subnet.viewer_accounts, [])
+          psc_endpoints     = coalesce(subnet.psc_endpoints, [])
         })
       ]
     ]),
@@ -201,6 +201,7 @@ locals {
   psc_endpoints = flatten([for s, subnet in local.subnets :
     [for e, endpoint in lookup(subnet, "psc_endpoints", []) :
       {
+        create              = local.create ? coalesce(endpoint.create, true) : false
         project             = coalesce(endpoint.project, local.project)
         name                = try(coalesce(endpoint.name, endpoint.target_name), null)
         address             = endpoint.address
@@ -223,10 +224,12 @@ locals {
 }
 module "psc-endpoints" {
   source              = "../modules/forwarding-rule"
-  for_each            = { for k, v in local.psc_endpoints : "${v.region}/${v.name}" => v }
+  for_each            = { for k, v in local.psc_endpoints : "${v.region}/${coalesce(v.name, v.target_name)}" => v }
+  create              = each.value.create
   network             = module.vpc-network.self_link
   project             = each.value.project
-  name                = each.value.name
+  host_project        = local.project
+  name                = coalesce(each.value.name, each.value.target_name)
   address             = each.value.address
   address_name        = each.value.address_name
   address_description = each.value.address_description

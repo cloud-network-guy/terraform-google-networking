@@ -57,13 +57,13 @@ No modules.
 | <a name="input_port_range"></a> [port\_range](#input\_port\_range) | n/a | `string` | `null` | no |
 | <a name="input_ports"></a> [ports](#input\_ports) | n/a | `list(number)` | `null` | no |
 | <a name="input_project"></a> [project](#input\_project) | n/a | `string` | `null` | no |
-| <a name="input_project_id"></a> [project\_id](#input\_project\_id) | n/a | `string` | n/a | yes |
+| <a name="input_project_id"></a> [project\_id](#input\_project\_id) | n/a | `string` | `null` | no |
 | <a name="input_protocol"></a> [protocol](#input\_protocol) | n/a | `string` | `null` | no |
 | <a name="input_psc"></a> [psc](#input\_psc) | Parameters to Publish this Frontend via PSC | <pre>object({<br/>    create                   = optional(bool)<br/>    host_project             = optional(string)<br/>    name                     = optional(string)<br/>    description              = optional(string)<br/>    nat_subnets              = optional(list(string))<br/>    enable_proxy_protocol    = optional(bool)<br/>    auto_accept_all_projects = optional(bool)<br/>    accept_projects = optional(list(object({<br/>      project          = string<br/>      connection_limit = optional(number)<br/>    })))<br/>    domain_names          = optional(list(string))<br/>    consumer_reject_lists = optional(list(string))<br/>    reconcile_connections = optional(bool)<br/>  })</pre> | `null` | no |
 | <a name="input_region"></a> [region](#input\_region) | n/a | `string` | `null` | no |
 | <a name="input_service_label"></a> [service\_label](#input\_service\_label) | n/a | `string` | `null` | no |
 | <a name="input_subnetwork"></a> [subnetwork](#input\_subnetwork) | n/a | `string` | `null` | no |
-| <a name="input_target"></a> [target](#input\_target) | n/a | `string` | `null` | no |
+| <a name="input_target"></a> [target](#input\_target) | PSC Target Service | `string` | `null` | no |
 | <a name="input_type"></a> [type](#input\_type) | n/a | `string` | `null` | no |
 
 ## Outputs
