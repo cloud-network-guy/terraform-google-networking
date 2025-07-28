@@ -201,31 +201,37 @@ locals {
   psc_endpoints = flatten([for s, subnet in local.subnets :
     [for e, endpoint in lookup(subnet, "psc_endpoints", []) :
       {
-        name         = coalesce(endpoint.name, endpoint.target_name, "psc-${e + 1}")
+        project      = coalesce(endpoint.project, local.project)
+        name         = try(coalesce(endpoint.name, endpoint.target_name), null)
         address      = endpoint.ip_address
         address_name = endpoint.ip_address_name
         region       = subnet.region
         subnetwork   = subnet.name
-        target = coalesce(endpoint.target,
-          endpoint.target_project_id != null ? "projects/${endpoint.target_project_id}/regions/${subnet.region}/serviceAttachments/${endpoint.target_name}" : null,
-          "error"
-        )
+        target = try(coalesce(
+          endpoint.target,
+          endpoint.target_project != null && endpoint.target_name != null ? "projects/${endpoint.target_project}/regions/${coalesce(endpoint.target_region, subnet.region)}/serviceAttachments/${endpoint.target_name}" : null
+        ), null)
+        target_name = try(coalesce(
+          endpoint.target_name,
+          endpoint.target != null ? split("/", endpoint.target)[-1] : null
+        ), null)
         global_access = coalesce(endpoint.global_access, false)
       }
     ]
   ])
 }
 module "psc-endpoints" {
-  source        = "../modules/forwarding-rule"
-  for_each      = { for k, v in local.psc_endpoints : "${v.region}/${v.name}" => v }
-  project_id    = local.project
-  network       = module.vpc-network.self_link
-  name          = each.value.name
-  address       = each.value.address
-  address_name  = each.value.address_name
-  region        = each.value.region
-  subnetwork    = each.value.subnetwork
-  target        = each.value.target
-  global_access = each.value.global_access
-  depends_on    = [module.vpc-network]
+  source              = "../modules/forwarding-rule"
+  for_each            = { for k, v in local.psc_endpoints : "${v.region}/${v.name}" => v }
+  network             = module.vpc-network.self_link
+  project             = each.value.project
+  name                = each.value.name
+  address             = each.value.address
+  address_name        = each.value.address_name
+  address_description = each.value.address_description
+  region              = each.value.region
+  subnetwork          = each.value.subnetwork
+  target              = try(coalesce(each.value.target, each.value.target_name), null)
+  global_access       = each.value.global_access
+  depends_on          = [module.vpc-network]
 }

@@ -1,5 +1,6 @@
 variable "project_id" {
   type = string
+  default = null
 }
 variable "project" {
   type    = string
@@ -70,6 +71,7 @@ variable "backend_service" {
   default = null
 }
 variable "target" {
+  description = "PSC Target Service"
   type    = string
   default = null
 }
