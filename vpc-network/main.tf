@@ -201,12 +201,13 @@ locals {
   psc_endpoints = flatten([for s, subnet in local.subnets :
     [for e, endpoint in lookup(subnet, "psc_endpoints", []) :
       {
-        project      = coalesce(endpoint.project, local.project)
-        name         = try(coalesce(endpoint.name, endpoint.target_name), null)
-        address      = endpoint.ip_address
-        address_name = endpoint.ip_address_name
-        region       = subnet.region
-        subnetwork   = subnet.name
+        project             = coalesce(endpoint.project, local.project)
+        name                = try(coalesce(endpoint.name, endpoint.target_name), null)
+        address             = endpoint.address
+        address_name        = endpoint.address_name
+        address_description = endpoint.address_description
+        region              = subnet.region
+        subnetwork          = subnet.name
         target = try(coalesce(
           endpoint.target,
           endpoint.target_project != null && endpoint.target_name != null ? "projects/${endpoint.target_project}/regions/${coalesce(endpoint.target_region, subnet.region)}/serviceAttachments/${endpoint.target_name}" : null
