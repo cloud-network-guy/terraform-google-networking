@@ -78,7 +78,7 @@ locals {
       service_account_email = var.service_account_email
       network_tags          = var.network_tags
       labels                = var.labels
-      startup_script        = var.startup_script
+      startup_script        = try(coalesce(v.startup_script, var.startup_script), null)
     } if length(v.instance_groups) == 0
   }
 }

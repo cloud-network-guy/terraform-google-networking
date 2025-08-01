@@ -143,6 +143,7 @@ variable "deployments" {
     disk_size             = optional(number)
     os_project            = optional(string)
     os                    = optional(string)
+    startup_script        = optional(string)
     network               = optional(string)
     subnet                = optional(string)
     ip_address            = optional(string)
