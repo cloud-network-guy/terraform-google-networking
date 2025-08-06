@@ -31,20 +31,22 @@ locals {
       name                    = coalesce(rule.name, "fwr-${local.network_name}-${i}")
       source_tags             = rule.direction == "INGRESS" ? rule.source_tags : null
       source_service_accounts = rule.direction == "INGRESS" ? rule.source_service_accounts : null
-      source_ranges = rule.direction == "INGRESS" ? coalesce(
+      source_ranges = rule.direction == "INGRESS" ? toset(coalesce(
         rule.source_ranges,
         rule.ranges,
-        flatten([for range_type in rule.range_types :
-          data.google_netblock_ip_ranges.default[range_type].cidr_blocks if rule.create
-        ]),
-      ) : null
-      destination_ranges = rule.direction == "EGRESS" ? coalesce(
+        compact(flatten([for rt in rule.range_types :
+          try(data.google_netblock_ip_ranges.default[lower(rt)].cidr_blocks, null)
+        ])),
+        [],
+      )) : null
+      destination_ranges = rule.direction == "EGRESS" ? toset(coalesce(
         rule.destination_ranges,
         rule.ranges,
-        flatten([for range_type in rule.range_types :
-          data.google_netblock_ip_ranges.default[range_type].cidr_blocks if rule.create
-        ]),
-      ) : null
+        compact(flatten([for rt in rule.range_types :
+          try(data.google_netblock_ip_ranges.default[lower(rt)].cidr_blocks, null)
+        ])),
+        [],
+      )) : null
       traffic = coalesce(
         rule.action == "ALLOW" && rule.allow != null ? [for allow in rule.allow :
           {
