@@ -35,7 +35,7 @@ locals {
         rule.source_ranges,
         rule.ranges,
         compact(flatten([for rt in rule.range_types :
-          try(data.google_netblock_ip_ranges.default[lower(rt)].cidr_blocks, null)
+          try(data.google_netblock_ip_ranges.default[lower(rt)].cidr_blocks_ipv4, null)
         ])),
         [],
       )) : null
@@ -43,7 +43,7 @@ locals {
         rule.destination_ranges,
         rule.ranges,
         compact(flatten([for rt in rule.range_types :
-          try(data.google_netblock_ip_ranges.default[lower(rt)].cidr_blocks, null)
+          try(data.google_netblock_ip_ranges.default[lower(rt)].cidr_blocks_ipv4, null)
         ])),
         [],
       )) : null
