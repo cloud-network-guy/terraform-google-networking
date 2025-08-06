@@ -72,8 +72,8 @@ locals {
   firewall_rules = [for rule in local.__firewall_rules :
     merge(rule, {
       # If no IP ranges, use 169.254.169.254 since allowing 0.0.0.0/0 may not be intended
-      source_ranges      = rule.direction == "INGRESS" && rule.source_tags == null && rule.source_service_accounts == null ? coalescelist(rule.source_ranges, ["169.254.169.254"]) : null
-      destination_ranges = rule.direction == "EGRESS" ? coalescelist(rule.destination_ranges, ["169.254.169.254"]) : null
+      source_ranges      = rule.direction == "INGRESS" && rule.source_tags == null && rule.source_service_accounts == null ? coalescelist(tolist(rule.source_ranges), ["169.254.169.254"]) : null
+      destination_ranges = rule.direction == "EGRESS" ? coalescelist(tolist(rule.destination_ranges), ["169.254.169.254"]) : null
       index_key          = coalesce(rule.index_key, rule.name)
     }) if local.recreate == false
   ]
