@@ -37,7 +37,7 @@ locals {
     backend_key => merge(backend, {
       project                  = coalesce(backend.project, local.project)
       host_project             = coalesce(backend.host_project, var.host_project_id, var.host_project, local.project)
-      region                   = coalesce(backend.region, var.region, "global")
+      region                   = try(coalesce(backend.region, var.region), null)
       name                     = coalesce(backend.name, var.name_prefix != null ? "${var.name_prefix}-${backend_key}" : backend_key)
       protocol                 = try(coalesce(backend.protocol, var.backend_protocol), null)
       existing_security_policy = try(coalesce(backend.existing_security_policy, var.existing_security_policy), null)
@@ -240,6 +240,58 @@ locals {
     })
   }
 }
+
+
+/*
+locals {
+  _domains = {
+    test = {
+      create = true
+      name = "gcp-whamola-net"
+      domain = "gcp.whamola.net"
+      description = "Test"
+      labels = {}
+      scope = null
+    }
+  }
+  scope = "DEFAULT"
+  domains = {
+    for k, v in local._domains :
+    k => {
+      create      = coalesce(v.create, true)
+      name        = lower(replace(replace(coalesce(v.name, v.domain, k), ".", "-"), "*", "wildcard"))
+      description = v.description
+      domain      = lower(replace(replace(coalesce(v.domain, v.name, k), "-", "."), "wildcard", "*"))
+      scope       = upper(coalesce(v.scope, local.scope))
+      labels      = { for k, v in coalesce(v.labels, {}) : k => lower(v) }
+    }
+  }
+}
+
+resource "google_certificate_manager_dns_authorization" "default" {
+  for_each    = { for k, v in local.domains : k => v if v.create }
+  name        = each.value.name
+  description = each.value.description
+  domain      = each.value.domain
+  labels      = each.value.labels
+}
+
+resource "google_certificate_manager_certificate" "default" {
+  for_each    = { for k, v in local.domains : k => v if v.create }
+  name        = each.value.name
+  description = each.value.description
+  scope       = each.value.scope
+  labels      = each.value.labels
+  managed {
+    domains = [
+      google_certificate_manager_dns_authorization.default[each.key].domain
+    ]
+    dns_authorizations = [
+      google_certificate_manager_dns_authorization.default[each.key].id
+    ]
+  }
+}
+*/
 
 # Frontends (Forwarding Rules, Target Proxies, URL maps, etc)
 module "frontends" {

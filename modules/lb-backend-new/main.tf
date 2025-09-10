@@ -27,16 +27,17 @@ locals {
       local.is_regional ? "${local.api_prefix}/projects/${local.project}/regions/${local.region}/healthChecks/${hc}" : null,
     )
   ]
-  network = coalesce(
+  network = var.network != null ? trimspace(coalesce(
     startswith(var.network, local.api_prefix) ? var.network : null,
     startswith(var.network, "projects/") ? "${local.api_prefix}/${var.network}" : null,
     "projects/${local.host_project}/global/networks/${var.network}",
-  )
-  subnetwork = coalesce(
+  )) : null
+  subnetwork = var.subnetwork != null ? trimspace(coalesce(
     startswith(var.subnetwork, local.api_prefix) ? var.subnetwork : null,
     startswith(var.subnetwork, "projects/", ) ? "${local.api_prefix}/${var.subnetwork}" : null,
     "projects/${local.host_project}/regions/${local.region}/subnetworks/${var.subnetwork}",
-  )
+  )) : null
+
   backend = {
     capacity_scaler              = local.is_tcp ? 0 : null
     balancing_mode               = local.is_tcp ? "CONNECTION" : null
@@ -62,7 +63,7 @@ locals {
   is_rnegs                        = length([for _ in local.groups : _ if local.is_negs && strcontains(_, "/regions/")]) > 0 ? true : false
   is_znegs                        = length([for _ in local.groups : _ if local.is_negs && strcontains(_, "/zones/")]) > 0 ? true : false
   is_classic                      = coalesce(var.classic, false)
-  is_application                  = false
+  is_application                  = startswith(local.protocol, "HTTP") ? true : false
   load_balancing_scheme           = local.is_application && !local.is_classic ? "${local.type}_MANAGED" : local.type
   locality_lb_policy              = local.is_tcp || local.is_gnegs ? "" : "ROUND_ROBIN"
   session_affinity                = local.is_tcp ? coalesce(var.session_affinity, "NONE") : null
@@ -166,5 +167,4 @@ resource "google_compute_backend_service" "default" {
   }
   depends_on = [null_resource.backend_service]
 }
-
 

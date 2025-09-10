@@ -1,5 +1,6 @@
 variable "project_id" {
-  type = string
+  type    = string
+  default = null
 }
 variable "project" {
   type    = string
@@ -31,11 +32,11 @@ variable "description" {
 }
 variable "network" {
   type    = string
-  default = "default"
+  default = null
 }
 variable "subnetwork" {
   type    = string
-  default = "default"
+  default = null
 }
 variable "type" {
   type    = string
@@ -93,19 +94,15 @@ variable "security_policy" {
   type    = string
   default = null
 }
-variable "bucket_name" {
-  type    = string
-  default = null
-}
-variable "create_bucket" {
-  type    = bool
-  default = null
-}
-variable "bucket_location" {
-  type    = string
-  default = null
-}
 variable "locality_lb_policy" {
+  type    = string
+  default = null
+}
+variable "balancing_mode" {
+  type    = string
+  default = null
+}
+variable "ip_address_selection_policy" {
   type    = string
   default = null
 }
@@ -115,15 +112,31 @@ variable "capacity_scaler" {
 }
 variable "max_utilization" {
   type    = number
-  default = null
+  default = 0
+}
+variable "max_rate" {
+  type    = number
+  default = 0
 }
 variable "max_rate_per_instance" {
   type    = number
-  default = null
+  default = 0
+}
+variable "max_rate_per_endpoint" {
+  type    = number
+  default = 0
 }
 variable "max_connections" {
   type    = number
-  default = null
+  default = 0
+}
+variable "max_connections_per_endpoint" {
+  type    = number
+  default = 0
+}
+variable "max_connections_per_instance" {
+  type    = number
+  default = 0
 }
 variable "connection_draining_timeout_sec" {
   type    = number
@@ -138,8 +151,10 @@ variable "bucket" {
 }
 variable "iap" {
   type = object({
+    create            = optional(bool)
     application_title = optional(string)
     support_email     = optional(string)
+    display_name      = optional(string)
     members           = optional(list(string))
   })
   default = null
@@ -150,5 +165,3 @@ variable "cdn" {
   })
   default = null
 }
-
-
