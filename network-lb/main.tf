@@ -79,7 +79,7 @@ locals {
 }
 
 module "backends" {
-  source           = "../modules/lb-backend-new"
+  source           = "../modules/lb-backend"
   for_each         = { for k, v in local.backends : k => v }
   create           = each.value.create
   project_id       = each.value.project_id

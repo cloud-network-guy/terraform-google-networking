@@ -177,7 +177,7 @@ locals {
 }
 # Backend Services, Buckets, and Network Endpoint Groups
 module "backends" {
-  source                       = "../modules/lb-backend-new"
+  source                       = "../modules/lb-backend"
   for_each                     = { for k, v in local.backends : k => v }
   project_id                   = each.value.project
   host_project_id              = each.value.host_project

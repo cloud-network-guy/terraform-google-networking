@@ -223,7 +223,7 @@ locals {
   }
 }
 module "lb-backend" {
-  source           = "../modules/lb-backend-new"
+  source           = "../modules/lb-backend"
   for_each         = { for k, v in local.lb_backends : k => v }
   project_id       = var.project_id
   host_project_id  = var.host_project_id

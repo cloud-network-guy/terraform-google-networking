@@ -63,15 +63,16 @@ No modules.
 | <a name="input_max_rate_per_instance"></a> [max\_rate\_per\_instance](#input\_max\_rate\_per\_instance) | n/a | `number` | `0` | no |
 | <a name="input_max_utilization"></a> [max\_utilization](#input\_max\_utilization) | n/a | `number` | `0` | no |
 | <a name="input_name"></a> [name](#input\_name) | n/a | `string` | `null` | no |
-| <a name="input_network"></a> [network](#input\_network) | n/a | `string` | `"default"` | no |
+| <a name="input_network"></a> [network](#input\_network) | n/a | `string` | `null` | no |
 | <a name="input_port"></a> [port](#input\_port) | n/a | `number` | `null` | no |
+| <a name="input_port_name"></a> [port\_name](#input\_port\_name) | n/a | `string` | `null` | no |
 | <a name="input_project"></a> [project](#input\_project) | n/a | `string` | `null` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | n/a | `string` | `null` | no |
 | <a name="input_protocol"></a> [protocol](#input\_protocol) | n/a | `string` | `null` | no |
 | <a name="input_region"></a> [region](#input\_region) | n/a | `string` | `null` | no |
 | <a name="input_security_policy"></a> [security\_policy](#input\_security\_policy) | n/a | `string` | `null` | no |
 | <a name="input_session_affinity"></a> [session\_affinity](#input\_session\_affinity) | n/a | `string` | `"NONE"` | no |
-| <a name="input_subnetwork"></a> [subnetwork](#input\_subnetwork) | n/a | `string` | `"default"` | no |
+| <a name="input_subnetwork"></a> [subnetwork](#input\_subnetwork) | n/a | `string` | `null` | no |
 | <a name="input_timeout"></a> [timeout](#input\_timeout) | n/a | `number` | `30` | no |
 | <a name="input_type"></a> [type](#input\_type) | n/a | `string` | `"INTERNAL"` | no |
 
