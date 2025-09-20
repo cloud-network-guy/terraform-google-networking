@@ -14,7 +14,7 @@ No providers.
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_backends"></a> [backends](#module\_backends) | ../modules/lb-backend-new | n/a |
+| <a name="module_backends"></a> [backends](#module\_backends) | ../modules/lb-backend | n/a |
 | <a name="module_cloudarmor"></a> [cloudarmor](#module\_cloudarmor) | ../modules/cloudarmor | n/a |
 | <a name="module_frontends"></a> [frontends](#module\_frontends) | ../modules/lb-frontend | n/a |
 | <a name="module_healthchecks"></a> [healthchecks](#module\_healthchecks) | ../modules/healthcheck | n/a |

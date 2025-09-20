@@ -44,6 +44,7 @@ No modules.
 | <a name="input_classic"></a> [classic](#input\_classic) | n/a | `bool` | `false` | no |
 | <a name="input_connection_draining_timeout_sec"></a> [connection\_draining\_timeout\_sec](#input\_connection\_draining\_timeout\_sec) | n/a | `number` | `300` | no |
 | <a name="input_create"></a> [create](#input\_create) | n/a | `bool` | `true` | no |
+| <a name="input_custom_request_headers"></a> [custom\_request\_headers](#input\_custom\_request\_headers) | n/a | `list(string)` | `null` | no |
 | <a name="input_description"></a> [description](#input\_description) | n/a | `string` | `null` | no |
 | <a name="input_group"></a> [group](#input\_group) | n/a | `string` | `null` | no |
 | <a name="input_groups"></a> [groups](#input\_groups) | n/a | `list(string)` | `null` | no |

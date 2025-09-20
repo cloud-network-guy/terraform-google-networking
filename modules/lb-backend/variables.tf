@@ -165,3 +165,7 @@ variable "cdn" {
   })
   default = null
 }
+variable "custom_request_headers" {
+  type    = list(string)
+  default = null
+}

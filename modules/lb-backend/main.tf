@@ -244,7 +244,8 @@ resource "google_compute_backend_service" "default" {
       oauth2_client_secret = one(google_iap_client.default).secret
     }
   }
-  depends_on = [null_resource.backend_service]
+  custom_request_headers = local.custom_request_headers
+  depends_on             = [null_resource.backend_service]
 }
 
 # IAP IAM Binding
