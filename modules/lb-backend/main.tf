@@ -83,7 +83,7 @@ locals {
   session_affinity                = local.is_tcp ? trimspace(coalesce(var.session_affinity, "NONE")) : null
   connection_draining_timeout_sec = coalesce(var.connection_draining_timeout_sec, 300)
   timeout_sec                     = local.is_tcp ? null : coalesce(var.timeout, 30)
-  security_policy                 = local.is_application && !local.is_internal && var.security_policy != null ? lower(trimspace(var.security_policy)) : null
+  security_policy                 = local.is_application && !local.is_internal && var.security_policy != null ? trimspace(var.security_policy) : null
   enable_cdn                      = var.cdn != null && local.is_application && !local.is_regional && !local.is_internal ? true : false
   cdn_cache_mode                  = local.enable_cdn ? upper(lookup(var.cdn, "cache_mode", "CACHE_ALL_STATIC")) : "NONE"
   cdn = local.enable_cdn ? {

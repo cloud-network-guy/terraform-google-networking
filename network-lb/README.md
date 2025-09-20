@@ -10,13 +10,13 @@
 
 | Name | Version |
 |------|---------|
-| <a name="provider_google"></a> [google](#provider\_google) | >= 6.5, < 7.0 |
+| <a name="provider_google"></a> [google](#provider\_google) | 6.49.3 |
 
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_backends"></a> [backends](#module\_backends) | ../modules/lb-backend-new | n/a |
+| <a name="module_backends"></a> [backends](#module\_backends) | ../modules/lb-backend | n/a |
 | <a name="module_frontends"></a> [frontends](#module\_frontends) | ../modules/forwarding-rule | n/a |
 | <a name="module_healthchecks"></a> [healthchecks](#module\_healthchecks) | ../modules/healthcheck | n/a |
 

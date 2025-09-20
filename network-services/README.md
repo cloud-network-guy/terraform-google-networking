@@ -18,7 +18,7 @@
 | <a name="module_healthcheck"></a> [healthcheck](#module\_healthcheck) | ../modules/healthcheck | n/a |
 | <a name="module_instance-groups"></a> [instance-groups](#module\_instance-groups) | ../modules/instance-group | n/a |
 | <a name="module_instance-template"></a> [instance-template](#module\_instance-template) | ../modules/instance-template | n/a |
-| <a name="module_lb-backend"></a> [lb-backend](#module\_lb-backend) | ../modules/lb-backend-new | n/a |
+| <a name="module_lb-backend"></a> [lb-backend](#module\_lb-backend) | ../modules/lb-backend | n/a |
 | <a name="module_lb-frontend"></a> [lb-frontend](#module\_lb-frontend) | ../modules/forwarding-rule | n/a |
 
 ## Resources
