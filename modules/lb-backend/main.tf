@@ -104,6 +104,7 @@ locals {
     role                = "roles/iap.httpsResourceAccessor"
     members             = toset(lookup(var.iap, "members", []))
   } : null
+  custom_request_headers = var.custom_request_headers != null ? toset(var.custom_request_headers) : null
 }
 
 # IAP Brand
