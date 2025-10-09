@@ -379,6 +379,7 @@ locals {
       network         = local.name
       region          = var.region
       target          = startswith(v.target, local.url_prefix) ? v.target : "${local.url_prefix}/${v.target}"
+      global_access   = coalesce(v.global_access, false)
     })
   ]
 }
@@ -397,6 +398,6 @@ module "psc-endpoints" {
   network             = each.value.network
   subnetwork          = each.value.subnet
   target              = each.value.target
-  global_access       = false
+  global_access       = each.value.global_access
   depends_on          = [module.vpc-network]
 }

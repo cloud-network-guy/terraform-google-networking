@@ -244,6 +244,7 @@ variable "psc_endpoints" {
     ip_address_name        = optional(string)
     ip_address_description = optional(string)
     target                 = string
+    global_access          = optional(bool)
   }))
   default = []
 }

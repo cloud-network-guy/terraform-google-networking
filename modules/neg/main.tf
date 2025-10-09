@@ -35,7 +35,7 @@ locals {
     })
   ]
   gneg_endpoints = [for i, v in local.endpoints : v if local.is_global && !local.is_psc]
-  rneg_endpoints = [for i, v in local.endpoints : v if local.is_regional]
+  rneg_endpoints = local.is_psc ? [] : [for i, v in local.endpoints : v if local.is_regional]
   zneg_endpoints = [for i, v in local.endpoints : v if local.is_zonal]
   network_endpoint_type = coalesce(
     local.is_psc ? "PRIVATE_SERVICE_CONNECT" : null,
@@ -45,7 +45,7 @@ locals {
     length([for e in local.endpoints : e if e.ip_address != null]) > 0 ? "INTERNET_IP_PORT" : null,
     "UNKNOWN"
   )
-  psc_target_service = local.is_psc ? lower(trimspace(var.psc_target)) : null
+  psc_target_service = local.is_psc ? trimspace(var.psc_target) : null
   cloud_run_service  = local.is_regional && var.cloud_run_service != null ? lower(trimspace(var.cloud_run_service)) : null
   _network           = coalesce(var.network, "default")
   network = coalesce(
@@ -90,7 +90,7 @@ resource "null_resource" "rnegs" {
   count = local.create && local.is_regional ? 1 : 0
 }
 resource "google_compute_region_network_endpoint_group" "default" {
-  count                 = local.create && local.is_regional ? 1 : 0
+  count                 = local.create && (local.is_regional || local.is_psc) ? 1 : 0
   project               = local.project
   name                  = local.name
   network_endpoint_type = local.network_endpoint_type

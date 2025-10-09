@@ -138,7 +138,7 @@ resource "google_compute_service_attachment" "default" {
   description           = coalesce(var.psc.description, "PSC Publish for '${local.psc.service_name}'")
   enable_proxy_protocol = local.psc.use_proxy_protocol
   nat_subnets           = local.psc.nat_subnet_ids
-  target_service        = one(google_compute_forwarding_rule.default).id
+  target_service        = local.enable_https ? one(google_compute_forwarding_rule.https).id : one(google_compute_forwarding_rule.default).id
   connection_preference = local.psc.auto_accept_all_connections ? "ACCEPT_AUTOMATIC" : "ACCEPT_MANUAL"
   consumer_reject_lists = []
   domain_names          = []
