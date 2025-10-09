@@ -11,15 +11,16 @@ locals {
   create         = coalesce(var.create, true)
   project        = lower(trimspace(coalesce(var.project_id, var.project)))
   host_project   = lower(trimspace(coalesce(var.host_project_id, var.host_project, local.project)))
-  name           = lower(trimspace(var.name != null ? var.name : one(random_string.name).result))
+  name           = var.name #lower(trimspace(var.name != null ? var.name : one(random_string.name).result))
   description    = var.description != null ? trimspace(var.description) : null
   region         = lower(trimspace(coalesce(var.region, "global")))
   is_regional    = local.region != "global" ? true : false
-  is_global = !local.is_regional
+  is_global      = !local.is_regional
   type           = upper(trimspace(coalesce(var.type, "INTERNAL")))
   is_internal    = local.type == "INTERNAL" ? true : false
   protocol       = var.protocol != null ? upper(trimspace(var.protocol)) : "TCP"
   is_tcp         = local.protocol == "TCP" ? true : false
+  is_psc         = local.is_regional ? true : false
   _health_checks = var.health_check != null ? [var.health_check] : coalesce(var.health_checks, [])
   health_checks = local.is_gnegs || local.is_psc ? null : [for hc in local._health_checks :
     coalesce(
@@ -53,7 +54,6 @@ locals {
   is_gnegs                    = length([for _ in local.groups : _ if local.is_negs && strcontains(_, "/global/")]) > 0 ? true : false
   is_rnegs                    = length([for _ in local.groups : _ if local.is_negs && strcontains(_, "/regions/")]) > 0 ? true : false
   is_znegs                    = length([for _ in local.groups : _ if local.is_negs && strcontains(_, "/zones/")]) > 0 ? true : false
-  is_psc                      = local.is_rnegs ? true : false
   balancing_mode              = var.balancing_mode != null ? upper(trimspace(coalesce(var.balancing_mode, "CONNECTION"))) : null
   alb_balancing_mode          = local.is_gnegs ? null : local.is_negs && !local.is_psc ? "RATE" : coalesce(local.balancing_mode, "UTILIZATION")
   use_connection_balancing    = local.is_tcp ? true : false
@@ -129,7 +129,7 @@ resource "null_resource" "backend_service" {
 
 # Regional Backend Service
 resource "google_compute_region_backend_service" "default" {
-  count                           = local.create && local.is_regional && !local.is_psc ? 1 : 0
+  count                           = local.create && (local.is_regional && !local.is_psc) ? 1 : 0
   project                         = local.project
   name                            = local.name
   description                     = local.description
@@ -177,7 +177,7 @@ resource "google_compute_region_backend_service" "default" {
 
 # Global Backend Service
 resource "google_compute_backend_service" "default" {
-  count                           = local.create && !local.is_regional || local.is_psc ? 1 : 0
+  count                           = local.create && (local.is_global || local.is_psc) ? 1 : 0
   project                         = local.project
   name                            = local.name
   description                     = local.description

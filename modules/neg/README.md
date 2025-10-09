@@ -62,5 +62,10 @@ No modules.
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_endpoints"></a> [endpoints](#output\_endpoints) | n/a |
+| <a name="output_id"></a> [id](#output\_id) | n/a |
+| <a name="output_name"></a> [name](#output\_name) | n/a |
+| <a name="output_self_link"></a> [self\_link](#output\_self\_link) | n/a |
 <!-- END_TF_DOCS -->
