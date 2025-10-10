@@ -20,13 +20,14 @@ locals {
   is_internal    = local.type == "INTERNAL" ? true : false
   protocol       = var.protocol != null ? upper(trimspace(var.protocol)) : "TCP"
   is_tcp         = local.protocol == "TCP" ? true : false
-  is_psc         = local.is_regional ? true : false
-  _health_checks = var.health_check != null ? [var.health_check] : coalesce(var.health_checks, [])
+  is_psc         = local.is_application && local.is_regional && !local.is_internal ? true : false
+  _health_checks = var.health_check != null ? [var.health_check] : compact(coalesce(var.health_checks, []))
   health_checks = local.is_gnegs || local.is_psc ? null : [for hc in local._health_checks :
     coalesce(
       startswith(hc, local.api_prefix) ? hc : null,
       startswith(hc, "projects/", ) ? "${local.api_prefix}/${hc}" : null,
       local.is_regional ? "${local.api_prefix}/projects/${local.project}/regions/${local.region}/healthChecks/${hc}" : null,
+      "${local.api_prefix}/projects/${local.project}/global/healthChecks/${hc}"
     )
   ]
   _network = lower(trimspace(coalesce(var.network, "default")))
