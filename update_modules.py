@@ -2,11 +2,8 @@
 
 from pathlib import Path
 from tempfile import gettempdir
-from os import scandir
-from os.path import realpath, dirname
-from shutil import copy, rmtree
-from filecmp import cmp
 from traceback import format_exc
+from shutil import rmtree
 import yaml
 import git
 
@@ -16,9 +13,11 @@ GIT_REPO = "terraform-google-networking"
 GIT_BRANCH = "main"
 GIT_URL = f"https://{GIT_HOST}/{GIT_USER}/{GIT_REPO}"
 SETTINGS_FILE = "settings.yaml"
-TF_EXTENSIONS = ('.tf', '.md')
-TEMP_DIR = gettempdir()
-PWD = Path(realpath(dirname(__file__)))
+FILE_EXTENSIONS = ('.tf', '.md')
+ENCODING = 'utf-8'
+NEWLINE = '\n'
+TEMP_DIR = Path(gettempdir())
+PWD = Path(__file__).parent
 
 
 def sync_tf_files(source_dir: Path, target_dir: Path) -> bool:
@@ -26,28 +25,26 @@ def sync_tf_files(source_dir: Path, target_dir: Path) -> bool:
     # Copy source files to destination directory
     if not target_dir.exists():
         target_dir.mkdir()
-    for f in scandir(source_dir):
-        do_copy = False
-        source_file = Path(f)
-        if source_file.suffix in TF_EXTENSIONS:
-            do_copy = True
-            target_file = Path(target_dir.joinpath(f.name))
-            if target_file.exists:
-                # This is returning tue for nonexistant files for some reason
-                try:
-                    if cmp(source_file, target_file):
-                        do_copy = False
-                except:
-                    do_copy = True
-        if do_copy:
-            copy(source_file, target_dir)
+    for source_file in source_dir.iterdir():
+        if not (source_file.suffix in FILE_EXTENSIONS):
+            continue
+        source_contents = source_file.read_text()
+        target_file = Path(target_dir.joinpath(source_file.name))
+        if target_file.exists():
+            try:
+                target_contents = target_file.read_text()
+                if source_contents == target_contents:
+                    continue
+            except FileNotFoundError:
+                pass
+        target_file.write_text(source_contents, encoding=ENCODING, newline=NEWLINE)
 
     return True
 
 
 def main():
 
-    temp_dir = Path(TEMP_DIR).joinpath(GIT_REPO)
+    temp_dir = TEMP_DIR.joinpath(GIT_REPO)
   
     successful_pull = False
 
@@ -79,9 +76,12 @@ def main():
         _ = sync_tf_files(source_dir, target_dir)
 
     # Sync Child Modules
-    for module in [d.name for d in scandir(temp_dir.joinpath(f"modules")) if d.is_dir()]:
-        source_dir = temp_dir.joinpath(f"modules/{module}")
-        target_dir = PWD.joinpath(f"modules/{module}")
+    for module in temp_dir.joinpath(f"modules").iterdir():
+        if not module.is_dir():
+            continue
+        module_name = module.name
+        source_dir = temp_dir.joinpath(f"modules/{module_name}")
+        target_dir = PWD.joinpath(f"modules/{module_name}")
         _ = sync_tf_files(source_dir, target_dir)
 
 
