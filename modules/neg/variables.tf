@@ -1,6 +1,6 @@
 variable "create" {
   type    = bool
-  default = null
+  default = true
 }
 variable "project_id" {
   type    = string

@@ -40,7 +40,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_cloud_run_service"></a> [cloud\_run\_service](#input\_cloud\_run\_service) | n/a | `string` | `null` | no |
-| <a name="input_create"></a> [create](#input\_create) | n/a | `bool` | `null` | no |
+| <a name="input_create"></a> [create](#input\_create) | n/a | `bool` | `true` | no |
 | <a name="input_default_port"></a> [default\_port](#input\_default\_port) | n/a | `number` | `null` | no |
 | <a name="input_description"></a> [description](#input\_description) | n/a | `string` | `null` | no |
 | <a name="input_endpoints"></a> [endpoints](#input\_endpoints) | n/a | <pre>list(object({<br/>    ip_address = optional(string)<br/>    port       = optional(number)<br/>    fqdn       = optional(string)<br/>    instance   = optional(string)<br/>  }))</pre> | `[]` | no |
