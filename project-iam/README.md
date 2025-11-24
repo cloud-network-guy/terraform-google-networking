@@ -28,6 +28,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_org_domain"></a> [org\_domain](#input\_org\_domain) | GCP Organizational Domain | `string` | n/a | yes |
 | <a name="input_project"></a> [project](#input\_project) | n/a | `string` | `null` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | n/a | `string` | `null` | no |
 | <a name="input_service_accounts"></a> [service\_accounts](#input\_service\_accounts) | Service Accounts | <pre>map(object({<br/>    create       = optional(bool, true)<br/>    account_id   = optional(string)<br/>    name         = optional(string)<br/>    display_name = optional(string)<br/>    description  = optional(string)<br/>    roles        = optional(list(string), [])<br/>  }))</pre> | `{}` | no |

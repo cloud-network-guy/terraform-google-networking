@@ -5,7 +5,7 @@ locals {
     k => {
       account_id   = coalesce(v.account_id, v.name, k)
       description  = v.description != null ? trimspace(v.description) : null
-      display_name = v.display_name != null ? trimspace(v.display_name) : null
+      display_name = v.display_name != null || v.name != null ? trimspace(coalesce(v.display_name, v.name)) : null
       roles        = coalesce(v.roles, [])
     } if v.create
   }

@@ -18,3 +18,7 @@ variable "service_accounts" {
   }))
   default = {}
 }
+variable "org_domain" {
+  type        = string
+  description = "GCP Organizational Domain"
+}
