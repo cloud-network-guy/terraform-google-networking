@@ -34,7 +34,7 @@ def sync_tf_files(source_dir: Path, target_dir: Path) -> bool:
             try:
                 target_contents = target_file.read_text()
                 if source_contents == target_contents:
-                    continue
+                    continue  # already have same version, so skip this file
             except FileNotFoundError:
                 pass
         target_file.write_text(source_contents, encoding=ENCODING, newline=NEWLINE)
@@ -44,9 +44,9 @@ def sync_tf_files(source_dir: Path, target_dir: Path) -> bool:
 
 def main():
 
-    temp_dir = TEMP_DIR.joinpath(GIT_REPO)
-  
     successful_pull = False
+
+    temp_dir = TEMP_DIR.joinpath(GIT_REPO)
 
     if temp_dir.exists():
         # Do Git Pull with a hard reset
@@ -59,7 +59,7 @@ def main():
             rmtree(temp_dir)
         except Exception as e:
             raise e
-        
+
     if not successful_pull:
         # Do Git Clone
         repo = git.Repo.clone_from(url=GIT_URL, to_path=temp_dir, branch=GIT_BRANCH)  # Perform git clone
