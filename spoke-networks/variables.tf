@@ -138,6 +138,11 @@ variable "subnets" {
   }))
   default = []
 }
+variable "advertised_ip_ranges" {
+  description = "List of Prefixes to advertise via Internal VPNs"
+  type        = list(string)
+  default     = null
+}
 variable "allow_internal_ingress" {
   type    = bool
   default = true
