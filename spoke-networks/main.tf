@@ -38,6 +38,7 @@ locals {
             }
           ] : [],
         )
+        purpose           = "PRIVATE"
         attached_projects = concat(v.attached_projects, var.attached_projects)
         shared_accounts   = concat(v.shared_accounts, var.shared_accounts)
         viewer_accounts   = concat(v.viewer_accounts, var.viewer_accounts)
@@ -304,14 +305,13 @@ locals {
       peer_gcp_vpn_gateway_project_id = coalesce(var.hub_vpc.project_id, var.project_id)
       peer_gcp_vpn_gateway            = coalesce(var.hub_vpc.cloud_vpn_gateway, "${var.hub_vpc.network}-${var.region}")
       peer_bgp_asn                    = var.hub_vpc.bgp_asn
-      advertised_ip_ranges = flatten([for i, v in var.subnets :
-        [
-          {
-            range       = v.main_cidr
-            description = v.name
-          }
-        ]
-      ])
+      advertised_ip_ranges = coalescelist(
+        [for ip_range in var.advertised_ip_ranges : { range = ip_range }],
+        [for subnet in local.subnets : {
+          range       = subnet.ip_range
+          description = subnet.name
+        } if subnet.purpose == "PRIVATE"]
+      )
       tunnels = [for i in range(0, 2) :
         {
           name                = "${local.name}-${var.hub_vpc.network}-${i}"
