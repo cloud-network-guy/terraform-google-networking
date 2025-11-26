@@ -141,7 +141,7 @@ variable "subnets" {
 variable "advertised_ip_ranges" {
   description = "List of Prefixes to advertise via Internal VPNs"
   type        = list(string)
-  default     = null
+  default     = []
 }
 variable "allow_internal_ingress" {
   type    = bool
@@ -253,3 +253,4 @@ variable "psc_endpoints" {
   }))
   default = []
 }
+
