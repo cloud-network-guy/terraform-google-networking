@@ -33,6 +33,7 @@ No requirements.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_advertised_ip_ranges"></a> [advertised\_ip\_ranges](#input\_advertised\_ip\_ranges) | List of Prefixes to advertise via Internal VPNs | `list(string)` | `[]` | no |
 | <a name="input_allow_external_egress"></a> [allow\_external\_egress](#input\_allow\_external\_egress) | n/a | `bool` | `true` | no |
 | <a name="input_allow_external_ingress"></a> [allow\_external\_ingress](#input\_allow\_external\_ingress) | n/a | `bool` | `false` | no |
 | <a name="input_allow_internal_egress"></a> [allow\_internal\_egress](#input\_allow\_internal\_egress) | n/a | `bool` | `true` | no |
