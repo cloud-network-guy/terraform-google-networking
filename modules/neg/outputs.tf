@@ -23,3 +23,6 @@ output "self_link" {
   ) : null
 }
 output "endpoints" { value = local.create ? local.endpoints : null }
+output "is_global" { value = local.create ? local.is_global : null }
+output "is_regional" { value = local.create ? local.is_regional : null }
+output "is_zonal" { value = local.create ? local.is_zonal : null }
