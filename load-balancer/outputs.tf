@@ -1,6 +1,6 @@
 output "backend_services" {
   value = { for k, v in local.backends :
-    k => { for _ in ["name", "id", "self_link"] : _ => lookup(module.backends[k], _, null) }
+    k => { for _ in ["name", "id", "self_link", "is_psc"] : _ => lookup(module.backends[k], _, null) }
   }
   sensitive = true
 }
@@ -24,3 +24,9 @@ output "ip_addresses" {
 #output "new_negs" {
 #  value = { for k, v in var.backends : k => module.backends[k].new_negs }
 #}
+output "negs" {
+  value = {
+    for backend_key, backend in local._backends : backend_key =>
+    [for neg in local.negs : module.negs["${neg.backend_key}/${neg.neg_key}"] if neg.backend_key == backend_key]
+  if backend.create }
+}

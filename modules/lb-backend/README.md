@@ -83,6 +83,9 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_id"></a> [id](#output\_id) | n/a |
+| <a name="output_is_global"></a> [is\_global](#output\_is\_global) | n/a |
+| <a name="output_is_psc"></a> [is\_psc](#output\_is\_psc) | n/a |
+| <a name="output_is_regional"></a> [is\_regional](#output\_is\_regional) | n/a |
 | <a name="output_name"></a> [name](#output\_name) | n/a |
 | <a name="output_self_link"></a> [self\_link](#output\_self\_link) | n/a |
 <!-- END_TF_DOCS -->

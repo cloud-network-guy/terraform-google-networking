@@ -62,5 +62,6 @@ No resources.
 | <a name="output_backend_services"></a> [backend\_services](#output\_backend\_services) | n/a |
 | <a name="output_forwarding_rules"></a> [forwarding\_rules](#output\_forwarding\_rules) | n/a |
 | <a name="output_ip_addresses"></a> [ip\_addresses](#output\_ip\_addresses) | n/a |
+| <a name="output_negs"></a> [negs](#output\_negs) | output "debug" { value = { for k, v in local.\_backends : k => module.negs[k].debug } } output "new\_negs" { value = { for k, v in var.backends : k => module.backends[k].new\_negs } } |
 | <a name="output_security_policies"></a> [security\_policies](#output\_security\_policies) | n/a |
 <!-- END_TF_DOCS -->

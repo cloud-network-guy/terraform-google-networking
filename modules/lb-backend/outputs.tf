@@ -13,3 +13,6 @@ output "self_link" {
     "error",
   ) : null
 }
+output "is_psc" { value = local.create ? local.is_psc : null }
+output "is_global" { value = local.create ? local.is_global : null }
+output "is_regional" { value = local.create ? local.is_regional : null }
