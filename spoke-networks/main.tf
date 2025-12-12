@@ -1,8 +1,12 @@
 locals {
-  url_prefix = "https://www.googleapis.com/compute/v1"
-  create     = coalesce(var.create, true)
-  project    = lower(trimspace(coalesce(var.project_id, var.project)))
-  region     = var.region != null ? lower(trimspace(var.region)) : null
+  url_prefix                           = "https://www.googleapis.com/compute/v1"
+  create                               = coalesce(var.create, true)
+  project                              = lower(trimspace(coalesce(var.project_id, var.project)))
+  region                               = var.region != null ? lower(trimspace(var.region)) : null
+  enable_service_networking            = coalesce(var.enable_service_networking, false)
+  enable_netapp                        = coalesce(var.enable_netapp, false)
+  advertise_servicenetworking_ip_range = coalesce(var.advertise_servicenetworking_ip_range, false)
+  advertise_netapp_ip_range            = coalesce(var.advertise_netapp_ip_range, false)
 }
 
 # Get list of zones for this region, if required
@@ -104,13 +108,13 @@ locals {
       }
   ])
   ip_ranges = concat(
-    local.create && var.enable_service_networking == true ? [
+    local.create && local.enable_service_networking ? [
       {
         name     = "servicenetworking-${local.name}"
         ip_range = var.servicenetworking_cidr
       }
     ] : [],
-    local.create && var.enable_netapp_cv == true ? [
+    local.create && local.enable_netapp ? [
       {
         name     = "netapp-cv-${local.name}"
         ip_range = var.netapp_cidr
@@ -118,25 +122,18 @@ locals {
     ] : [],
   )
   service_connections = concat(
-    local.create && var.enable_service_networking == true ? [
+    local.create && local.enable_service_networking ? [
       {
         name      = "service-networking"
         service   = "servicenetworking.googleapis.com"
-        ip_ranges = ["servicenetworking-${local.name}"]
+        ip_ranges = [ for _ in local.ip_ranges : _ if _.name == "servicenetworking-${local.name}"]
       }
     ] : [],
-    local.create && var.enable_netapp_cv == true ? [
-      {
-        name      = "netapp-cv"
-        service   = "cloudvolumesgcp-api-network.netapp.com"
-        ip_ranges = ["netapp-cv-${local.name}"]
-      }
-    ] : [],
-    local.create && var.enable_netapp_gcnv == true ? [
+    local.create && local.enable_netapp ? [
       {
         name      = "netapp-gcnv"
         service   = "netapp.servicenetworking.goog"
-        ip_ranges = ["netapp-cv-${local.name}"]
+        ip_ranges = [ for _ in local.ip_ranges : _ if _.name == "netapp-cv-${local.name}"]
       }
     ] : [],
   )
@@ -305,12 +302,16 @@ locals {
       peer_gcp_vpn_gateway_project_id = coalesce(var.hub_vpc.project_id, var.project_id)
       peer_gcp_vpn_gateway            = coalesce(var.hub_vpc.cloud_vpn_gateway, "${var.hub_vpc.network}-${var.region}")
       peer_bgp_asn                    = var.hub_vpc.bgp_asn
-      advertised_ip_ranges = coalescelist(
-        [for ip_range in var.advertised_ip_ranges : { range = ip_range }],
-        [for subnet in local.subnets : {
-          range       = subnet.ip_range
-          description = subnet.name
-        } if subnet.purpose == "PRIVATE"]
+      advertised_ip_ranges = concat(
+        coalescelist(
+          [for ip_range in var.advertised_ip_ranges : { range = ip_range }],
+          [for subnet in local.subnets : {
+            range       = subnet.ip_range
+            description = subnet.name
+          } if subnet.purpose == "PRIVATE"]
+        ),
+        local.advertise_servicenetworking_ip_range ? [var.servicenetworking_cidr] : [],
+        local.advertise_netapp_ip_range ? [var.netapp_cidr] : [],
       )
       tunnels = [for i in range(0, 2) :
         {

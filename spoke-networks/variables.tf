@@ -39,15 +39,10 @@ variable "enable_service_networking" {
   type        = bool
   default     = false
 }
-variable "enable_netapp_cv" {
-  description = "Enable PSA Connection NetApp Cloud Volumes"
+variable "enable_netapp" {
+  description = "Enable PSA Connection Google Cloud NetApp Volumes"
   type        = bool
   default     = false
-}
-variable "enable_netapp_gcnv" {
-  description = "Enable PSA Connection NetApp Cloud Volumes"
-  type        = bool
-  default     = true
 }
 variable "cloud_router_bgp_asn" {
   type    = string
@@ -142,6 +137,16 @@ variable "advertised_ip_ranges" {
   description = "List of Prefixes to advertise via Internal VPNs"
   type        = list(string)
   default     = []
+}
+variable "advertise_servicenetworking_ip_range" {
+  description = "Advertise Service Networking PSA range via Internal VPNs"
+  type        = bool
+  default     = false
+}
+variable "advertise_netapp_ip_range" {
+  description = "Advertise NetApp PSA range via Internal VPNs"
+  type        = bool
+  default     = false
 }
 variable "allow_internal_ingress" {
   type    = bool
