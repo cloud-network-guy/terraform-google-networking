@@ -1,9 +1,9 @@
 FROM hashicorp/terraform:latest
 WORKDIR /tmp
 RUN apk add --no-cache bash git make python3 py3-pip
-COPY ./requirements.txt ./
+COPY ./pyproject.toml ./
 RUN pip install --upgrade pip --break-system-packages
-RUN pip install -r requirements.txt --break-system-packages
+RUN pip install --break-system-packages
 ENV APP_DIR=/tmp
 COPY terraform.tf $APP_DIR/
 ENV PORT=8080

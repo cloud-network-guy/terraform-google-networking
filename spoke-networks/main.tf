@@ -4,7 +4,7 @@ locals {
   project                              = lower(trimspace(coalesce(var.project_id, var.project)))
   region                               = var.region != null ? lower(trimspace(var.region)) : null
   enable_service_networking            = coalesce(var.enable_service_networking, false)
-  enable_netapp                        = coalesce(var.enable_netapp, false)
+  enable_netapp                        = anytrue([var.enable_netapp, var.enable_netapp_gcnv, false])
   advertise_servicenetworking_ip_range = coalesce(var.advertise_servicenetworking_ip_range, false)
   advertise_netapp_ip_range            = coalesce(var.advertise_netapp_ip_range, false)
 }
@@ -126,14 +126,14 @@ locals {
       {
         name      = "service-networking"
         service   = "servicenetworking.googleapis.com"
-        ip_ranges = [ for _ in local.ip_ranges : _ if _.name == "servicenetworking-${local.name}"]
+        ip_ranges = [for _ in local.ip_ranges : _.name if _.name == "servicenetworking-${local.name}"]
       }
     ] : [],
     local.create && local.enable_netapp ? [
       {
         name      = "netapp-gcnv"
         service   = "netapp.servicenetworking.goog"
-        ip_ranges = [ for _ in local.ip_ranges : _ if _.name == "netapp-cv-${local.name}"]
+        ip_ranges = [for _ in local.ip_ranges : _.name if _.name == "netapp-cv-${local.name}"]
       }
     ] : [],
   )
@@ -310,8 +310,19 @@ locals {
             description = subnet.name
           } if subnet.purpose == "PRIVATE"]
         ),
-        local.advertise_servicenetworking_ip_range ? [var.servicenetworking_cidr] : [],
-        local.advertise_netapp_ip_range ? [var.netapp_cidr] : [],
+        local.advertise_servicenetworking_ip_range ? [
+          {
+
+            range       = var.servicenetworking_cidr
+            description = "Service Networking PSA Range"
+          }
+        ] : [],
+        local.advertise_netapp_ip_range ? [
+          {
+            range       = var.netapp_cidr
+            description = "NetApp PSA Range"
+          }
+        ] : [],
       )
       tunnels = [for i in range(0, 2) :
         {

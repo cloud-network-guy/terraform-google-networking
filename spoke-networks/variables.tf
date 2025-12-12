@@ -44,6 +44,11 @@ variable "enable_netapp" {
   type        = bool
   default     = false
 }
+variable "enable_netapp_gcnv" {
+  description = "Enable PSA Connection Google Cloud NetApp Volumes (old variable name)"
+  type        = bool
+  default     = false
+}
 variable "cloud_router_bgp_asn" {
   type    = string
   default = 64512
