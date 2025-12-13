@@ -109,20 +109,19 @@ locals {
   custom_request_headers = var.custom_request_headers != null ? toset(var.custom_request_headers) : null
 }
 
-# IAP Brand
+/* IAP Brand & Client deprecated July 2025
 resource "google_iap_brand" "default" {
   count             = local.uses_iap ? 1 : 0
   project           = local.project
   application_title = lookup(local.iap, "application_title", null)
   support_email     = lookup(local.iap, "support_email", null)
 }
-
-# IAP Client
 resource "google_iap_client" "default" {
   count        = local.uses_iap ? 1 : 0
   display_name = lookup(local.iap, "display_name", null)
   brand        = local.uses_iap ? one(google_iap_brand.default).name : null
 }
+*/
 
 resource "null_resource" "backend_service" {
   count = local.create ? 1 : 0
