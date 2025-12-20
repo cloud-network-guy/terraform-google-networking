@@ -5,9 +5,9 @@
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.8.5 |
-| <a name="requirement_google"></a> [google](#requirement\_google) | >= 5.16, < 7.0 |
-| <a name="requirement_null"></a> [null](#requirement\_null) | >= 3.1 |
-| <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.4 |
+| <a name="requirement_google"></a> [google](#requirement\_google) | >= 5.16.0, < 7.0.0 |
+| <a name="requirement_null"></a> [null](#requirement\_null) | >= 3.1.0 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.4.0 |
 
 ## Providers
 
@@ -27,8 +27,6 @@ No modules.
 |------|------|
 | [google_compute_backend_service.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_backend_service) | resource |
 | [google_compute_region_backend_service.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_region_backend_service) | resource |
-| [google_iap_brand.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/iap_brand) | resource |
-| [google_iap_client.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/iap_client) | resource |
 | [google_iap_web_backend_service_iam_binding.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/iap_web_backend_service_iam_binding) | resource |
 | [null_resource.backend_service](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
 | [random_string.name](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
