@@ -59,6 +59,7 @@ variable "address_groups" {
     capacity    = optional(number)
     items       = list(string)
     labels      = optional(map(string))
+    ip_type     = optional(string, "IPV4")
   }))
   default = {}
 }
@@ -68,6 +69,7 @@ variable "rules" {
     priority                   = optional(number)
     description                = optional(string)
     direction                  = optional(string)
+    ip_type                    = optional(string, "IPV4")
     ranges                     = optional(list(string))
     range                      = optional(string)
     source_ranges              = optional(list(string))

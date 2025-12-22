@@ -1,12 +1,12 @@
 locals {
-  address_groups = [
-    for k, v in var.address_groups : {
+  address_groups = [for k, v in var.address_groups :
+    {
       create      = coalesce(v.create, true)
       project     = coalesce(v.project_id, local.project)
       name        = lower(trimspace(coalesce(v.name, k)))
       description = v.description != null ? trimspace(v.description) : null
       location    = lower(trimspace(v.region != null ? v.region : "global"))
-      type        = "IPV4"
+      type        = upper(trimspace(coalesce(v.ip_type, "IPV4")))
       capacity    = 100
       labels      = coalesce(v.labels, {})
       items       = v.items
@@ -46,8 +46,8 @@ locals {
   is_global    = !local.is_regional
   region       = local.is_regional ? lower(trimspace(var.region)) : "global"
   host_project = lower(trimspace(coalesce(var.host_project_id, var.host_project, local.project)))
-  networks = [
-    for network in coalesce(var.networks, []) : lower(trimspace(coalesce(
+  networks = [for network in coalesce(var.networks, []) :
+    lower(trimspace(coalesce(
       startswith(network, local.api_prefix) ? network : null,
       startswith(network, "projects/") ? "${local.api_prefix}/${network}" : null,
       "${local.api_prefix}/projects/${local.host_project}/global/networks/${network}",
@@ -76,8 +76,8 @@ resource "google_compute_region_network_firewall_policy" "default" {
 
 # Locals for Rules
 locals {
-  _rules = [
-    for rule in coalesce(var.rules, []) : merge(rule, {
+  _rules = [for rule in coalesce(var.rules, []) :
+    merge(rule, {
       create         = coalesce(rule.create, local.create)
       action         = lower(coalesce(rule.action, "allow"))
       disabled       = coalesce(rule.disabled, false)
@@ -88,6 +88,7 @@ locals {
         rule.destination_ranges != null || rule.destination_address_groups != null ? "EGRESS" : "INGRESS"
       )))
       target_service_accounts   = coalesce(rule.target_service_accounts, [])
+      ip_type                   = upper(trimspace(coalesce(rule.ip_type, "IPV4")))
       src_ip_ranges             = rule.source_ranges
       src_address_groups        = coalesce(rule.source_address_groups, rule.address_groups, [])
       src_fqdns                 = [] # TODO
@@ -108,8 +109,8 @@ locals {
 
 # Get a list of unique range types in all rules
 locals {
-  range_types = toset(flatten([
-    for rule in local._rules : [for rt in rule.range_types : lower(trimspace(rt))]
+  range_types = toset(flatten([for rule in local._rules :
+    [for rt in rule.range_types : lower(trimspace(rt))]
   ]))
 }
 # Use data source to lookup current IP address blocks
@@ -126,11 +127,9 @@ locals {
   rules = !local.create ? [] : [for i, rule in local._rules : merge(rule, {
     priority        = coalesce(rule.priority, i)
     firewall_policy = local.firewall_policy
-    range_types = [
-      for range_type in rule.range_types : lower(range_type)
-    ]
-    layer4_configs = [
-      for protocol in rule.protocols : {
+    range_types     = [for range_type in rule.range_types : lower(range_type)]
+    layer4_configs = [for protocol in rule.protocols :
+      {
         ip_protocol = lower(protocol)
         ports       = contains(["tcp", "udp"], lower(protocol)) ? toset(coalescelist(rule.ports, ["1-65535"])) : []
       }
@@ -138,17 +137,23 @@ locals {
     src_ip_ranges = rule.direction == "INGRESS" ? toset(coalesce(
       rule.src_ip_ranges,
       rule.ranges,
-      compact(flatten([for rt in rule.range_types :
-        try(data.google_netblock_ip_ranges.default[lower(rt)].cidr_blocks, null)
-      ])),
-      [],
+      rule.ip_type == "IPV4" ? compact(flatten([for rt in rule.range_types :
+        try(data.google_netblock_ip_ranges.default[lower(rt)].cidr_blocks_ipv4, null)
+      ])) : null,
+      rule.ip_type == "IPV6" ? compact(flatten([for rt in rule.range_types :
+        try(data.google_netblock_ip_ranges.default[lower(rt)].cidr_blocks_ipv6, null)
+      ])) : null,
+      []
     )) : null
     dest_ip_ranges = rule.direction == "EGRESS" ? toset(coalesce(
       rule.dest_ip_ranges,
       rule.ranges,
-      compact(flatten([for rt in rule.range_types :
-        try(data.google_netblock_ip_ranges.default[lower(rt)].cidr_blocks, null)
-      ])),
+      rule.ip_type == "IPV4" ? compact(flatten([for rt in rule.range_types :
+        try(data.google_netblock_ip_ranges.default[lower(rt)].cidr_blocks_ipv4, null)
+      ])) : null,
+      rule.ip_type == "IPV6" ? compact(flatten([for rt in rule.range_types :
+        try(data.google_netblock_ip_ranges.default[lower(rt)].cidr_blocks_ipv6, null)
+      ])) : null,
       [],
     )) : null
     src_address_groups = rule.direction == "INGRESS" ? toset(compact(flatten(
@@ -165,8 +170,8 @@ locals {
 }
 
 locals {
-  network_firewall_policy_rules = [
-    for rule in local.rules : merge(rule, {
+  network_firewall_policy_rules = [for rule in local.rules :
+    merge(rule, {
       rule_name = null
     }) if local.is_network
   ]
