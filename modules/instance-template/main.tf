@@ -31,7 +31,7 @@ locals {
   os_project         = lower(trimspace(coalesce(var.os_project, "debian-cloud")))
   os                 = lower(trimspace(coalesce(var.os, "debian-12")))
   disk = {
-    source_image = coalesce(var.disk.source_image, "${local.os_project}/${local.os}")
+    source_image = coalesce(var.disk.source_image, var.image, "${local.os_project}/${local.os}")
     boot         = coalesce(var.disk.boot, true)
     auto_delete  = coalesce(var.disk.auto_delete, true)
     type         = coalesce(var.disk.type, "pd-standard")
