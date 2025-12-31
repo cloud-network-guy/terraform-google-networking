@@ -44,8 +44,8 @@ variable "enable_netapp" {
   type        = bool
   default     = false
 }
-variable "enable_netapp_gcnv" {
-  description = "Enable PSA Connection Google Cloud NetApp Volumes (old variable name)"
+variable "enable_netapp_cv" {
+  description = "Enable PSA Connection Legacy NetApp Cloud Volumes (depreciated as of 2025)"
   type        = bool
   default     = false
 }

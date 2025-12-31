@@ -4,7 +4,8 @@ locals {
   project                              = lower(trimspace(coalesce(var.project_id, var.project)))
   region                               = var.region != null ? lower(trimspace(var.region)) : null
   enable_service_networking            = coalesce(var.enable_service_networking, false)
-  enable_netapp                        = anytrue([var.enable_netapp, var.enable_netapp_gcnv, false])
+  enable_netapp                        = anytrue([var.enable_netapp, var.enable_netapp_cv, false])
+  enable_netapp_cv                     = coalesce(var.enable_netapp_cv, false)
   advertise_servicenetworking_ip_range = coalesce(var.advertise_servicenetworking_ip_range, false)
   advertise_netapp_ip_range            = coalesce(var.advertise_netapp_ip_range, false)
 }
@@ -133,6 +134,13 @@ locals {
       {
         name      = "netapp-gcnv"
         service   = "netapp.servicenetworking.goog"
+        ip_ranges = [for _ in local.ip_ranges : _.name if _.name == "netapp-cv-${local.name}"]
+      }
+    ] : [],
+    local.create && local.enable_netapp && local.enable_netapp_cv ? [
+      {
+        name      = "netapp-cv"
+        service   = "cloudvolumesgcp-api-network.netapp.com"
         ip_ranges = [for _ in local.ip_ranges : _.name if _.name == "netapp-cv-${local.name}"]
       }
     ] : [],
