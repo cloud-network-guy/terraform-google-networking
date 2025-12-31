@@ -20,7 +20,9 @@ locals {
     merge(router, {
       enable_bgp = coalesce(
         router.enable_bgp,
-        router.bgp_asn != null ? true : false,
+        # Auto-enable if an ASN is configured
+        router.bgp_asn != null ? true : false,  
+        # Auto-enable if BGP advertised groups or custom ranges are configured
         length(concat(router.advertised_groups, router.advertised_ip_ranges)) > 0 ? true : false
       )
     })
@@ -63,3 +65,4 @@ resource "google_compute_router" "default" {
     update = null
   }
 }
+
