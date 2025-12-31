@@ -68,8 +68,8 @@ regions         = ["europe-west1", "europe-west4"]
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.8.5 |
-| <a name="requirement_google"></a> [google](#requirement\_google) | >= 6.12.0, < 7.0.0 |
-| <a name="requirement_google-beta"></a> [google-beta](#requirement\_google-beta) | >= 6.12.0, < 7.0.0 |
+| <a name="requirement_google"></a> [google](#requirement\_google) | >= 6.12.0, < 8.0.0 |
+| <a name="requirement_google-beta"></a> [google-beta](#requirement\_google-beta) | >= 7.12.0, < 8.0.0 |
 
 ## Providers
 

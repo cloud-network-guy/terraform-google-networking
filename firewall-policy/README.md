@@ -4,7 +4,7 @@
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5.7 |
-| <a name="requirement_google"></a> [google](#requirement\_google) | >= 5.16.0, < 8.0.0 |
+| <a name="requirement_google"></a> [google](#requirement\_google) | >= 6.37.0, < 8.0.0 |
 | <a name="requirement_null"></a> [null](#requirement\_null) | >= 3.1.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.4.0 |
 
@@ -12,7 +12,7 @@
 
 | Name | Version |
 |------|---------|
-| <a name="provider_google"></a> [google](#provider\_google) | >= 5.16.0, < 8.0.0 |
+| <a name="provider_google"></a> [google](#provider\_google) | >= 6.37.0, < 8.0.0 |
 | <a name="provider_random"></a> [random](#provider\_random) | >= 3.4.0 |
 
 ## Modules
@@ -37,7 +37,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_address_groups"></a> [address\_groups](#input\_address\_groups) | n/a | <pre>map(object({<br/>    create      = optional(bool, true)<br/>    project_id  = optional(string)<br/>    org_id      = optional(number)<br/>    name        = optional(string)<br/>    description = optional(string)<br/>    parent      = optional(string)<br/>    region      = optional(string)<br/>    type        = optional(string)<br/>    capacity    = optional(number)<br/>    items       = list(string)<br/>    labels      = optional(map(string))<br/>  }))</pre> | `{}` | no |
+| <a name="input_address_groups"></a> [address\_groups](#input\_address\_groups) | n/a | <pre>map(object({<br/>    create      = optional(bool, true)<br/>    project_id  = optional(string)<br/>    org_id      = optional(number)<br/>    name        = optional(string)<br/>    description = optional(string)<br/>    parent      = optional(string)<br/>    region      = optional(string)<br/>    type        = optional(string)<br/>    capacity    = optional(number)<br/>    items       = list(string)<br/>    labels      = optional(map(string))<br/>    ip_type     = optional(string, "IPV4")<br/>  }))</pre> | `{}` | no |
 | <a name="input_create"></a> [create](#input\_create) | n/a | `bool` | `true` | no |
 | <a name="input_description"></a> [description](#input\_description) | n/a | `string` | `null` | no |
 | <a name="input_host_project"></a> [host\_project](#input\_host\_project) | n/a | `string` | `null` | no |
@@ -49,7 +49,7 @@ No modules.
 | <a name="input_project"></a> [project](#input\_project) | n/a | `string` | `null` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | n/a | `string` | `null` | no |
 | <a name="input_region"></a> [region](#input\_region) | n/a | `string` | `null` | no |
-| <a name="input_rules"></a> [rules](#input\_rules) | n/a | <pre>list(object({<br/>    create                     = optional(bool, true)<br/>    priority                   = optional(number)<br/>    description                = optional(string)<br/>    direction                  = optional(string)<br/>    ranges                     = optional(list(string))<br/>    range                      = optional(string)<br/>    source_ranges              = optional(list(string))<br/>    destination_ranges         = optional(list(string))<br/>    address_groups             = optional(list(string))<br/>    range_types                = optional(list(string))<br/>    range_type                 = optional(string)<br/>    protocol                   = optional(string)<br/>    protocols                  = optional(list(string))<br/>    port                       = optional(number)<br/>    ports                      = optional(list(number))<br/>    source_address_groups      = optional(list(string))<br/>    destination_address_groups = optional(list(string))<br/>    target_tags                = optional(list(string))<br/>    target_service_accounts    = optional(list(string))<br/>    action                     = optional(string)<br/>    logging                    = optional(bool)<br/>    disabled                   = optional(bool)<br/>  }))</pre> | `[]` | no |
+| <a name="input_rules"></a> [rules](#input\_rules) | n/a | <pre>list(object({<br/>    create                     = optional(bool, true)<br/>    priority                   = optional(number)<br/>    description                = optional(string)<br/>    direction                  = optional(string)<br/>    ip_type                    = optional(string, "IPV4")<br/>    ranges                     = optional(list(string))<br/>    range                      = optional(string)<br/>    source_ranges              = optional(list(string))<br/>    destination_ranges         = optional(list(string))<br/>    address_groups             = optional(list(string))<br/>    range_types                = optional(list(string))<br/>    range_type                 = optional(string)<br/>    protocol                   = optional(string)<br/>    protocols                  = optional(list(string))<br/>    port                       = optional(number)<br/>    ports                      = optional(list(number))<br/>    source_address_groups      = optional(list(string))<br/>    destination_address_groups = optional(list(string))<br/>    target_tags                = optional(list(string))<br/>    target_service_accounts    = optional(list(string))<br/>    action                     = optional(string)<br/>    logging                    = optional(bool)<br/>    disabled                   = optional(bool)<br/>  }))</pre> | `[]` | no |
 | <a name="input_type"></a> [type](#input\_type) | n/a | `string` | `null` | no |
 
 ## Outputs
