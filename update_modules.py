@@ -57,7 +57,8 @@ def main():
             repo.remotes.origin.pull()
             successful_pull = True
         except InvalidGitRepositoryError:
-            rmtree(temp_dir)  # Git repo is corrupted, so just delete it
+            temp_dir.rmdir()
+            #rmtree(temp_dir)  # Git repo is corrupted, so just delete it
         except Exception as e:
             raise e
         
