@@ -4,8 +4,8 @@ from pathlib import Path
 from tempfile import gettempdir
 from traceback import format_exc
 from shutil import rmtree
-import yaml
-import git
+from yaml import load, FullLoader
+from git import Repo, InvalidGitRepositoryError
 
 GIT_HOST = "github.com"
 GIT_USER = "cloud-network-guy"
@@ -45,31 +45,29 @@ def sync_tf_files(source_dir: Path, target_dir: Path) -> bool:
 def main():
 
     temp_dir = TEMP_DIR.joinpath(GIT_REPO)
-  
-    successful_pull = False
 
+    successful_pull = False
     if temp_dir.exists():
         # Do Git Pull with a hard reset
         try:
-            repo = git.Repo(path=temp_dir)
+            repo = Repo(path=temp_dir)
             repo.git.reset('--hard', f'origin/{GIT_BRANCH}')
             repo.remotes.origin.pull()
             successful_pull = True
-        except git.InvalidGitRepositoryError:
+        except InvalidGitRepositoryError:
             rmtree(temp_dir)
         except Exception as e:
             raise e
         
     if not successful_pull:
-        # Do Git Clone
-        repo = git.Repo.clone_from(url=GIT_URL, to_path=temp_dir, branch=GIT_BRANCH)  # Perform git clone
+        repo = Repo.clone_from(url=GIT_URL, to_path=temp_dir, branch=GIT_BRANCH)  # Perform git clone
 
     # Sync Parent Modules
-    _ = Path(__file__).parent.joinpath(SETTINGS_FILE)
-    fp = open(_, mode="rb")
-    _ = yaml.load(fp, Loader=yaml.FullLoader)
-    parent_modules = _.get('parent_modules', [])
-    fp.close()
+    settings_file = Path(__file__).parent.joinpath(SETTINGS_FILE)
+    with open(settings_file, mode="rb") as settings_fp:
+        settings = load(settings_fp, Loader=FullLoader)
+    parent_modules = settings.get('parent_modules', [])
+
     for module in parent_modules:
         source_dir = temp_dir.joinpath(module)
         target_dir = PWD.joinpath(module)

@@ -1,13 +1,14 @@
 from dataclasses import dataclass
-from os.path import realpath, dirname, join, exists, isfile, isdir
-from os import environ, chdir, scandir, access, R_OK
+#from os.path import realpath, dirname, join, exists, isfile, isdir
+from os import environ, chdir, scandir, access, R_OK, supports_effective_ids
 from sys import platform
 from time import time
 from tempfile import gettempdir
 from pathlib import Path
+from shutil import rmtree
 from datetime import datetime
 from asyncio import gather
-from git import Repo
+from git import Repo, exc
 from gcloud.aio.auth import Token
 from gcloud.aio.storage import Storage
 
@@ -19,70 +20,107 @@ AWS_PROFILE_VAR = 'AWS_PROFILE'
 AWS_REGION_VAR = 'AWS_REGION'
 STORAGE_TIMEOUT = 15
 GCS_SCOPES = ["https://www.googleapis.com/auth/cloud-platform.read-only"]
-PWD = realpath(dirname(__file__))
+#PWD = realpath(dirname(__file__))
+PWD = Path(__file__).parent
 
 
 @dataclass
 class GitRepo:
     """ Data Class for a Git Repo """
     url: str
-    branch: str
-    ssh_private_key_file: str
+    branch: str = None
+    sub_dir: str = None
     type: str = None
-    local_path: str = None
+    protocol: str = None
+    username: str = None
+    password: str = None
+    ssh_private_key_file: str = None
+    local_path: Path = None
+    default_branch: str = None
 
-    def configure(self, branch: str = None):
+    def configure(self, branch: str = None, sub_dir: str = None, ssh_private_key_file: str = None):
         """Configure default branch and private SSH key"""
-        if 'github.com' in self.url:
-            self.type = "github"
-            self.branch = branch if branch else "main"
-        if 'source.developers.google.com' in self.url:
-            self.type = "google_csr"
-            self.branch = branch if branch else "master"
+        if self.type and self.default_branch:
+            pass
+        else:
+            self.type = "unknown"
+            if 'github.com' in self.url:
+                self.type = "github"
+                self.default_branch = "main"
+            elif 'source.developers.google.com' in self.url:
+                self.type = "google_csr"
+                self.default_branch = "master"
+        self.branch = branch if branch else self.default_branch
+
+        self.protocol = "https"
         if self.url.startswith("ssh://"):
+            self.protocol = "ssh"
+            print("Configuring SSH key...")
             self.set_ssh_variables()
+            print("Git SSH Command:", environ.get('GIT_SSH_COMMAND'))
 
     def pull(self, branch: str = None):
         """Pull existing Git repo, or clone if repo does not exist locally"""
-        if branch:
-            self.branch = branch
-        temp_dir = gettempdir()
-        to_path = self.url.split('/')[-1]
-        self.local_path = join(temp_dir, to_path)
+        self.branch = branch if branch else self.branch
+        temp_dir = Path(gettempdir())
+        to_path = str(self.url.split('/')[-1])
+        self.local_path = temp_dir.joinpath(to_path)
+        if self.sub_dir:
+            self.local_path = self.local_path.joinpath(self.sub_dir)
 
-        now = time()
-        if exists(self.local_path):
-            print("starting git init:", self.local_path)
-            repo = Repo(path=self.local_path)
-            repo.git.reset('--hard', f'origin/{self.branch}')
-            origin = repo.remotes.origin
-            origin.pull()  # Perform git pull
-            print("finished git pull in ", time() - now)
-        else:
+        git_start_time = time()
+        print("Starting clone or pull:", self.url, "to", self.local_path)
+        repo_ready = False
+        if self.local_path.exists():
+            try:
+                repo = Repo(path=self.local_path)
+                repo.git.reset('--hard', f'origin/{self.branch}')
+                origin = repo.remotes.origin
+                origin.pull()  # Perform git pull
+                print("Completed successful git pull in ", time() - git_start_time)
+                repo_ready = True
+            except exc.InvalidGitRepositoryError as e:
+                print("Repairing corrupted git repo...")
+                rmtree(self.local_path)
+            except Exception as e:
+                raise e
+
+        if not repo_ready:
             chdir(temp_dir)
-            _ = time()
-            repo = Repo.clone_from(url=self.url, to_path=to_path, branch=self.branch)  # Perform git clone
-            print("finished git clone in ", time() - now)
+            try:
+                environ['GIT_SSH_COMMAND'] = f"ssh -i {self.ssh_private_key_file}"
+                repo = Repo.clone_from(url=self.url, to_path=to_path, branch=self.branch)  # Perform git clone
+                print("Completed successful clone in ", time() - git_start_time)
+            #except exc.GitCommandError:
+            #    print("Clone failed using SSH key", self.ssh_private_key_file)
+            #   # raise("Could not clone repo:", self.ssh_private_key_file)
+            except BaseException as e:
+                raise e
 
         chdir(PWD)  # Change back to base directory
 
     def set_ssh_variables(self) -> None:
         """Configure the Git SSH Variant & Private Key File by setting appropriate Environment Variables"""
         environ.update({'GIT_SSH_VARIANT': "ssh"})
-        if not (environ.get('GIT_SSH_COMMAND')):
+        if not self.ssh_private_key_file:
+#        if not (environ.get('GIT_SSH_COMMAND')):
             # Scan SSH Key locations to find valid private key file
             using_windows = True if platform.startswith('win') else False
-            home_dir = environ.get("USERPROFILE") if using_windows else environ.get('HOME')
+            home_dir = Path(environ.get("USERPROFILE") if using_windows else environ.get('HOME'))
+            ssh_key_dir = home_dir.joinpath('.ssh')
             for private_key_file in SSH_PRIVATE_KEY_FILES:
-                _ = f"{home_dir}/.ssh/{private_key_file}"
-                if using_windows:
-                    _ = _.replace("/", "\\")
-                if exists(_) and isfile(_) and access(_, R_OK):
-                    self.ssh_private_key_file = _
+                #_ = f"{home_dir}/.ssh/{private_key_file}"
+                _ = ssh_key_dir.joinpath(private_key_file)
+                #if using_windows:
+                #    _ = _.replace("/", "\\")
+                #if exists(_) and isfile(_) and access(_, R_OK):
+                if _.exists() and _.is_file() and access(_, R_OK):
+                    self.ssh_private_key_file = str(_)
                     break
-            environ.update({'GIT_SSH_COMMAND': f"ssh -i {self.ssh_private_key_file}"})
+        environ.update({'GIT_SSH_COMMAND': f"ssh -i {self.ssh_private_key_file}"})
+        print("Git SSH Command:", environ.get('GIT_SSH_COMMAND'))
         print("Git using private ssh key:", self.ssh_private_key_file)
-        print(environ)
+        #print(environ)
 
     def __repr__(self):
         return str({k: v for k, v in vars(self).items() if v})
@@ -95,8 +133,8 @@ class GitRepo:
 class TFModule:
     """ Data Class for a Terraform Module """
     name: str
-    root_path: str
-    path: str = None
+    root_path: Path
+    path: Path = None
     backend: dict = None
     providers: dict = None
     authentication_file: str = None
@@ -107,8 +145,8 @@ class TFModule:
     async def discover_backend(self) -> None:
 
         # Verify the path actually exists
-        self.path = join(self.root_path, self.name)
-        assert exists(self.path) and isdir(self.path), f"{self.path} is not a valid directory"
+        self.path = self.root_path.joinpath(self.name)
+        assert self.path.exists() and self.path.is_dir(), f"{self.path} is not a valid directory"
         self.backend = {'path': self.path, 'type': "unknown"}
 
         # Scan the directory for Terraform code files
@@ -192,7 +230,8 @@ class TFModule:
         if authentication_file:
             if self.backend['type'] == "gcs":
                 self.backend.update({
-                    'key_path': realpath(authentication_file),
+                    #'key_path': realpath(authentication_file),
+                    'key_path': Path(authentication_file),
                 })
                 token = Token(service_file=self.backend.get('key_path'), scopes=GCS_SCOPES)
                 self.storage = Storage(token=token)
@@ -202,7 +241,8 @@ class TFModule:
         self.workspaces = []
 
         if self.backend['type'] == 'local':
-            if exists("terraform.d"):
+            _ = self.root_path.joinpath("terraform.d")
+            if _.exists():
                 self.uses_workspaces = True
                 self.backend.update({
                     'location': "terraform.d/"

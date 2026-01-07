@@ -11,7 +11,7 @@ app.config['SESSION_COOKIE_SAMESITE'] = "Strict"
 
 
 PLAIN_CONTENT_TYPE = "text/plain"
-JSON_RESPONSE_HEADERS = {'Cache-Control': "no-cache, no-store"}
+JSON_RESPONSE_HEADERS = {'Cache-Control': "no-cache, no-store"}   # Don't cache anything in client or CDN, ever
 FIELDS = get_fields()
 ENVIRONMENTS = get_environments()
 TABLE_TEMPLATE = "table.jinja"
@@ -31,12 +31,12 @@ async def _modules(environment: str):
 
     try:
         modules = []
-        _ = await get_modules(environment)
-        for module in _:
-            m = module.__dict__
-            m['workspaces'] = [workspace.__dict__ for workspace in module.workspaces if module.uses_workspaces]
-            modules.append(m)
-        return jsonify(modules), JSON_RESPONSE_HEADERS
+        modules = await get_modules(environment)
+        #for module in _:
+            #m = module.__dict__
+        #    module.workspaces = [workspace.__dict__ for workspace in module.workspaces if module.uses_workspaces]
+            #modules.append(m)
+        return jsonify([m.name for m in modules]), JSON_RESPONSE_HEADERS
     except Exception as e:
         return Response(format_exc(), status=500, content_type=PLAIN_CONTENT_TYPE)
 
@@ -121,4 +121,4 @@ async def _root():
 
 if __name__ == "__main__":
 
-    app.run(debug=True, use_reloader=True)
+    app.run(debug=True, use_reloader=True, port=5001)

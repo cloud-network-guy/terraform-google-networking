@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 from os import scandir, chdir, system, environ
-#from os.path import realpath, dirname, join, exists, isfile, isdir, splitext
 from time import time
 from asyncio import gather
 from pathlib import Path
@@ -10,7 +9,6 @@ import google.auth.transport.requests
 from classes import TFModule, TFWorkSpace, GitRepo
 
 SCOPES = ['https://www.googleapis.com/auth/cloud-platform']
-#PWD = realpath(dirname(__file__))
 PWD = Path(__file__).parent
 ADC_VAR = 'GOOGLE_APPLICATION_CREDENTIALS'
 VALID_ACTIONS = ('version', 'init', 'plan', 'apply', 'providers')
@@ -33,17 +31,13 @@ def get_gcp_access_token(key_file: str = None) -> str:
 
 
 
-def check_file(file_name: str) -> str:
+def init_file(file_name: str) -> Path:
     """
-    Verify a file exists
+    Verify a file exists, and return its path.
     """
-    #_ = str(join(PWD, str(file_name)))
     _ = PWD.joinpath(file_name)
     assert _.exists, FileNotFoundError(f"File '{_}' does not exist")
     assert _.is_file, f"File '{_}' is not a file"
-
-    #_ = Path(join(PWD, str(file_name)))
-    #assert _.is_file() and _.stat().st_size > 0, f"File '{file_name}' does not exist or is empty!"
     return _
 
 
@@ -52,8 +46,8 @@ def check_directory(directory: str) -> bool:
     Verify a directory exists
     """
     _ = PWD.joinpath(directory)
-    assert _.exists, f"Directory '{directory}' does not exist"
-    assert _.is_dir, f"Directory '{directory}' is not a directory"
+    assert _.exists, f"Directory '{_}' does not exist"
+    assert _.is_dir, f"Directory '{_}' is not a directory"
     return True
 
 def get_config(input_file: str) -> dict:
@@ -61,14 +55,15 @@ def get_config(input_file: str) -> dict:
     import tomli
     import yaml
 
-    if _ := check_file(input_file):
-        #file_format = splitext(input_file)[-1].lower()
+    if _ := init_file(input_file):
         file_format = _.suffix.lower()
         with open(_, mode="rb") as fp:
             if 'yaml' in file_format:
                 _ = yaml.load(fp, Loader=yaml.FullLoader)
             if 'toml' in file_format:
                 _ = tomli.load(fp)
+            assert len(_.keys()) == len(set(_.keys())), KeyError(f"Duplicate keys found in '{input_file}'")
+            print(_.keys())
             return _
     return {}
 
@@ -92,23 +87,31 @@ async def get_modules(environment: str, module: str = None) -> list[TFModule]:
     environments = get_environments()
     assert environment in environments, f"environment '{environment}' not found"
 
-    root_dir = PWD.joinpath(".")
+    #root_dir = PWD.joinpath(".")
 
     splits = {'start': time()}
     e = environments.get(environment)
-    if url := e.get('git_url'):
-        repo = GitRepo(url, branch=e.get('git_branch'), ssh_private_key_file=e.get('git_ssh_key'))
-        #git_repo(url=url, branch=branch)
-        repo.configure()
-        repo.pull()
-        sub_dir = str(e.get('sub_dir', ""))
-        root_dir = root_dir.joinpath(repo.local_path)
-        print("Root directory:", root_dir)
-    elif directory := e.get('directory'):
-        root_dir = root_dir.joinpath(directory)
+    directory = e.get('directory', '.')
+    root_dir = PWD.joinpath(directory)
+    if git := e.get('git'):
+        if url := git.get('url'):
+            repo = GitRepo(url)
+            #git_repo(url=url, branch=branch)
+            sub_dir = str(e.get('sub_dir', ""))
+            repo.configure(branch=git.get('branch'), ssh_private_key_file=git.get('private_ssh_key'), sub_dir=sub_dir)
+            repo.pull()
+            #print("root_dir is:", root_dir)
+            print("repo local path is:", repo.local_path)
+            root_dir = repo.local_path.joinpath(e.get('sub_dir', ""))
+            #print("Root directory:", root_dir)
+
     splits['finish_git_init'] = time()
 
+    print("root dir:", root_dir)
+    #sub_dir = root_dir.joinpath(e.get('sub_dir', ""))
+    #print("environment")
     sub_directories = get_sub_directories(root_dir)
+    print("sub directories", sub_directories)
     print([sub_dir for sub_dir in sub_directories])
     splits['scan_sub_dirs'] = time()
 
@@ -118,9 +121,11 @@ async def get_modules(environment: str, module: str = None) -> list[TFModule]:
     else:
         modules = [TFModule(sub_dir, str(join(root_dir, sub_dir))) for sub_dir in sub_directories.keys()]
     """
-    modules = [TFModule(module_name, str(root_dir)) for module_name in sub_directories.keys()]
+    modules = [TFModule(module_name, root_dir) for module_name in sub_directories.keys()]
     if module:
+        # Look for a specific modules
         modules = [m for m in modules if m.name == module]
+    # Filter down to certain modules
     if valid_modules := e.get('modules'):
         modules = [m for m in modules if m.name in valid_modules]
     splits['module_init'] = time()
@@ -192,11 +197,11 @@ async def get_workspaces(environment: str, module: str) -> list[TFWorkSpace]:
     return workspaces
 
 
-def get_sub_directories(base_dir: str) -> dict:
+def get_sub_directories(base_dir: Path) -> dict:
 
     sub_directories = {}
     for subdir in [_.name for _ in scandir(base_dir) if _.is_dir()]:
-        _subdir = Path(base_dir).joinpath(subdir)
+        _subdir = base_dir.joinpath(subdir)
         tf_files = [f.name for f in scandir(_subdir) if f.name.lower().endswith(".tf")]
         if len(tf_files) > 0:
             #print("Found Terraform sub-directories in base:", base_dir)
@@ -235,7 +240,6 @@ def main(environment: str, module: str, workspace: str = None, action: str = "pl
             environ.update({ADC_VAR: str(google_adc_key)})
 
     # Initialize
-    #root_dir = join(realpath(repo_dir), directory)
     if debug or OPTIONS.get('debug'):
         print("running init for ", target_dir)
     tf_init(target_dir)
