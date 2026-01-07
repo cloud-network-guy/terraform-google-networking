@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+from importlib.util import source_hash
 from pathlib import Path
 from tempfile import gettempdir
 from traceback import format_exc
@@ -23,6 +23,8 @@ PWD = Path(__file__).parent
 def sync_tf_files(source_dir: Path, target_dir: Path) -> bool:
 
     # Copy source files to destination directory
+    if not source_dir.exists():
+        raise NotADirectoryError("Source Module directory not found:", source_dir)
     if not target_dir.exists():
         target_dir.mkdir()
     for source_file in source_dir.iterdir():
@@ -55,19 +57,20 @@ def main():
             repo.remotes.origin.pull()
             successful_pull = True
         except InvalidGitRepositoryError:
-            rmtree(temp_dir)
+            rmtree(temp_dir)  # Git repo is corrupted, so just delete it
         except Exception as e:
             raise e
         
     if not successful_pull:
         repo = Repo.clone_from(url=GIT_URL, to_path=temp_dir, branch=GIT_BRANCH)  # Perform git clone
 
-    # Sync Parent Modules
+    # Open Settings file to get list of parent modules to sync
     settings_file = Path(__file__).parent.joinpath(SETTINGS_FILE)
-    with open(settings_file, mode="rb") as settings_fp:
-        settings = load(settings_fp, Loader=FullLoader)
+    with settings_file.open(mode="rb") as _:
+        settings = load(_, Loader=FullLoader)
     parent_modules = settings.get('parent_modules', [])
 
+    # Sync Parent Modules
     for module in parent_modules:
         source_dir = temp_dir.joinpath(module)
         target_dir = PWD.joinpath(module)
