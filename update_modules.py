@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-from importlib.util import source_hash
 from pathlib import Path
 from tempfile import gettempdir
 from traceback import format_exc
 from shutil import rmtree
-from yaml import load, FullLoader
 from git import Repo, InvalidGitRepositoryError
+import yaml
 
 GIT_HOST = "github.com"
 GIT_USER = "cloud-network-guy"
@@ -67,7 +66,7 @@ def main():
     # Open Settings file to get list of parent modules to sync
     settings_file = Path(__file__).parent.joinpath(SETTINGS_FILE)
     with settings_file.open(mode="rb") as _:
-        settings = load(_, Loader=FullLoader)
+        settings = yaml.load(_, Loader=yaml.FullLoader)
     parent_modules = settings.get('parent_modules', [])
 
     # Sync Parent Modules
