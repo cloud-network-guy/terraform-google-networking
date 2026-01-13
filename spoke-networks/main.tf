@@ -269,12 +269,12 @@ locals {
   ]
 }
 module "shared-vpc" {
-  source                     = "../modules/shared-vpc"
-  host_project_id            = local.project
-  network                    = module.vpc-network.name
-  region                     = local.region
-  subnetworks                = local.create ? [for s in local.shared_subnetworks : s if s.purpose == "PRIVATE"] : []
-  give_project_viewer_access = var.give_gke_project_viewer_access
+  source                         = "../modules/shared-vpc"
+  host_project_id                = local.project
+  network                        = module.vpc-network.name
+  region                         = local.region
+  subnetworks                    = local.create ? [for s in local.shared_subnetworks : s if s.purpose == "PRIVATE"] : []
+  give_gke_project_viewer_access = var.give_gke_project_viewer_access
 }
 
 # Generate a random 20-character string to be used for the IKE shared secret
