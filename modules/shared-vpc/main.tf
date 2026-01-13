@@ -63,7 +63,7 @@ locals {
   give_project_viewer_access = coalesce(var.give_project_viewer_access, false)
 }
 # Give all Service Accounts Read-only permissions at project level, if enabled
-resource "google_project_iam_member" "compute_network_viewer" {
+resource "google_project_iam_member" "project_network_viewer" {
   for_each = toset(flatten([for k, v in local.service_accounts : [for a in v : a] if local.give_project_viewer_access]))
   project  = local.project
   member   = each.value
