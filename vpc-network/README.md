@@ -7,7 +7,7 @@ No requirements.
 
 | Name | Version |
 |------|---------|
-| <a name="provider_google"></a> [google](#provider\_google) | 6.36.1 |
+| <a name="provider_google"></a> [google](#provider\_google) | 6.19.0 |
 
 ## Modules
 

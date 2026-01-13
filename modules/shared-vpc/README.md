@@ -75,8 +75,8 @@ regions         = ["europe-west1", "europe-west4"]
 
 | Name | Version |
 |------|---------|
-| <a name="provider_google"></a> [google](#provider\_google) | 6.36.1 |
-| <a name="provider_google-beta"></a> [google-beta](#provider\_google-beta) | 6.36.1 |
+| <a name="provider_google"></a> [google](#provider\_google) | 7.15.0 |
+| <a name="provider_google-beta"></a> [google-beta](#provider\_google-beta) | 7.15.0 |
 
 ## Modules
 
@@ -90,6 +90,7 @@ No modules.
 | [google_compute_subnetwork_iam_binding.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_subnetwork_iam_binding) | resource |
 | [google_compute_subnetwork_iam_binding.gke](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_subnetwork_iam_binding) | resource |
 | [google_compute_subnetwork_iam_binding.viewer](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_subnetwork_iam_binding) | resource |
+| [google_project_iam_member.compute_network_viewer](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_iam_member) | resource |
 | [google_project_iam_member.gke_host_service_agent_user](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_iam_member) | resource |
 | [google-beta_google_cloud_asset_resources_search_all.services](https://registry.terraform.io/providers/hashicorp/google-beta/latest/docs/data-sources/google_cloud_asset_resources_search_all) | data source |
 | [google_project.service_projects](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/project) | data source |
@@ -98,10 +99,11 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_give_project_viewer_access"></a> [give\_project\_viewer\_access](#input\_give\_project\_viewer\_access) | Give all Service Accounts Compute Network Viewer permissions on the Host Network Project | `bool` | `false` | no |
 | <a name="input_host_project_id"></a> [host\_project\_id](#input\_host\_project\_id) | For Shared VPC, Project ID of the Host Network Project | `string` | n/a | yes |
-| <a name="input_network"></a> [network](#input\_network) | n/a | `string` | `null` | no |
-| <a name="input_region"></a> [region](#input\_region) | n/a | `string` | `null` | no |
-| <a name="input_subnetworks"></a> [subnetworks](#input\_subnetworks) | n/a | <pre>list(object({<br/>    id                = optional(string)<br/>    name              = optional(string)<br/>    region            = optional(string)<br/>    purpose           = optional(string)<br/>    attached_projects = optional(list(string))<br/>    shared_accounts   = optional(list(string))<br/>    viewer_accounts   = optional(list(string))<br/>  }))</pre> | n/a | yes |
+| <a name="input_network"></a> [network](#input\_network) | VPC Network Name, ID, or Self LInk | `string` | `null` | no |
+| <a name="input_region"></a> [region](#input\_region) | Default Region | `string` | `null` | no |
+| <a name="input_subnetworks"></a> [subnetworks](#input\_subnetworks) | n/a | <pre>list(object({<br/>    id                = optional(string)<br/>    name              = optional(string)<br/>    region            = optional(string)<br/>    purpose           = optional(string)<br/>    attached_projects = optional(list(string))<br/>    shared_accounts   = optional(list(string))<br/>    viewer_accounts   = optional(list(string))<br/>  }))</pre> | `[]` | no |
 
 ## Outputs
 

@@ -3,12 +3,19 @@ variable "host_project_id" {
   type        = string
 }
 variable "network" {
-  type    = string
-  default = null
+  description = "VPC Network Name, ID, or Self LInk"
+  type        = string
+  default     = null
 }
 variable "region" {
-  type    = string
-  default = null
+  description = "Default Region"
+  type        = string
+  default     = null
+}
+variable "give_project_viewer_access" {
+  description = "Give all Service Accounts Compute Network Viewer permissions on the Host Network Project"
+  type        = bool
+  default     = false
 }
 variable "subnetworks" {
   type = list(object({
@@ -20,4 +27,5 @@ variable "subnetworks" {
     shared_accounts   = optional(list(string))
     viewer_accounts   = optional(list(string))
   }))
+  default = []
 }

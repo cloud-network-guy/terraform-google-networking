@@ -236,14 +236,14 @@ locals {
 # Create VPC network and related resources
 module "vpc-network" {
   source                  = "../modules/vpc-network"
-  project_id              = var.project_id
+  project_id              = local.project
   create                  = local.create
   name                    = local.name
   description             = null
   mtu                     = var.mtu
   auto_create_subnetworks = false
   global_routing          = false
-  default_region          = var.region
+  default_region          = local.region
   subnets                 = local.subnets
   cloud_routers           = local.cloud_routers
   cloud_nats              = local.cloud_nats
@@ -269,11 +269,12 @@ locals {
   ]
 }
 module "shared-vpc" {
-  source          = "../modules/shared-vpc"
-  host_project_id = var.project_id
-  network         = module.vpc-network.name
-  region          = var.region
-  subnetworks     = local.create ? [for s in local.shared_subnetworks : s if s.purpose == "PRIVATE"] : []
+  source                     = "../modules/shared-vpc"
+  host_project_id            = local.project
+  network                    = module.vpc-network.name
+  region                     = local.region
+  subnetworks                = local.create ? [for s in local.shared_subnetworks : s if s.purpose == "PRIVATE"] : []
+  give_project_viewer_access = var.give_project_viewer_access
 }
 
 # Generate a random 20-character string to be used for the IKE shared secret

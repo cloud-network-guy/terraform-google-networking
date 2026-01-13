@@ -51,18 +51,29 @@ locals {
       ))
     }
   }
-  service_accounts = {
+  _service_accounts = {
     for k, v in local.service_projects :
     k => compact([
-      contains(v.apis, "compute.googleapis.com") ? "serviceAccount:${v.number}@cloudservices.gserviceaccount.com" :
-      null,
-      contains(v.apis, "compute.googleapis.com") ? "serviceAccount:${v.number}-compute@developer.gserviceaccount.com"
-      : null,
-      contains(v.apis, "container.googleapis.com") ?
-      "serviceAccount:service-${v.number}@container-engine-robot.iam.gserviceaccount.com" : null,
+      contains(v.apis, "compute.googleapis.com") ? "${v.number}@cloudservices.gserviceaccount.com" : null,
+      contains(v.apis, "compute.googleapis.com") ? "${v.number}-compute@developer.gserviceaccount.com" : null,
+      contains(v.apis, "container.googleapis.com") ? "service-${v.number}@container-engine-robot.iam.gserviceaccount.com" : null,
     ])
   }
-  gke_service_accounts = { for k, v in local.service_accounts : k => one([for a in v : a if strcontains(a, "container-engine-robot")]) }
+  service_accounts           = { for k, v in local._service_accounts : k => [for a in v : "serviceAccount:${a}"] }
+  give_project_viewer_access = coalesce(var.give_project_viewer_access, false)
+}
+# Give all Service Accounts Read-only permissions at project level, if enabled
+resource "google_project_iam_member" "compute_network_viewer" {
+  for_each = { for k, v in local.service_accounts : k => v if local.give_project_viewer_access && v != null }
+  project  = local.project
+  member   = each.value
+  role     = "roles/compute.networkViewer"
+}
+
+locals {
+  gke_service_accounts = { for k, v in local.service_accounts :
+    k => one([for a in v : a if strcontains(a, "container-engine-robot")])
+  }
 }
 # Give GKE Service Accounts hostServiceAgentUser role
 resource "google_project_iam_member" "gke_host_service_agent_user" {
@@ -71,6 +82,7 @@ resource "google_project_iam_member" "gke_host_service_agent_user" {
   member   = each.value
   role     = "roles/container.hostServiceAgentUser"
 }
+
 
 locals {
   shared_subnetworks = { for s in local.subnetworks :

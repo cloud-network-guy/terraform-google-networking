@@ -125,6 +125,11 @@ variable "attached_projects" {
   type    = list(string)
   default = []
 }
+variable "give_project_viewer_access" {
+  description = "Give all Service Accounts Compute Network Viewer permissions on the Host Network Project"
+  type        = bool
+  default     = false
+}
 variable "subnets" {
   type = list(object({
     main_cidr         = string
