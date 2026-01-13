@@ -59,22 +59,13 @@ locals {
       contains(v.apis, "container.googleapis.com") ? "service-${v.number}@container-engine-robot.iam.gserviceaccount.com" : null,
     ])
   }
-  service_accounts           = { for k, v in local._service_accounts : k => [for a in v : "serviceAccount:${a}"] }
-  give_project_viewer_access = coalesce(var.give_project_viewer_access, false)
-}
-# Give all Service Accounts Read-only permissions at project level, if enabled
-resource "google_project_iam_member" "project_network_viewer" {
-  for_each = toset(flatten([for k, v in local.service_accounts : [for a in v : a] if local.give_project_viewer_access]))
-  project  = local.project
-  member   = each.value
-  role     = "roles/compute.networkViewer"
-}
-
-locals {
+  service_accounts = { for k, v in local._service_accounts : k => [for a in v : "serviceAccount:${a}"] }
   gke_service_accounts = { for k, v in local.service_accounts :
     k => one([for a in v : a if strcontains(a, "container-engine-robot")])
   }
+  give_gke_project_viewer_access = coalesce(var.give_gke_project_viewer_access, false)
 }
+
 # Give GKE Service Accounts hostServiceAgentUser role
 resource "google_project_iam_member" "gke_host_service_agent_user" {
   for_each = { for k, v in local.gke_service_accounts : k => v if v != null }
@@ -83,6 +74,13 @@ resource "google_project_iam_member" "gke_host_service_agent_user" {
   role     = "roles/container.hostServiceAgentUser"
 }
 
+# Give GKE Service Accounts Read-only permissions at project level, if enabled
+resource "google_project_iam_member" "gke_project_network_viewer" {
+  for_each = { for k, v in local.gke_service_accounts : k => v if v != null && local.give_gke_project_viewer_access }
+  project  = local.project
+  member   = each.value
+  role     = "roles/compute.networkViewer"
+}
 
 locals {
   shared_subnetworks = { for s in local.subnetworks :

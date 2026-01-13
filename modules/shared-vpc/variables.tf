@@ -12,8 +12,8 @@ variable "region" {
   type        = string
   default     = null
 }
-variable "give_project_viewer_access" {
-  description = "Give all Service Accounts Compute Network Viewer permissions on the Host Network Project"
+variable "give_gke_project_viewer_access" {
+  description = "Give GKE Service Accounts Compute Network Viewer permissions on the Host Network Project"
   type        = bool
   default     = false
 }
