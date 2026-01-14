@@ -6,6 +6,11 @@ variable "project" {
   type    = string
   default = null
 }
+variable "org_domain" {
+  type        = string
+  description = "GCP Organizational Domain"
+  default     = null
+}
 variable "service_accounts" {
   description = "Service Accounts"
   type = map(object({
@@ -18,7 +23,8 @@ variable "service_accounts" {
   }))
   default = {}
 }
-variable "org_domain" {
-  type        = string
-  description = "GCP Organizational Domain"
+variable "group_roles" {
+  description = "Map of roles based on groups"
+  type        = map(list(string))
+  default     = {}
 }

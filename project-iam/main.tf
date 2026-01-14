@@ -1,6 +1,7 @@
 # Healthchecks
 locals {
-  project = lower(trimspace(coalesce(var.project_id, var.project)))
+  project    = lower(trimspace(coalesce(var.project_id, var.project)))
+  org_domain = lower(trimspace(coalesce(var.org_domain, "example.org")))
   service_accounts = { for k, v in var.service_accounts :
     k => {
       account_id   = coalesce(v.account_id, v.name, k)
@@ -18,17 +19,44 @@ locals {
     ]
   ])
 }
+
+# Create service accounts
 resource "google_service_account" "default" {
-  for_each     = { for k, v in local.service_accounts : k => v }
+  for_each     = local.service_accounts
   project      = local.project
   account_id   = each.value.account_id
   description  = each.value.description
   display_name = each.value.display_name
 }
 
+# Add roles for each Service Account
 resource "google_project_iam_member" "default" {
   for_each = { for v in local.service_account_roles : "${v.account_key}/${v.role}" => v }
   project  = local.project
-  role     = each.value.role
   member   = google_service_account.default[each.value.account_key].member
+  role     = each.value.role
+}
+
+locals {
+  _group_roles = [for group, roles in var.group_roles :
+    {
+      group = lower(strcontains(group, "@") ? group : "${group}@${local.org_domain}")
+      roles = [for role in coalesce(roles, []) : startswith(role, "roles/") ? role : "roles/${role}"]
+    }
+  ]
+  group_roles = flatten([for group_role in local._group_roles :
+    [for role in group_role.roles :
+      {
+        member = group_role.group
+        role   = role
+      }
+    ]
+  ])
+  groups = toset([for group_role in local.group_roles : group_role.member])
+}
+resource "google_project_iam_member" "group_roles" {
+  for_each = { for v in local.group_roles : "${v.member}/${v.role}" => v }
+  project  = local.project
+  member   = "group:${each.value.member}"
+  role     = each.value.role
 }

@@ -7,3 +7,10 @@ output "service_accounts" {
     }
   }
 }
+output "group_roles" {
+  value = { for group in local.groups :
+    group => [for i, v in local.group_roles :
+      google_project_iam_member.group_roles["${v.member}/${v.role}"].role if group == v.member
+    ]
+  }
+}
