@@ -1,7 +1,10 @@
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
-No requirements.
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5.7 |
+| <a name="requirement_google"></a> [google](#requirement\_google) | >= 5.16.0, < 8.0.0 |
 
 ## Providers
 
@@ -54,7 +57,7 @@ No requirements.
 | <a name="input_enable_private_access"></a> [enable\_private\_access](#input\_enable\_private\_access) | Enable Google Private Access on all Subnets | `bool` | `false` | no |
 | <a name="input_enable_service_networking"></a> [enable\_service\_networking](#input\_enable\_service\_networking) | Enable PSA Connection to Service Networking | `bool` | `false` | no |
 | <a name="input_firewall_rules"></a> [firewall\_rules](#input\_firewall\_rules) | n/a | <pre>list(object({<br/>    name                    = optional(string)<br/>    description             = optional(string)<br/>    priority                = optional(number)<br/>    logging                 = optional(bool)<br/>    direction               = optional(string)<br/>    ranges                  = optional(list(string))<br/>    range                   = optional(string)<br/>    source_ranges           = optional(list(string))<br/>    destination_ranges      = optional(list(string))<br/>    range_types             = optional(list(string))<br/>    range_type              = optional(string)<br/>    protocol                = optional(string)<br/>    protocols               = optional(list(string))<br/>    port                    = optional(number)<br/>    ports                   = optional(list(number))<br/>    source_tags             = optional(list(string))<br/>    source_service_accounts = optional(list(string))<br/>    target_tags             = optional(list(string))<br/>    target_service_accounts = optional(list(string))<br/>    action                  = optional(string)<br/>    allow = optional(list(object({<br/>      protocol = string<br/>      ports    = optional(list(string))<br/>    })))<br/>    deny = optional(list(object({<br/>      protocol = string<br/>      ports    = optional(list(string))<br/>    })))<br/>    enforcement = optional(bool)<br/>    disabled    = optional(bool)<br/>  }))</pre> | `[]` | no |
-| <a name="input_give_project_viewer_access"></a> [give\_project\_viewer\_access](#input\_give\_project\_viewer\_access) | Give all Service Accounts Compute Network Viewer permissions on the Host Network Project | `bool` | `false` | no |
+| <a name="input_give_gke_project_viewer_access"></a> [give\_gke\_project\_viewer\_access](#input\_give\_gke\_project\_viewer\_access) | Give GKE Service Accounts Compute Network Viewer permissions on the Host Network Project | `bool` | `false` | no |
 | <a name="input_gke_services_range_length"></a> [gke\_services\_range\_length](#input\_gke\_services\_range\_length) | n/a | `number` | `22` | no |
 | <a name="input_hub_vpc"></a> [hub\_vpc](#input\_hub\_vpc) | n/a | <pre>object({<br/>    project_id           = optional(string)<br/>    network              = optional(string, "default")<br/>    bgp_asn              = optional(number, 64512)<br/>    cloud_router         = optional(string)<br/>    cloud_vpn_gateway    = optional(string)<br/>    advertised_ip_ranges = optional(list(string), ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"])<br/>  })</pre> | n/a | yes |
 | <a name="input_internal_ips"></a> [internal\_ips](#input\_internal\_ips) | n/a | `list(string)` | <pre>[<br/>  "10.0.0.0/8",<br/>  "172.16.0.0/12",<br/>  "192.168.0.0/16",<br/>  "100.64.0.0/10"<br/>]</pre> | no |

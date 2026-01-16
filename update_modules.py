@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
+
 from pathlib import Path
 from tempfile import gettempdir
 from traceback import format_exc
 from shutil import rmtree
-from git import Repo, InvalidGitRepositoryError
 import yaml
+import git
 
 GIT_HOST = "github.com"
 GIT_USER = "cloud-network-guy"
@@ -22,8 +23,6 @@ PWD = Path(__file__).parent
 def sync_tf_files(source_dir: Path, target_dir: Path) -> bool:
 
     # Copy source files to destination directory
-    if not source_dir.exists():
-        raise NotADirectoryError("Source Module directory not found:", source_dir)
     if not target_dir.exists():
         target_dir.mkdir()
     for source_file in source_dir.iterdir():
@@ -45,31 +44,33 @@ def sync_tf_files(source_dir: Path, target_dir: Path) -> bool:
 
 def main():
 
-    temp_dir = TEMP_DIR.joinpath(GIT_REPO)
 
     successful_pull = False
+
+    temp_dir = TEMP_DIR.joinpath(GIT_REPO)
+
     if temp_dir.exists():
         # Do Git Pull with a hard reset
         try:
-            repo = Repo(path=temp_dir)
+            repo = git.Repo(path=temp_dir)
             repo.git.reset('--hard', f'origin/{GIT_BRANCH}')
             repo.remotes.origin.pull()
             successful_pull = True
-        except InvalidGitRepositoryError:
-            rmtree(temp_dir)  # Git repo is corrupted, so just delete it
+        except git.InvalidGitRepositoryError:
+            rmtree(temp_dir)
         except Exception as e:
             raise e
-        
-    if not successful_pull:
-        repo = Repo.clone_from(url=GIT_URL, to_path=temp_dir, branch=GIT_BRANCH)  # Perform git clone
 
-    # Open Settings file to get list of parent modules to sync
-    settings_file = Path(__file__).parent.joinpath(SETTINGS_FILE)
-    with settings_file.open(mode="rb") as _:
-        settings = yaml.load(_, Loader=yaml.FullLoader)
-    parent_modules = settings.get('parent_modules', [])
+    if not successful_pull:
+        # Do Git Clone
+        repo = git.Repo.clone_from(url=GIT_URL, to_path=temp_dir, branch=GIT_BRANCH)  # Perform git clone
 
     # Sync Parent Modules
+    _ = Path(__file__).parent.joinpath(SETTINGS_FILE)
+    fp = open(_, mode="rb")
+    _ = yaml.load(fp, Loader=yaml.FullLoader)
+    parent_modules = _.get('parent_modules', [])
+    fp.close()
     for module in parent_modules:
         source_dir = temp_dir.joinpath(module)
         target_dir = PWD.joinpath(module)
@@ -91,6 +92,7 @@ if __name__ == "__main__":
         main()
     except Exception as e:
         quit(format_exc())
+
 
 
 

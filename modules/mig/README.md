@@ -1,18 +1,13 @@
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
-| Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.4 |
-| <a name="requirement_google"></a> [google](#requirement\_google) | >= 4.49.0, < 6.0 |
-| <a name="requirement_null"></a> [null](#requirement\_null) | >= 3.1.0 |
-| <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.4.0 |
+No requirements.
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_google"></a> [google](#provider\_google) | >= 4.49.0, < 6.0 |
+| <a name="provider_google"></a> [google](#provider\_google) | n/a |
 
 ## Modules
 
