@@ -14,3 +14,10 @@ output "group_roles" {
     ]
   }
 }
+output "user_roles" {
+  value = { for user in local.users :
+    user => [for i, v in local.user_roles :
+      google_project_iam_member.user_roles["${v.member}/${v.role}"].role if user == v.member
+    ]
+  }
+}

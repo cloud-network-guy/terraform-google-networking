@@ -37,6 +37,7 @@ resource "google_project_iam_member" "default" {
   role     = each.value.role
 }
 
+# Assign roles to certain groups
 locals {
   _group_roles = [for group, roles in var.group_roles :
     {
@@ -58,5 +59,30 @@ resource "google_project_iam_member" "group_roles" {
   for_each = { for v in local.group_roles : "${v.member}/${v.role}" => v }
   project  = local.project
   member   = "group:${each.value.member}"
+  role     = each.value.role
+}
+
+# Assign roles to individual users
+locals {
+  _user_roles = [for user, roles in var.user_roles :
+    {
+      group = lower(strcontains(user, "@") ? user : "${user}@${local.org_domain}")
+      roles = [for role in coalesce(roles, []) : startswith(role, "roles/") ? role : "roles/${role}"]
+    }
+  ]
+  user_roles = flatten([for user_role in local._user_roles :
+    [for role in user_role.roles :
+      {
+        member = user_role.group
+        role   = role
+      }
+    ]
+  ])
+  users = toset([for user_role in local.user_roles : user_role.member])
+}
+resource "google_project_iam_member" "user_roles" {
+  for_each = { for v in local.user_roles : "${v.member}/${v.role}" => v }
+  project  = local.project
+  member   = "user:${each.value.member}"
   role     = each.value.role
 }

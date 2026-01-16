@@ -28,3 +28,8 @@ variable "group_roles" {
   type        = map(list(string))
   default     = {}
 }
+variable "user_roles" {
+  description = "Map of roles for individual users"
+  type        = map(list(string))
+  default     = {}
+}
