@@ -242,8 +242,8 @@ resource "google_compute_backend_service" "default" {
     for_each = local.uses_iap ? [true] : []
     content {
       enabled              = true
-      oauth2_client_id     = one(google_iap_client.default).client_id
-      oauth2_client_secret = one(google_iap_client.default).secret
+      oauth2_client_id     = " "
+      oauth2_client_secret = " "
     }
   }
   custom_request_headers = local.custom_request_headers
