@@ -255,6 +255,6 @@ resource "google_iap_web_backend_service_iam_binding" "default" {
   count               = local.create && local.uses_iap ? 1 : 0
   project             = local.project
   web_backend_service = local.is_regional ? one(google_compute_region_backend_service.default).name : one(google_compute_backend_service.default).name
-  role                = lookup(local.iap, "role", null)
-  members             = lookup(local.iap, "members", null)
+  role                = local.iap.role
+  members             = local.iap.members
 }
