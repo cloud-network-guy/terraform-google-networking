@@ -86,3 +86,15 @@ resource "google_project_iam_member" "user_roles" {
   member   = "user:${each.value.member}"
   role     = each.value.role
 }
+
+locals {
+  network_viewers = [for i, v in var.network_viewers :
+    endswith(v, ".iam.gserviceaccount.com") ? v : "${v}.iam.gserviceaccount.com"
+  ]
+}
+resource "google_project_iam_member" "network_viewers" {
+  for_each = toset(local.network_viewers)
+  project  = local.project
+  member   = "serviceAccount:${each.value}"
+  role     = "roles/compute.networkViewer"
+}

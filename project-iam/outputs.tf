@@ -21,3 +21,8 @@ output "user_roles" {
     ]
   }
 }
+output "network_viewers" {
+  value = [for i, v in toset(local.network_viewers) :
+    google_project_iam_member.network_viewers[v].member
+  ]
+}

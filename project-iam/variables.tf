@@ -33,3 +33,8 @@ variable "user_roles" {
   type        = map(list(string))
   default     = {}
 }
+variable "network_viewers" {
+  description = "Service Accounts with Compute Network Viewer Permissions"
+  type        = list(string)
+  default     = []
+}
