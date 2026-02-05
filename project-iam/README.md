@@ -22,6 +22,7 @@ No modules.
 |------|------|
 | [google_project_iam_member.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_iam_member) | resource |
 | [google_project_iam_member.group_roles](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_iam_member) | resource |
+| [google_project_iam_member.network_viewers](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_iam_member) | resource |
 | [google_project_iam_member.user_roles](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_iam_member) | resource |
 | [google_service_account.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account) | resource |
 
@@ -30,6 +31,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_group_roles"></a> [group\_roles](#input\_group\_roles) | Map of roles based on groups | `map(list(string))` | `{}` | no |
+| <a name="input_network_viewers"></a> [network\_viewers](#input\_network\_viewers) | Service Accounts with Compute Network Viewer Permissions | `list(string)` | `[]` | no |
 | <a name="input_org_domain"></a> [org\_domain](#input\_org\_domain) | GCP Organizational Domain | `string` | `null` | no |
 | <a name="input_project"></a> [project](#input\_project) | n/a | `string` | `null` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | n/a | `string` | `null` | no |
@@ -41,6 +43,7 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_group_roles"></a> [group\_roles](#output\_group\_roles) | n/a |
+| <a name="output_network_viewers"></a> [network\_viewers](#output\_network\_viewers) | n/a |
 | <a name="output_service_accounts"></a> [service\_accounts](#output\_service\_accounts) | n/a |
 | <a name="output_user_roles"></a> [user\_roles](#output\_user\_roles) | n/a |
 <!-- END_TF_DOCS -->

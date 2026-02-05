@@ -18,7 +18,7 @@ locals {
       description               = v.description
       interconnect              = null
       interface_name            = v.interface_name
-      ipsec_internal_addresses  = [] # TODO
+      ipsec_internal_addresses  = coalesce(v.ipsec_internal_addresses, [])
       peer_asn                  = coalesce(v.peer_asn, var.peer_asn)
       advertised_ip_ranges      = coalesce(v.advertised_ip_ranges, var.advertised_ip_ranges)
       advertised_groups         = []
@@ -30,6 +30,8 @@ locals {
       admin_enabled             = true # TODO
       encryption                = upper(trimspace(var.encryption))
       enable_bfd                = coalesce(v.bfd, var.bfd)
+      enable_ipv4               = coalesce(v.enable_ipv4, var.enable_ipv4)
+      enable_ipv6               = coalesce(v.enable_ipv6, var.enable_ipv6)
       stack_type                = "IPV4_ONLY" # TODO
     }
   ]
@@ -102,10 +104,10 @@ locals {
       advertised_groups             = v.advertised_groups
       advertised_route_priority     = v.advertised_route_priority
       custom_learned_route_priority = 0 # TODO
-      enable_ipv4                   = false
-      enable_ipv6                   = false # TODO
-      export_policies               = []    # TODO
-      import_policies               = []    # TODO
+      enable_ipv4                   = v.enable_ipv4
+      enable_ipv6                   = v.enable_ipv6
+      export_policies               = [] # TODO
+      import_policies               = [] # TODO
       interface                     = google_compute_router_interface.default[i].name
       ipv4_nexthop_address          = null # TODO
       ipv6_nexthop_address          = null # TODO

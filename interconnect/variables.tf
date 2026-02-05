@@ -61,6 +61,14 @@ variable "bfd" {
   description = "Enable BFD"
   default     = false
 }
+variable "enable_ipv4" {
+  type    = bool
+  default = true
+}
+variable "enable_ipv6" {
+  type    = bool
+  default = false
+}
 variable "attachments" {
   type = list(object({
     create                    = optional(bool, true)
@@ -73,6 +81,8 @@ variable "attachments" {
     peer_ip_address           = optional(string) # IP address of BGP peer
     peer_name                 = optional(string) # Name of BGP Peer
     peer_asn                  = optional(number)
+    enable_ipv4               = optional(bool)
+    enable_ipv6               = optional(bool)
     advertised_route_priority = optional(number)
     advertised_groups         = optional(list(string))
     advertised_ip_ranges      = optional(list(string))
@@ -81,3 +91,4 @@ variable "attachments" {
   }))
   default = []
 }
+
