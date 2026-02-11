@@ -96,7 +96,7 @@ locals {
     cdn_client_ttl  = local.cdn_cache_mode == "CACHE_ALL_STATIC" ? 3600 : 0
   } : null
   uses_iap = var.iap != null && local.is_service ? true : false
-  iap = local.uses_iap ? {
+  iap = {
     enabled = coalesce(var.iap.enabled, local.create)
     role    = "roles/iap.httpsResourceAccessor"
     members = toset(coalesce(var.iap.members, []))
@@ -105,7 +105,7 @@ locals {
       description = var.iap.condition.description
       expression  = var.iap.condition.expression
     } : null
-  } : null
+  }
   custom_request_headers = var.custom_request_headers != null ? toset(var.custom_request_headers) : null
 }
 
