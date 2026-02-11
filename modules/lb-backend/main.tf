@@ -97,31 +97,17 @@ locals {
   } : null
   uses_iap = var.iap != null && local.is_service ? true : false
   iap = local.uses_iap ? {
-    create              = lookup(var.iap, "create", local.create)
-    name                = lookup(var.iap, "name", "iap-${local.name}")
-    application_title   = lookup(var.iap, "application_title", coalesce(local.description, local.name))
-    support_email       = lookup(var.iap, "support_email", "nobody@nowhere.net")
-    display_name        = lookup(var.iap, "display_name", local.name)
-    web_backend_service = local.name
-    role                = "roles/iap.httpsResourceAccessor"
-    members             = toset(lookup(var.iap, "members", []))
+    enabled = coalesce(var.iap.enabled, local.create)
+    role    = "roles/iap.httpsResourceAccessor"
+    members = toset(coalesce(var.iap.members, []))
+    condition = var.iap.condition != null ? {
+      title       = coalesce(var.iap.condition.title, "IAP Condition for backend ${local.name}")
+      description = var.iap.condition.description
+      expression  = var.iap.condition.expression
+    } : null
   } : null
   custom_request_headers = var.custom_request_headers != null ? toset(var.custom_request_headers) : null
 }
-
-/* IAP Brand & Client deprecated July 2025
-resource "google_iap_brand" "default" {
-  count             = local.uses_iap ? 1 : 0
-  project           = local.project
-  application_title = lookup(local.iap, "application_title", null)
-  support_email     = lookup(local.iap, "support_email", null)
-}
-resource "google_iap_client" "default" {
-  count        = local.uses_iap ? 1 : 0
-  display_name = lookup(local.iap, "display_name", null)
-  brand        = local.uses_iap ? one(google_iap_brand.default).name : null
-}
-*/
 
 resource "null_resource" "backend_service" {
   count = local.create ? 1 : 0
@@ -241,20 +227,28 @@ resource "google_compute_backend_service" "default" {
   dynamic "iap" {
     for_each = local.uses_iap ? [true] : []
     content {
-      enabled              = true
-      oauth2_client_id     = " "
-      oauth2_client_secret = " "
+      enabled              = local.iap.enabled
+      oauth2_client_id     = local.iap.enabled ? " " : null
+      oauth2_client_secret = local.iap.enabled ? " " : null
     }
   }
   custom_request_headers = local.custom_request_headers
   depends_on             = [null_resource.backend_service]
 }
 
-# IAP IAM Binding
+# IAP Web Service IAM Binding
 resource "google_iap_web_backend_service_iam_binding" "default" {
-  count               = local.create && local.uses_iap ? 1 : 0
+  count               = local.create && local.uses_iap && local.iap.create ? 1 : 0
   project             = local.project
-  web_backend_service = local.is_regional ? one(google_compute_region_backend_service.default).name : one(google_compute_backend_service.default).name
+  web_backend_service = "projects/${local.project}/iap_web/compute/services/${local.is_regional ? one(google_compute_region_backend_service.default).name : one(google_compute_backend_service.default).name}"
   role                = local.iap.role
   members             = local.iap.members
+  dynamic "condition" {
+    for_each = local.iap.condition != null ? [true] : []
+    content {
+      description = local.iap.condition.description
+      expression  = local.iap.condition.expression
+      title       = local.iap.condition.title
+    }
+  }
 }

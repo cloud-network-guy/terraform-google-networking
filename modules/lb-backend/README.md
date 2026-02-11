@@ -50,7 +50,7 @@ No modules.
 | <a name="input_health_checks"></a> [health\_checks](#input\_health\_checks) | n/a | `list(string)` | `null` | no |
 | <a name="input_host_project"></a> [host\_project](#input\_host\_project) | n/a | `string` | `null` | no |
 | <a name="input_host_project_id"></a> [host\_project\_id](#input\_host\_project\_id) | n/a | `string` | `null` | no |
-| <a name="input_iap"></a> [iap](#input\_iap) | n/a | <pre>object({<br/>    create            = optional(bool)<br/>    application_title = optional(string)<br/>    support_email     = optional(string)<br/>    display_name      = optional(string)<br/>    members           = optional(list(string))<br/>  })</pre> | `null` | no |
+| <a name="input_iap"></a> [iap](#input\_iap) | n/a | <pre>object({<br/>    enabled = optional(bool)<br/>    members = optional(list(string))<br/>    condition = optional(object({<br/>      title       = optional(string)<br/>      expression  = string<br/>      description = optional(string)<br/>    }))<br/>    /* Old attributes used IAP Brand & Client; deprecated July 2025<br/>    application_title = optional(string)<br/>    support_email     = optional(string)<br/>    display_name      = optional(string)<br/>    */<br/>  })</pre> | `null` | no |
 | <a name="input_ip_address_selection_policy"></a> [ip\_address\_selection\_policy](#input\_ip\_address\_selection\_policy) | n/a | `string` | `null` | no |
 | <a name="input_locality_lb_policy"></a> [locality\_lb\_policy](#input\_locality\_lb\_policy) | n/a | `string` | `null` | no |
 | <a name="input_logging"></a> [logging](#input\_logging) | n/a | `bool` | `false` | no |

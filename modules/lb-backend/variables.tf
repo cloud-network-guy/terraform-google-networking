@@ -151,11 +151,18 @@ variable "bucket" {
 }
 variable "iap" {
   type = object({
-    create            = optional(bool)
+    enabled = optional(bool)
+    members = optional(list(string))
+    condition = optional(object({
+      title       = optional(string)
+      expression  = string
+      description = optional(string)
+    }))
+    /* Old attributes used IAP Brand & Client; deprecated July 2025
     application_title = optional(string)
     support_email     = optional(string)
     display_name      = optional(string)
-    members           = optional(list(string))
+    */
   })
   default = null
 }
