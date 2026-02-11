@@ -238,7 +238,7 @@ resource "google_compute_backend_service" "default" {
 
 # IAP Web Service IAM Binding
 resource "google_iap_web_backend_service_iam_binding" "default" {
-  count               = local.create && local.uses_iap && local.iap.create ? 1 : 0
+  count               = local.create && local.uses_iap && local.iap.enabled ? 1 : 0
   project             = local.project
   web_backend_service = "projects/${local.project}/iap_web/compute/services/${local.is_regional ? one(google_compute_region_backend_service.default).name : one(google_compute_backend_service.default).name}"
   role                = local.iap.role
