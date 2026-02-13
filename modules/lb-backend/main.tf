@@ -95,17 +95,18 @@ locals {
     cdn_max_ttl     = local.cdn_cache_mode == "CACHE_ALL_STATIC" ? 14400 : 0
     cdn_client_ttl  = local.cdn_cache_mode == "CACHE_ALL_STATIC" ? 3600 : 0
   } : null
-  uses_iap = var.iap != null && local.is_service ? true : false
-  iap = local.uses_iap ? {
-    enabled = coalesce(var.iap.enabled, local.create)
+  uses_iap          = var.iap != null && local.is_service && local.is_application && local.is_global ? true : false
+  iap_has_condition = local.uses_iap ? lookup(var.iap, "condition", null) != null ? true : false : null
+  iap = {
+    enabled = local.uses_iap ? coalesce(var.iap.enabled, local.create) : false
     role    = "roles/iap.httpsResourceAccessor"
-    members = toset(coalesce(var.iap.members, []))
-    condition = {
-      title       = coalesce(var.iap.condition.title, "IAP Condition for backend ${local.name}")
+    members = local.uses_iap ? toset(coalesce(var.iap.members, [])) : null
+    condition = local.uses_iap ? {
+      title       = coalesce(var.iap.condition.title, "IAP Condition for backend '${local.name}'")
       description = var.iap.condition.description
       expression  = var.iap.condition.expression
-    } 
-  } : null
+    } : null
+  }
   custom_request_headers = var.custom_request_headers != null ? toset(var.custom_request_headers) : null
 }
 
@@ -227,9 +228,9 @@ resource "google_compute_backend_service" "default" {
   dynamic "iap" {
     for_each = local.uses_iap ? [true] : []
     content {
-      enabled              = lookup(local.iap, "enabled", true)
-      oauth2_client_id     = lookup(local.iap, "enabled", true) ? " " : null
-      oauth2_client_secret = lookup(local.iap, "enabled", true) ? " " : null
+      enabled              = local.iap.enabled
+      oauth2_client_id     = local.iap.enabled ? " " : null
+      oauth2_client_secret = local.iap.enabled ? " " : null
     }
   }
   custom_request_headers = local.custom_request_headers
@@ -238,13 +239,13 @@ resource "google_compute_backend_service" "default" {
 
 # IAP Web Service IAM Binding
 resource "google_iap_web_backend_service_iam_binding" "default" {
-  count               = local.create && local.uses_iap ? 1 : 0
+  count               = local.create && local.uses_iap && local.iap.enabled ? 1 : 0
   project             = local.project
-  web_backend_service = "projects/${local.project}/iap_web/compute/services/${local.is_regional ? one(google_compute_region_backend_service.default).name : one(google_compute_backend_service.default).name}"
+  web_backend_service = "projects/${local.project}/iap_web/compute/services/${one(google_compute_backend_service.default).name}"
   role                = local.iap.role
   members             = local.iap.members
   dynamic "condition" {
-    for_each = var.iap.condition != null ? [true] : []
+    for_each = local.iap_has_condition ? [true] : []
     content {
       description = local.iap.condition.description
       expression  = local.iap.condition.expression
