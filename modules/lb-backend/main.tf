@@ -101,7 +101,7 @@ locals {
     enabled = local.uses_iap ? coalesce(var.iap.enabled, local.create) : false
     role    = "roles/iap.httpsResourceAccessor"
     members = local.uses_iap ? toset(coalesce(var.iap.members, [])) : null
-    condition = local.uses_iap ? {
+    condition = local.uses_iap && local.iap_has_condition ? {
       title       = coalesce(var.iap.condition.title, "IAP Condition for backend '${local.name}'")
       description = var.iap.condition.description
       expression  = var.iap.condition.expression
