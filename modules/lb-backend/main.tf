@@ -95,8 +95,8 @@ locals {
     cdn_max_ttl     = local.cdn_cache_mode == "CACHE_ALL_STATIC" ? 14400 : 0
     cdn_client_ttl  = local.cdn_cache_mode == "CACHE_ALL_STATIC" ? 3600 : 0
   } : null
-  uses_iap          = var.iap != null && local.is_service && local.is_application && local.is_global ? true : false
-  iap_has_condition = local.uses_iap ? lookup(var.iap, "condition", null) != null ? true : false : null
+  uses_iap          = var.iap != null && local.is_global && local.is_application && local.is_service ? true : false
+  iap_has_condition = local.uses_iap ? (lookup(var.iap, "condition", null) != null ? true : false) : false
   iap = {
     enabled = local.uses_iap ? coalesce(var.iap.enabled, local.create) : false
     role    = "roles/iap.httpsResourceAccessor"
