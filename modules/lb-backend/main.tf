@@ -47,9 +47,8 @@ locals {
     enable      = local.logging ? local.logging : null
     sample_rate = local.logging ? coalesce(var.logging_sample_rate, 1) : null
   }
-  groups = [for group in coalesce(var.groups, []) :
-    (startswith(group, local.api_prefix) ? group : "${local.api_prefix}/${group}")
-  ]
+  _groups                     = [for group in coalesce(var.groups, []) : trimspace(group)]
+  groups                      = [for _ in local._groups : startswith(_, local.api_prefix) ? _ : "${local.api_prefix}/${_}"]
   is_igs                      = length([for _ in local.groups : _ if strcontains(_, "/instanceGroups/")]) > 0 ? true : false
   is_negs                     = length([for _ in local.groups : _ if strcontains(_, "/networkEndpointGroups/")]) > 0 ? true : false
   is_gnegs                    = length([for _ in local.groups : _ if local.is_negs && strcontains(_, "/global/")]) > 0 ? true : false
