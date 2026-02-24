@@ -94,26 +94,27 @@ resource "google_compute_router_interface" "default" {
 locals {
   router_peers = [for i, v in local.interconnect_attachments :
     {
-      create                        = v.create
-      enable                        = true
-      name                          = v.peer_name
-      ip_address                    = null
-      peer_ip_address               = v.peer_ip_address
-      peer_asn                      = v.peer_asn
-      advertise_mode                = length(v.advertised_ip_ranges) > 0 ? "CUSTOM" : "DEFAULT"
-      advertised_groups             = v.advertised_groups
-      advertised_route_priority     = v.advertised_route_priority
-      custom_learned_route_priority = 0 # TODO
-      enable_ipv4                   = v.enable_ipv4
-      enable_ipv6                   = v.enable_ipv6
-      export_policies               = [] # TODO
-      import_policies               = [] # TODO
-      interface                     = google_compute_router_interface.default[i].name
-      ipv4_nexthop_address          = null # TODO
-      ipv6_nexthop_address          = null # TODO
-      peer_ipv4_nexthop_address     = null # TODO
-      peer_ipv6_nexthop_address     = null # TODO
-      router_appliance_instance     = null # TODO
+      create                             = v.create
+      enable                             = true
+      name                               = v.peer_name
+      ip_address                         = null
+      peer_ip_address                    = v.peer_ip_address
+      peer_asn                           = v.peer_asn
+      advertise_mode                     = length(v.advertised_ip_ranges) > 0 ? "CUSTOM" : "DEFAULT"
+      advertised_groups                  = v.advertised_groups
+      advertised_route_priority          = v.advertised_route_priority
+      custom_learned_route_priority      = 0 # TODO
+      enable_ipv4                        = v.enable_ipv4
+      enable_ipv6                        = v.enable_ipv6
+      export_policies                    = [] # TODO
+      import_policies                    = [] # TODO
+      interface                          = google_compute_router_interface.default[i].name
+      ipv4_nexthop_address               = null  # TODO
+      ipv6_nexthop_address               = null  # TODO
+      peer_ipv4_nexthop_address          = null  # TODO
+      peer_ipv6_nexthop_address          = null  # TODO
+      router_appliance_instance          = null  # TODO
+      zero_custom_learned_route_priority = false # TODO
       bfd = {
         session_initialization_mode = v.enable_bfd ? "ACTIVE" : "DISABLED"
         min_transmit_interval       = 1000 # TODO
@@ -124,29 +125,30 @@ locals {
   ]
 }
 resource "google_compute_router_peer" "default" {
-  for_each                      = { for i, v in local.router_peers : i => v }
-  advertise_mode                = each.value.advertise_mode
-  advertised_groups             = each.value.advertised_groups
-  advertised_route_priority     = each.value.advertised_route_priority
-  custom_learned_route_priority = each.value.custom_learned_route_priority
-  enable                        = each.value.enable
-  enable_ipv4                   = each.value.enable_ipv4
-  enable_ipv6                   = each.value.enable_ipv6
-  export_policies               = each.value.export_policies
-  import_policies               = each.value.import_policies
-  interface                     = each.value.interface
-  ip_address                    = each.value.ip_address
-  ipv4_nexthop_address          = each.value.ipv4_nexthop_address
-  ipv6_nexthop_address          = each.value.ipv6_nexthop_address
-  name                          = each.value.name
-  peer_asn                      = each.value.peer_asn
-  peer_ip_address               = each.value.peer_ip_address
-  peer_ipv4_nexthop_address     = each.value.peer_ipv4_nexthop_address
-  peer_ipv6_nexthop_address     = each.value.peer_ipv6_nexthop_address
-  project                       = local.project
-  region                        = local.region
-  router                        = local.router
-  router_appliance_instance     = each.value.router_appliance_instance
+  for_each                           = { for i, v in local.router_peers : i => v }
+  advertise_mode                     = each.value.advertise_mode
+  advertised_groups                  = each.value.advertised_groups
+  advertised_route_priority          = each.value.advertised_route_priority
+  custom_learned_route_priority      = each.value.custom_learned_route_priority
+  enable                             = each.value.enable
+  enable_ipv4                        = each.value.enable_ipv4
+  enable_ipv6                        = each.value.enable_ipv6
+  export_policies                    = each.value.export_policies
+  import_policies                    = each.value.import_policies
+  interface                          = each.value.interface
+  ip_address                         = each.value.ip_address
+  ipv4_nexthop_address               = each.value.ipv4_nexthop_address
+  ipv6_nexthop_address               = each.value.ipv6_nexthop_address
+  name                               = each.value.name
+  peer_asn                           = each.value.peer_asn
+  peer_ip_address                    = each.value.peer_ip_address
+  peer_ipv4_nexthop_address          = each.value.peer_ipv4_nexthop_address
+  peer_ipv6_nexthop_address          = each.value.peer_ipv6_nexthop_address
+  project                            = local.project
+  region                             = local.region
+  router                             = local.router
+  router_appliance_instance          = each.value.router_appliance_instance
+  zero_custom_learned_route_priority = each.value.zero_custom_learned_route_priority
   bfd {
     min_receive_interval        = each.value.bfd.min_receive_interval
     min_transmit_interval       = each.value.bfd.min_transmit_interval
