@@ -114,7 +114,7 @@ locals {
       peer_ipv4_nexthop_address          = null  # TODO
       peer_ipv6_nexthop_address          = null  # TODO
       router_appliance_instance          = null  # TODO
-      zero_custom_learned_route_priority = false # TODO
+      zero_custom_learned_route_priority = null  # TODO
       bfd = {
         session_initialization_mode = v.enable_bfd ? "ACTIVE" : "DISABLED"
         min_transmit_interval       = 1000 # TODO
