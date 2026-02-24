@@ -88,6 +88,7 @@ variable "rules" {
     action                     = optional(string)
     logging                    = optional(bool)
     disabled                   = optional(bool)
+    security_profile_group     = optional(string)
   }))
   default = []
 }

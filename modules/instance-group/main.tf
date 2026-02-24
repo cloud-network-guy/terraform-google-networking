@@ -115,7 +115,7 @@ resource "google_compute_region_instance_group_manager" "default" {
 }
 
 locals {
-  auto_scaler_name   = lower(trimspace(coalesce(var.autoscaler_name, local.name)))
+  auto_scaler_name = lower(trimspace(coalesce(var.autoscaler_name, local.name)))
   autoscaling_policy = {
     mode            = local.autoscaling_mode
     min_replicas    = local.autoscaling_mode == "OFF" ? 0 : coalesce(var.min_replicas, 1)

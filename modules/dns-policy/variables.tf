@@ -43,6 +43,6 @@ variable "networks" {
   default = null
 }
 variable "network" {
-  type = string
+  type    = string
   default = null
 }

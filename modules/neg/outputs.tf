@@ -28,4 +28,4 @@ output "is_regional" { value = local.create ? local.is_regional : null }
 output "is_zonal" { value = local.create ? local.is_zonal : null }
 output "is_psc" { value = local.create ? local.is_psc : null }
 output "zone" { value = local.create ? local.is_zonal ? local.zone : null : null }
-output "region" { value = local.create ? local.is_regional ? local.region : "global" : null}
+output "region" { value = local.create ? local.is_regional ? local.region : "global" : null }

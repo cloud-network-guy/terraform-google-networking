@@ -38,14 +38,14 @@ resource "random_string" "name" {
 locals {
   api_prefix   = "https://www.googleapis.com/compute/v1"
   create       = coalesce(var.create, true)
-  project      = lower(trimspace(var.project_id))
+  project      = lower(trimspace(coalesce(var.project_id, var.project)))
+  host_project = lower(trimspace(coalesce(var.host_project_id, var.host_project, local.project)))
   org          = var.org_id
   name         = lower(trimspace(var.name != null ? var.name : one(random_string.name).result))
   description  = var.description
   is_regional  = var.region != null ? true : false
   is_global    = !local.is_regional
   region       = local.is_regional ? lower(trimspace(var.region)) : "global"
-  host_project = lower(trimspace(coalesce(var.host_project_id, var.host_project, local.project)))
   networks = [for network in coalesce(var.networks, []) :
     lower(trimspace(coalesce(
       startswith(network, local.api_prefix) ? network : null,
@@ -103,6 +103,7 @@ locals {
       protocols                 = coalesce(rule.protocols, rule.protocol != null ? [rule.protocol] : ["all"])
       ports                     = coalesce(rule.ports, compact([rule.port]))
       location                  = local.region
+      security_profile_group    = rule.security_profile_group
     })
   ]
 }
@@ -190,6 +191,7 @@ resource "google_compute_network_firewall_policy_rule" "default" {
   disabled                = each.value.disabled
   enable_logging          = each.value.enable_logging
   target_service_accounts = each.value.target_service_accounts
+  security_profile_group  = each.value.security_profile_group
   match {
     src_ip_ranges            = each.value.src_ip_ranges
     src_address_groups       = each.value.src_address_groups
@@ -224,6 +226,7 @@ resource "google_compute_region_network_firewall_policy_rule" "default" {
   disabled                = each.value.disabled
   enable_logging          = each.value.enable_logging
   target_service_accounts = each.value.target_service_accounts
+  security_profile_group  = each.value.security_profile_group
   match {
     src_ip_ranges            = each.value.src_ip_ranges
     src_fqdns                = each.value.src_fqdns
@@ -237,7 +240,6 @@ resource "google_compute_region_network_firewall_policy_rule" "default" {
       ip_protocol = "all"
     }
   }
-  region     = local.region
   depends_on = [google_network_security_address_group.default]
 }
 
@@ -249,11 +251,15 @@ locals {
       attachment_target = network
     } if local.create
   ]
+  global_network_firewall_policy_associations = local.is_global ? local.network_firewall_policy_associations : []
+  regional_network_firewall_policy_associations = local.is_regional ? [
+    for _ in local.network_firewall_policy_associations : merge(_, { region = local.region })
+  ] : []
 }
 
 # Global Associations
 resource "google_compute_network_firewall_policy_association" "default" {
-  for_each          = { for i, v in local.network_firewall_policy_associations : v.name => v if local.is_global }
+  for_each          = { for i, v in local.global_network_firewall_policy_associations : v.name => v }
   project           = local.project
   name              = each.value.name
   attachment_target = each.value.attachment_target
@@ -262,10 +268,10 @@ resource "google_compute_network_firewall_policy_association" "default" {
 
 # Regional Associations
 resource "google_compute_region_network_firewall_policy_association" "default" {
-  for_each          = { for i, v in local.network_firewall_policy_associations : v.name => v if local.is_regional }
+  for_each          = { for i, v in local.regional_network_firewall_policy_associations : v.name => v }
   project           = local.project
   name              = each.value.name
   attachment_target = each.value.attachment_target
   firewall_policy   = local.firewall_policy
-  region            = local.region
+  region            = each.value.region
 }

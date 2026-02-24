@@ -15,7 +15,7 @@ variable "description" {
   default = null
 }
 variable "project_id" {
-  type = string
+  type    = string
   default = null
 }
 variable "project" {

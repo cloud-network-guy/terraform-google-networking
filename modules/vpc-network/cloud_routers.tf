@@ -21,7 +21,7 @@ locals {
       enable_bgp = coalesce(
         router.enable_bgp,
         # Auto-enable if an ASN is configured
-        router.bgp_asn != null ? true : false,  
+        router.bgp_asn != null ? true : false,
         # Auto-enable if BGP advertised groups or custom ranges are configured
         length(concat(router.advertised_groups, router.advertised_ip_ranges)) > 0 ? true : false
       )

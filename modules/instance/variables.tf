@@ -109,10 +109,10 @@ variable "allow_stopping_for_update" {
 }
 variable "disk" {
   type = object({
-    image = optional(string)
-    type  = optional(string)
-    size  = optional(number)
-    size_gb  = optional(number)
+    image   = optional(string)
+    type    = optional(string)
+    size    = optional(number)
+    size_gb = optional(number)
   })
   default = {}
 }

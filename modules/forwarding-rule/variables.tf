@@ -1,5 +1,5 @@
 variable "project_id" {
-  type = string
+  type    = string
   default = null
 }
 variable "project" {
@@ -72,8 +72,8 @@ variable "backend_service" {
 }
 variable "target" {
   description = "PSC Target Service"
-  type    = string
-  default = null
+  type        = string
+  default     = null
 }
 variable "global_access" {
   type    = bool
