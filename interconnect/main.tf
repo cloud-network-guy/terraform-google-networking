@@ -102,6 +102,7 @@ locals {
       peer_asn                           = v.peer_asn
       advertise_mode                     = length(v.advertised_ip_ranges) > 0 ? "CUSTOM" : "DEFAULT"
       advertised_groups                  = v.advertised_groups
+      advertised_ip_ranges               = v.advertised_ip_ranges
       advertised_route_priority          = v.advertised_route_priority
       custom_learned_route_priority      = 0 # TODO
       enable_ipv4                        = v.enable_ipv4
@@ -109,12 +110,12 @@ locals {
       export_policies                    = [] # TODO
       import_policies                    = [] # TODO
       interface                          = google_compute_router_interface.default[i].name
-      ipv4_nexthop_address               = null  # TODO
-      ipv6_nexthop_address               = null  # TODO
-      peer_ipv4_nexthop_address          = null  # TODO
-      peer_ipv6_nexthop_address          = null  # TODO
-      router_appliance_instance          = null  # TODO
-      zero_custom_learned_route_priority = null  # TODO
+      ipv4_nexthop_address               = null # TODO
+      ipv6_nexthop_address               = null # TODO
+      peer_ipv4_nexthop_address          = null # TODO
+      peer_ipv6_nexthop_address          = null # TODO
+      router_appliance_instance          = null # TODO
+      zero_custom_learned_route_priority = null # TODO
       bfd = {
         session_initialization_mode = v.enable_bfd ? "ACTIVE" : "DISABLED"
         min_transmit_interval       = 1000 # TODO
@@ -149,6 +150,13 @@ resource "google_compute_router_peer" "default" {
   router                             = local.router
   router_appliance_instance          = each.value.router_appliance_instance
   zero_custom_learned_route_priority = each.value.zero_custom_learned_route_priority
+  dynamic "advertised_ip_ranges" {
+    for_each = each.value.advertised_ip_ranges
+    content {
+      range       = advertised_ip_ranges.value
+      description = ""
+    }
+  }
   bfd {
     min_receive_interval        = each.value.bfd.min_receive_interval
     min_transmit_interval       = each.value.bfd.min_transmit_interval
@@ -159,3 +167,4 @@ resource "google_compute_router_peer" "default" {
 
   }
 }
+
