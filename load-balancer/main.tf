@@ -159,6 +159,7 @@ locals {
       ))
       timeout = try(coalesce(backend.timeout, var.backend_timeout), null)
       security_policy = one(coalescelist(
+        [backend.security_policy],
         [backend.existing_security_policy],
         [for sp_key, sp in local.security_policies : module.cloudarmor[backend.security_policy].self_link if backend.security_policy == sp_key]
       ))
