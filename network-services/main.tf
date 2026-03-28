@@ -20,11 +20,6 @@ locals {
   }
 }
 
-provider "google" {
-  project = local.project
-  region  = local.region
-}
-
 # TCP Regional Healthcheck for the first port of service
 locals {
   healthchecks = { for k, v in local.deployments :
