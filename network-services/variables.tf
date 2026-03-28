@@ -149,7 +149,7 @@ variable "deployments" {
     os                    = optional(string)
     startup_script        = optional(string)
     network               = optional(string)
-    subnet                = optional(string)
+    subnetwork            = optional(string)
     ip_address            = optional(string)
     ip_address_name       = optional(string)
     ports                 = optional(list(number))

@@ -12,7 +12,7 @@ locals {
       region          = coalesce(v.region, k)
       ports           = coalesce(v.ports, var.ports)
       network         = coalesce(v.network, var.network, "default")
-      subnet          = coalesce(v.subnet, "default")
+      subnetwork      = coalesce(v.subnetwork, "default")
       instance_groups = coalesce(v.instance_groups, [])
     }) if coalesce(v.enabled, true) == true
   }
@@ -70,7 +70,7 @@ locals {
       name_prefix           = v.name_prefix
       region                = v.region
       network               = v.network
-      subnetwork            = v.subnet
+      subnetwork            = v.subnetwork
       machine_type          = coalesce(v.machine_type, var.machine_type, "e2-small")
       disk_type             = coalesce(v.disk_type, var.disk_type, "pd-standard")
       disk_size             = coalesce(v.disk_size, var.disk_size, 10)
@@ -247,7 +247,7 @@ locals {
       name          = coalesce(v.forwarding_rule_name, "${var.name_prefix}-${k}")
       region        = v.region
       network       = v.network
-      subnetwork    = v.subnet
+      subnetwork    = v.subnetwork
       address       = v.ip_address
       address_name  = coalesce(v.ip_address_name, "${var.name_prefix}-${k}-ilb")
       ports         = v.ports
