@@ -57,12 +57,17 @@ locals {
   is_network = local.type == "network" ? true : false
 }
 
+resource "null_resource" "network_firewall_policy" {
+  count = local.create && local.is_network ? 1 : 0
+}
+
 # Global Network Firewall Policies
 resource "google_compute_network_firewall_policy" "default" {
   count       = local.create && local.is_network && local.is_global ? 1 : 0
   project     = local.project
   name        = local.name
   description = local.description
+  depends_on  = [null_resource.network_firewall_policy]
 }
 
 # Regional Network Firewall Policies
@@ -72,6 +77,7 @@ resource "google_compute_region_network_firewall_policy" "default" {
   name        = local.name
   description = local.description
   region      = local.region
+  depends_on  = [null_resource.network_firewall_policy]
 }
 
 # Locals for Rules

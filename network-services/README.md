@@ -9,7 +9,7 @@
 
 | Name | Version |
 |------|---------|
-| <a name="provider_google"></a> [google](#provider\_google) | n/a |
+| <a name="provider_google"></a> [google](#provider\_google) | 7.25.0 |
 
 ## Modules
 
@@ -42,6 +42,7 @@
 | <a name="input_global_access"></a> [global\_access](#input\_global\_access) | Allow access to LB from outside of local region (ILB only) | `bool` | `false` | no |
 | <a name="input_healthcheck_interval"></a> [healthcheck\_interval](#input\_healthcheck\_interval) | n/a | `number` | `10` | no |
 | <a name="input_healthcheck_logging"></a> [healthcheck\_logging](#input\_healthcheck\_logging) | n/a | `bool` | `false` | no |
+| <a name="input_host_project"></a> [host\_project](#input\_host\_project) | n/a | `string` | `null` | no |
 | <a name="input_host_project_id"></a> [host\_project\_id](#input\_host\_project\_id) | If using Shared VPC, the Project ID that hosts the VPC network | `string` | `null` | no |
 | <a name="input_labels"></a> [labels](#input\_labels) | n/a | `map(any)` | `null` | no |
 | <a name="input_machine_type"></a> [machine\_type](#input\_machine\_type) | Machine Type | `string` | `"e2-small"` | no |

@@ -58,7 +58,7 @@ No modules.
 | <a name="input_named_ports"></a> [named\_ports](#input\_named\_ports) | n/a | <pre>list(object({<br/>    name = optional(string)<br/>    port = optional(number)<br/>  }))</pre> | `[]` | no |
 | <a name="input_network"></a> [network](#input\_network) | n/a | `string` | `"default"` | no |
 | <a name="input_project"></a> [project](#input\_project) | n/a | `string` | `null` | no |
-| <a name="input_project_id"></a> [project\_id](#input\_project\_id) | n/a | `string` | n/a | yes |
+| <a name="input_project_id"></a> [project\_id](#input\_project\_id) | n/a | `string` | `null` | no |
 | <a name="input_region"></a> [region](#input\_region) | n/a | `string` | `null` | no |
 | <a name="input_target_size"></a> [target\_size](#input\_target\_size) | n/a | `number` | `2` | no |
 | <a name="input_update"></a> [update](#input\_update) | n/a | <pre>object({<br/>    type                         = optional(string)<br/>    minimal_action               = optional(string)<br/>    most_disruptive_action       = optional(string)<br/>    replacement_method           = optional(string)<br/>    instance_redistribution_type = optional(string)<br/>  })</pre> | `{}` | no |

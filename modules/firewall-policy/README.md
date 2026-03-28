@@ -13,6 +13,7 @@
 | Name | Version |
 |------|---------|
 | <a name="provider_google"></a> [google](#provider\_google) | >= 5.16.0, < 8.0.0 |
+| <a name="provider_null"></a> [null](#provider\_null) | >= 3.1.0 |
 | <a name="provider_random"></a> [random](#provider\_random) | >= 3.4.0 |
 
 ## Modules
@@ -30,6 +31,7 @@ No modules.
 | [google_compute_region_network_firewall_policy_association.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_region_network_firewall_policy_association) | resource |
 | [google_compute_region_network_firewall_policy_rule.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_region_network_firewall_policy_rule) | resource |
 | [google_network_security_address_group.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/network_security_address_group) | resource |
+| [null_resource.network_firewall_policy](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
 | [random_string.name](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
 | [google_netblock_ip_ranges.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/netblock_ip_ranges) | data source |
 

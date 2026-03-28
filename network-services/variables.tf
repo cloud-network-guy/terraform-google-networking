@@ -73,6 +73,10 @@ variable "host_project_id" {
   type        = string
   default     = null
 }
+variable "host_project" {
+  type    = string
+  default = null
+}
 variable "network" {
   description = "Name of the VPC Network"
   type        = string

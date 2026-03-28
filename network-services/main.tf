@@ -1,6 +1,7 @@
 locals {
   create              = coalesce(var.create, true)
   project             = lower(trimspace(coalesce(var.project_id, var.project)))
+  host_project        = lower(trimspace(coalesce(var.host_project_id, var.host_project, local.project)))
   region              = var.region != null ? lower(trimspace(var.region)) : null
   lb_type             = "INTERNAL"
   lb_protocol         = "TCP"
@@ -34,7 +35,7 @@ locals {
 module "healthcheck" {
   source      = "../modules/healthcheck"
   for_each    = { for k, v in local.healthchecks : k => v }
-  project_id  = var.project_id
+  project     = local.project
   name        = each.value.name
   description = each.value.description
   region      = each.value.region
@@ -87,7 +88,7 @@ locals {
 module "instance-template" {
   source                = "../modules/instance-template"
   for_each              = { for k, v in local.instance_templates : k => v }
-  project_id            = var.project_id
+  project               = local.project
   region                = each.value.region
   name_prefix           = each.value.name_prefix
   service_account_email = each.value.service_account_email
@@ -162,8 +163,8 @@ locals {
 module "instance-groups" {
   source                = "../modules/instance-group"
   for_each              = { for i, v in local.instance_groups : v.index_key => v }
-  project_id            = var.project_id
-  host_project_id       = var.host_project_id
+  project               = local.project
+  host_project          = local.host_project
   name                  = each.value.name
   network               = each.value.network
   base_instance_name    = lookup(each.value, "base_instance_name", null)
@@ -225,8 +226,8 @@ locals {
 module "lb-backend" {
   source           = "../modules/lb-backend"
   for_each         = { for k, v in local.lb_backends : k => v }
-  project_id       = var.project_id
-  host_project_id  = var.host_project_id
+  project          = local.project
+  host_project     = local.host_project
   type             = each.value.type
   protocol         = each.value.protocol
   session_affinity = each.value.session_affinity
@@ -261,8 +262,8 @@ locals {
 module "lb-frontend" {
   source          = "../modules/forwarding-rule"
   for_each        = { for k, v in local.lb_frontends : k => v }
-  project_id      = var.project_id
-  host_project_id = var.host_project_id
+  project         = local.project
+  host_project    = local.host_project
   protocol        = local.lb_protocol
   create          = each.value.create
   name            = each.value.name

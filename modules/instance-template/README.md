@@ -49,7 +49,7 @@ No modules.
 | <a name="input_os"></a> [os](#input\_os) | n/a | `string` | `"debian-12"` | no |
 | <a name="input_os_project"></a> [os\_project](#input\_os\_project) | n/a | `string` | `"debian-cloud"` | no |
 | <a name="input_project"></a> [project](#input\_project) | n/a | `string` | `null` | no |
-| <a name="input_project_id"></a> [project\_id](#input\_project\_id) | n/a | `string` | n/a | yes |
+| <a name="input_project_id"></a> [project\_id](#input\_project\_id) | n/a | `string` | `null` | no |
 | <a name="input_region"></a> [region](#input\_region) | n/a | `string` | `null` | no |
 | <a name="input_service_account"></a> [service\_account](#input\_service\_account) | n/a | `string` | `null` | no |
 | <a name="input_service_account_email"></a> [service\_account\_email](#input\_service\_account\_email) | n/a | `string` | `null` | no |
