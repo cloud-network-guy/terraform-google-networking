@@ -1,7 +1,10 @@
 # Healthchecks
 locals {
-  project = lower(trimspace(coalesce(var.project_id, var.project)))
-  type    = lower(trimspace(coalesce(var.type, "external")))
+  project     = lower(trimspace(coalesce(var.project_id, var.project)))
+  type        = lower(trimspace(coalesce(var.type, "external")))
+  region      = lower(trimspace(coalesce(var.region, "global")))
+  is_regional = local.region != "global" ? true : false
+  is_global   = !local.is_regional
   health_checks = { for k, v in var.health_checks : k =>
     merge(v, {
       project     = coalesce(v.project_id, local.project)
