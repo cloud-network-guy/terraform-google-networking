@@ -206,7 +206,7 @@ locals {
 }
 resource "google_project_iam_member" "ops_agent" {
   for_each = local.ops_agent_iam_members
-  project  = var.project_id
+  project  = local.project
   member   = each.value.member
   role     = each.value.role
 }
