@@ -7,12 +7,13 @@ locals {
   lb_protocol         = "TCP"
   lb_session_affinity = coalesce(var.session_affinity, "NONE")
   name_prefix         = lower(trimspace(coalesce(var.name_prefix, "network-service")))
+  network             = coalesce(var.network, "default")
   deployments = { for k, v in var.deployments :
     k => merge(v, {
       name_prefix     = local.name_prefix
       region          = coalesce(v.region, k)
       ports           = coalesce(v.ports, var.ports)
-      network         = coalesce(v.network, var.network, "default")
+      network         = lower(trimspace(coalesce(v.network, local.network)))
       subnetwork      = coalesce(v.subnetwork, "default")
       instance_groups = coalesce(v.instance_groups, [])
     }) if coalesce(v.enabled, true) == true
@@ -221,7 +222,7 @@ locals {
         compact([for ig in local.instance_groups : module.instance-groups[ig.index_key].instance_group if ig.deployment_key == k]),
         compact([for ig in local.instance_groups : module.instance-groups[ig.index_key].id if ig.deployment_key == k]),
       )
-      health_checks = [module.healthcheck[k].self_link]
+      health_checks = [coalesce(v.existing_health_check, module.healthcheck[k].self_link)]
     }
   }
 }

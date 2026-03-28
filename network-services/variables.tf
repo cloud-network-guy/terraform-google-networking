@@ -148,6 +148,7 @@ variable "deployments" {
     os_project            = optional(string)
     os                    = optional(string)
     startup_script        = optional(string)
+    existing_health_check = optional(string)
     network               = optional(string)
     subnetwork            = optional(string)
     ip_address            = optional(string)
