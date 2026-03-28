@@ -158,7 +158,7 @@ resource "google_compute_region_backend_service" "default" {
   }
   depends_on = [null_resource.backend_service]
   region     = local.region
-  network    = local.is_tcp || local.is_internal ? null : local.network
+  network    = local.is_tcp || !local.is_internal ? null : local.network
 }
 
 # Global Backend Service
