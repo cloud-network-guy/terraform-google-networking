@@ -6,9 +6,10 @@ locals {
   lb_type             = "INTERNAL"
   lb_protocol         = "TCP"
   lb_session_affinity = coalesce(var.session_affinity, "NONE")
+  name_prefix         = lower(trimspace(coalesce(var.name_prefix, "network-service")))
   deployments = { for k, v in var.deployments :
     k => merge(v, {
-      name_prefix     = var.name_prefix
+      name_prefix     = local.name_prefix
       region          = coalesce(v.region, k)
       ports           = coalesce(v.ports, var.ports)
       network         = coalesce(v.network, var.network, "default")
@@ -52,9 +53,9 @@ locals {
   lb_deployments = { for k, v in var.deployments : k =>
     merge(v, {
       region                = coalesce(v.region, k)
-      base_instance_name    = "${var.name_prefix}-${k}"
+      base_instance_name    = "${local.name_prefix}-${k}"
       ip_address_name       = coalesce(v.ip_address_name, "${var.name_prefix}-${coalesce(v.region, k)}-ilb")
-      forwarding_rule_name  = coalesce(v.forwarding_rule_name, "${var.name_prefix}-${coalesce(v.region, k)}")
+      forwarding_rule_name  = coalesce(v.forwarding_rule_name, "${local.name_prefix}-${coalesce(v.region, k)}")
       global_access         = coalesce(v.global_access, var.global_access, false)
       ports                 = try(coalesce(v.ports, var.ports), null)
       cpu_target            = coalesce(v.cpu_target, var.cpu_target, 0.6)
@@ -116,8 +117,8 @@ locals {
     k => {
       deployment_key        = k
       region                = v.region
-      name                  = "${var.name_prefix}-${v.region}"
-      base_instance_name    = "${var.name_prefix}-${k}"
+      name                  = "${local.name_prefix}-${v.region}"
+      base_instance_name    = "${local.name_prefix}-${k}"
       network               = v.network
       target_size           = try(coalesce(v.target_size, var.target_size), null)
       min_replicas          = try(coalesce(v.min_replicas, var.min_replicas), null)
@@ -175,7 +176,7 @@ module "instance-groups" {
   health_checks         = lookup(each.value, "health_checks", null)
   instance_template     = lookup(each.value, "instance_template", null)
   autoscaling_mode      = lookup(each.value, "min_replicas", null) != null ? "ON" : "OFF"
-  autoscaler_name       = var.name_prefix
+  autoscaler_name       = local.name_prefix
   min_replicas          = lookup(each.value, "min_replicas", null)
   max_replicas          = lookup(each.value, "max_replicas", null)
   cpu_target            = lookup(each.value, "cpu_target", null)
@@ -212,7 +213,7 @@ locals {
       type             = local.lb_type
       protocol         = local.lb_protocol
       session_affinity = local.lb_session_affinity
-      name             = "${var.name_prefix}-${k}"
+      name             = coalesce(v.backend_name, "${local.name_prefix}-${k}")
       description      = "${var.name_prefix} backend service for '${k}'"
       region           = v.region
       groups = coalescelist(

@@ -153,6 +153,7 @@ variable "deployments" {
     ip_address            = optional(string)
     ip_address_name       = optional(string)
     ports                 = optional(list(number))
+    backend_name          = optional(string)
     forwarding_rule_name  = optional(string)
     target_size           = optional(number)
     min_replicas          = optional(number)
