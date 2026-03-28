@@ -216,6 +216,7 @@ locals {
       name             = coalesce(v.backend_name, "${local.name_prefix}-${k}")
       description      = "${var.name_prefix} backend service for '${k}'"
       region           = v.region
+      network          = v.network
       groups = coalescelist(
         compact([for ig in local.instance_groups : module.instance-groups[ig.index_key].instance_group if ig.deployment_key == k]),
         compact([for ig in local.instance_groups : module.instance-groups[ig.index_key].id if ig.deployment_key == k]),
@@ -230,6 +231,7 @@ module "lb-backend" {
   project          = local.project
   host_project     = local.host_project
   type             = each.value.type
+  network          = each.value.network
   protocol         = each.value.protocol
   session_affinity = each.value.session_affinity
   create           = each.value.create
