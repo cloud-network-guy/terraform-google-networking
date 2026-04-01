@@ -138,8 +138,8 @@ resource "google_compute_forwarding_rule" "default" {
   service_label           = local.service_label
   service_name            = local.service_name
   source_ip_ranges        = local.source_ip_ranges
-  #subnetwork              = local.is_internal && !local.is_psc ? local.subnetwork : null
-  subnetwork              = local.is_internal ? local.subnetwork : null
+  #subnetwork              = local.is_internal ? local.subnetwork : null
+  subnetwork              = local.is_internal && !local.is_psc ? local.subnetwork : null
   target                  = local.target
 }
 
