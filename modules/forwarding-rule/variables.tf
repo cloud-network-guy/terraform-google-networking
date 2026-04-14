@@ -50,6 +50,11 @@ variable "subnetwork" {
   type    = string
   default = null
 }
+variable "set_null_subnetwork" {
+  description = "Set subnetwork attribute to null for forwarding rule"
+  type        = bool
+  default     = null
+}
 variable "type" {
   type    = string
   default = null

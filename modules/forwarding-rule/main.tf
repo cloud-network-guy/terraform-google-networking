@@ -29,6 +29,7 @@ locals {
     startswith(var.subnetwork, "projects/", ) ? "${local.api_prefix}/${var.subnetwork}" : null,
     "projects/${local.host_project}/regions/${local.region}/subnetworks/${var.subnetwork}",
   )) : null
+  set_null_subnetwork = coalesce(var.set_null_subnetwork, false)
   network_tier        = local.is_internal ? null : upper(coalesce(var.network_tier, local.is_application_lb ? "PREMIUM" : "STANDARD"))
   create_static_ip    = local.create && var.address != null || var.address_name != null || local.is_psc ? true : false
   address             = var.address != null ? trimspace(var.address) : null
@@ -42,7 +43,7 @@ locals {
 
 # Work-around for scenarios where PSC Consumer Endpoint IP changes
 resource "null_resource" "ip_addresses" {
-  count = local.create_static_ip && local.is_psc ? 1 : 0
+  count = local.create_static_ip && local.is_regional ? 1 : 0
 }
 
 # Regional IP Address
@@ -136,7 +137,7 @@ resource "google_compute_forwarding_rule" "default" {
   service_label           = local.service_label
   service_name            = local.service_name
   source_ip_ranges        = local.source_ip_ranges
-  subnetwork              = local.is_internal && !local.is_psc ? local.subnetwork : null
+  subnetwork              = local.is_internal && !local.set_null_subnetwork ? local.subnetwork : null
   target                  = local.target
 }
 
@@ -155,7 +156,7 @@ resource "google_compute_global_forwarding_rule" "default" {
   port_range            = local.port_range
   project               = local.project
   source_ip_ranges      = local.source_ip_ranges
-  subnetwork            = local.subnetwork
+  subnetwork            = local.is_internal && !local.set_null_subnetwork ? local.subnetwork : null
   target                = local.target
 }
 

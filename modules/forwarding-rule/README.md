@@ -62,6 +62,7 @@ No modules.
 | <a name="input_psc"></a> [psc](#input\_psc) | Parameters to Publish this Frontend via PSC | <pre>object({<br/>    create                   = optional(bool)<br/>    host_project             = optional(string)<br/>    name                     = optional(string)<br/>    description              = optional(string)<br/>    nat_subnets              = optional(list(string))<br/>    enable_proxy_protocol    = optional(bool)<br/>    auto_accept_all_projects = optional(bool)<br/>    accept_projects = optional(list(object({<br/>      project          = string<br/>      connection_limit = optional(number)<br/>    })))<br/>    domain_names          = optional(list(string))<br/>    consumer_reject_lists = optional(list(string))<br/>    reconcile_connections = optional(bool)<br/>  })</pre> | `null` | no |
 | <a name="input_region"></a> [region](#input\_region) | n/a | `string` | `null` | no |
 | <a name="input_service_label"></a> [service\_label](#input\_service\_label) | n/a | `string` | `null` | no |
+| <a name="input_set_null_subnetwork"></a> [set\_null\_subnetwork](#input\_set\_null\_subnetwork) | Set subnetwork attribute to null for forwarding rule | `bool` | `null` | no |
 | <a name="input_subnetwork"></a> [subnetwork](#input\_subnetwork) | n/a | `string` | `null` | no |
 | <a name="input_target"></a> [target](#input\_target) | PSC Target Service | `string` | `null` | no |
 | <a name="input_type"></a> [type](#input\_type) | n/a | `string` | `null` | no |
