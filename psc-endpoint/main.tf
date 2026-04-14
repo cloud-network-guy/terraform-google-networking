@@ -27,6 +27,6 @@ module "psc-endpoint" {
   host_project_id     = var.network_project_id
   network             = var.network_name
   subnetwork          = var.subnet_name
+  set_null_subnetwork = var.set_null_subnetwork
   global_access       = var.global_access
 }
-

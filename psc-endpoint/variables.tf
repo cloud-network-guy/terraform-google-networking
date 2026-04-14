@@ -75,3 +75,8 @@ variable "global_access" {
   type        = bool
   default     = null
 }
+variable "set_null_subnetwork" {
+  description = "Set subnetwork = null for forwarding rule"
+  type        = bool
+  default     = false
+}

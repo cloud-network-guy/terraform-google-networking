@@ -34,6 +34,7 @@ No resources.
 | <a name="input_network_project_id"></a> [network\_project\_id](#input\_network\_project\_id) | If using Shared VPC, the GCP Project ID for the host network | `string` | `null` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | GCP Project ID to create resources in | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | GCP region name for the IP address and forwarding rule | `string` | `null` | no |
+| <a name="input_set_null_subnetwork"></a> [set\_null\_subnetwork](#input\_set\_null\_subnetwork) | Set subnetwork = null for forwarding rule | `bool` | `false` | no |
 | <a name="input_subnet_id"></a> [subnet\_id](#input\_subnet\_id) | Subnetwork ID (projects/PROJECT\_ID/regions/REGION/subnetworks/SUBNET\_NAME) | `string` | `null` | no |
 | <a name="input_subnet_name"></a> [subnet\_name](#input\_subnet\_name) | Subnetwork Name | `string` | `"default"` | no |
 | <a name="input_target_id"></a> [target\_id](#input\_target\_id) | ID of the published service (projects/PUBLISHER\_PROJECT\_ID/regions/REGION/serviceAttachments/SERVICE\_NAME) | `string` | `null` | no |
