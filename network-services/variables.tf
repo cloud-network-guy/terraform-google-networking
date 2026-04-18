@@ -136,6 +136,14 @@ variable "update_type" {
   type    = string
   default = null
 }
+variable "add_ops_agent_roles" {
+  type     = bool
+  default  = true
+}
+variable "ops_agent_roles" {
+  type     = list(string)
+  default  = ["logging.logWriter", "monitoring.metricWriter"]
+}
 variable "deployments" {
   description = "Regions to deploy instances and/or iLB to"
   type = map(object({
