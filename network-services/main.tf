@@ -195,7 +195,7 @@ locals {
   ops_agent_iam_members = { for i, v in coalesce(var.ops_agent_roles, []) :
     i => {
       member = "serviceAccount:${var.service_account_email}"
-      role   = startswith(v, "roles/", v) ? v : "roles/${v}"
+      role   = startswith(v, "roles/") ? v : "roles/${v}"
     } if var.add_ops_agent_roles && var.service_account_email != null
   }
 }
