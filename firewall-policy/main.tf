@@ -89,9 +89,9 @@ locals {
       )))
       target_service_accounts   = coalesce(rule.target_service_accounts, [])
       ip_type                   = upper(trimspace(coalesce(rule.ip_type, "IPV4")))
-      src_ip_ranges             = rule.source_ranges
+      src_ip_ranges             = coalesce(rule.source_ranges, rule.src_ranges, [])
       src_address_groups        = coalesce(rule.source_address_groups, rule.address_groups, [])
-      src_fqdns                 = [] # TODO
+      src_fqdns                 = coalesce(rule.source_fqdns, rule.src_fqdns, [])
       src_region_codes          = [] # TODO
       src_threat_intelligences  = [] # TODO
       dest_ip_ranges            = coalesce(rule.destination_ranges, rule.dest_ranges, [])
@@ -136,7 +136,7 @@ locals {
       }
     ]
     src_ip_ranges = rule.direction == "INGRESS" ? toset(coalesce(
-      rule.src_ip_ranges,
+      length(rule.src_ip_ranges) > 0 ? rule.src_ip_ranges : null,
       rule.ranges,
       rule.ip_type == "IPV4" ? compact(flatten([for rt in rule.range_types :
         contains(local.range_types, lower(rt)) ? data.google_netblock_ip_ranges.default[lower(rt)].cidr_blocks_ipv4 : null
@@ -147,7 +147,7 @@ locals {
       []
     )) : null
     dest_ip_ranges = rule.direction == "EGRESS" ? toset(coalesce(
-      rule.dest_ip_ranges,
+      length(rule.dest_ip_ranges) > 0 ? rule.dest_ip_ranges : null,
       rule.ranges,
       rule.ip_type == "IPV4" ? compact(flatten([for rt in rule.range_types :
         contains(local.range_types, lower(rt)) ? data.google_netblock_ip_ranges.default[lower(rt)].cidr_blocks_ipv4 : null
@@ -155,7 +155,7 @@ locals {
       rule.ip_type == "IPV6" ? compact(flatten([for rt in rule.range_types :
         contains(local.range_types, lower(rt)) ? data.google_netblock_ip_ranges.default[lower(rt)].cidr_blocks_ipv6 : null
       ])) : null,
-      [],
+      ["0.0.0.0/0"],
     )) : null
     dest_fqdns = toset([for _ in rule.dest_fqdns : lower(trimspace(_))])
     src_address_groups = rule.direction == "INGRESS" ? toset(compact(flatten(
