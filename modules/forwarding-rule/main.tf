@@ -15,6 +15,7 @@ locals {
   name         = lower(trimspace(var.name != null ? var.name : one(random_string.name).result))
   description  = var.description != null ? trimspace(var.description) : null
   is_regional  = var.region != null ? true : false
+  is_global    = !local.is_regional
   region       = local.is_regional ? var.region : "global"
   type         = local.is_psc ? "PSC" : upper(coalesce(var.type, local.subnetwork != null ? "INTERNAL" : "EXTERNAL"))
   is_internal  = local.type == "INTERNAL" || local.subnetwork != null ? true : false
@@ -43,12 +44,16 @@ locals {
 
 # Work-around for scenarios where PSC Consumer Endpoint IP changes
 resource "null_resource" "ip_addresses" {
+<<<<<<< HEAD
   count = local.create_static_ip && local.is_regional ? 1 : 0
+=======
+  count = local.create && local.create_static_ip && local.is_psc ? 1 : 0
+>>>>>>> refs/remotes/origin/main
 }
 
 # Regional IP Address
 resource "google_compute_address" "default" {
-  count              = local.create_static_ip && local.is_regional ? 1 : 0
+  count              = local.create && local.create_static_ip && local.is_regional ? 1 : 0
   address            = local.address
   address_type       = local.address_type
   description        = local.address_description
@@ -66,7 +71,7 @@ resource "google_compute_address" "default" {
 
 # Global IP address
 resource "google_compute_global_address" "default" {
-  count         = local.create_static_ip && !local.is_regional ? 1 : 0
+  count         = local.create && local.create_static_ip && !local.is_regional ? 1 : 0
   address       = local.address
   address_type  = local.address_type
   description   = local.address_description
@@ -100,8 +105,9 @@ locals {
   allow_global_access     = local.is_internal && !local.is_psc ? coalesce(var.global_access, false) : null
   allow_psc_global_access = local.is_psc ? coalesce(var.global_access, false) : null
   load_balancing_scheme   = local.is_psc ? "" : local.is_application_lb && !local.is_classic ? "${local.type}_MANAGED" : local.type
-  ip_address = local.create_static_ip ? (
-    local.is_regional ? one(google_compute_address.default).self_link : one(google_compute_global_address.default).self_link
+  ip_address = local.create && local.create_static_ip ? coalesce(
+    local.is_regional ? one(google_compute_address.default).self_link : null,
+    local.is_global ? one(google_compute_global_address.default).self_link : null,
   ) : null
   labels                 = { for k, v in coalesce(var.labels, {}) : k => lower(replace(v, " ", "_")) }
   create_service_label   = coalesce(var.create_service_label, false)
@@ -137,7 +143,12 @@ resource "google_compute_forwarding_rule" "default" {
   service_label           = local.service_label
   service_name            = local.service_name
   source_ip_ranges        = local.source_ip_ranges
+<<<<<<< HEAD
   subnetwork              = local.is_internal && !local.set_null_subnetwork ? local.subnetwork : null
+=======
+  #subnetwork              = local.is_internal ? local.subnetwork : null
+  subnetwork              = local.is_internal && !local.is_psc ? local.subnetwork : null
+>>>>>>> refs/remotes/origin/main
   target                  = local.target
 }
 

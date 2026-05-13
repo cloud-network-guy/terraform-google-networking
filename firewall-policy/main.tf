@@ -94,9 +94,9 @@ locals {
       src_fqdns                 = [] # TODO
       src_region_codes          = [] # TODO
       src_threat_intelligences  = [] # TODO
-      dest_ip_ranges            = rule.destination_ranges
+      dest_ip_ranges            = coalesce(rule.destination_ranges, rule.dest_ranges, [])
       dest_address_groups       = coalesce(rule.destination_address_groups, rule.address_groups, [])
-      dest_fqdns                = [] # TODO
+      dest_fqdns                = coalesce(rule.destination_fqdns, rule.dest_fqdns, [])
       dest_region_codes         = [] # TODO
       dest_threat_intelligences = [] # TODO
       range_types               = toset(coalesce(rule.range_types, rule.range_type != null ? [rule.range_type] : []))
@@ -139,10 +139,10 @@ locals {
       rule.src_ip_ranges,
       rule.ranges,
       rule.ip_type == "IPV4" ? compact(flatten([for rt in rule.range_types :
-        try(data.google_netblock_ip_ranges.default[lower(rt)].cidr_blocks_ipv4, null)
+        contains(local.range_types, lower(rt)) ? data.google_netblock_ip_ranges.default[lower(rt)].cidr_blocks_ipv4 : null
       ])) : null,
       rule.ip_type == "IPV6" ? compact(flatten([for rt in rule.range_types :
-        try(data.google_netblock_ip_ranges.default[lower(rt)].cidr_blocks_ipv6, null)
+        contains(local.range_types, lower(rt)) ? data.google_netblock_ip_ranges.default[lower(rt)].cidr_blocks_ipv6 : null
       ])) : null,
       []
     )) : null
@@ -150,13 +150,14 @@ locals {
       rule.dest_ip_ranges,
       rule.ranges,
       rule.ip_type == "IPV4" ? compact(flatten([for rt in rule.range_types :
-        try(data.google_netblock_ip_ranges.default[lower(rt)].cidr_blocks_ipv4, null)
+        contains(local.range_types, lower(rt)) ? data.google_netblock_ip_ranges.default[lower(rt)].cidr_blocks_ipv4 : null
       ])) : null,
       rule.ip_type == "IPV6" ? compact(flatten([for rt in rule.range_types :
-        try(data.google_netblock_ip_ranges.default[lower(rt)].cidr_blocks_ipv6, null)
+        contains(local.range_types, lower(rt)) ? data.google_netblock_ip_ranges.default[lower(rt)].cidr_blocks_ipv6 : null
       ])) : null,
       [],
     )) : null
+    dest_fqdns = toset([for _ in rule.dest_fqdns : lower(trimspace(_))])
     src_address_groups = rule.direction == "INGRESS" ? toset(compact(flatten(
       [for address_group in rule.src_address_groups :
         try(google_network_security_address_group.default["${rule.location}/${address_group}"].id, null)
