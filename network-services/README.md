@@ -31,6 +31,7 @@
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_add_ops_agent_roles"></a> [add\_ops\_agent\_roles](#input\_add\_ops\_agent\_roles) | n/a | `bool` | `true` | no |
 | <a name="input_autoscaling_mode"></a> [autoscaling\_mode](#input\_autoscaling\_mode) | n/a | `string` | `"OFF"` | no |
 | <a name="input_cool_down_period"></a> [cool\_down\_period](#input\_cool\_down\_period) | n/a | `number` | `60` | no |
 | <a name="input_cpu_predictive_method"></a> [cpu\_predictive\_method](#input\_cpu\_predictive\_method) | n/a | `string` | `null` | no |
@@ -51,6 +52,7 @@
 | <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | Name prefix for the instances and load balancer | `string` | n/a | yes |
 | <a name="input_network"></a> [network](#input\_network) | Name of the VPC Network | `string` | `null` | no |
 | <a name="input_network_tags"></a> [network\_tags](#input\_network\_tags) | List of Network Tags | `list(string)` | `null` | no |
+| <a name="input_ops_agent_roles"></a> [ops\_agent\_roles](#input\_ops\_agent\_roles) | n/a | `list(string)` | <pre>[<br/>  "logging.logWriter",<br/>  "monitoring.metricWriter"<br/>]</pre> | no |
 | <a name="input_os"></a> [os](#input\_os) | GCP OS Name | `string` | `"debian-12"` | no |
 | <a name="input_os_project"></a> [os\_project](#input\_os\_project) | GCP OS Project | `string` | `"debian-cloud"` | no |
 | <a name="input_ports"></a> [ports](#input\_ports) | List of ports to forward on the frontend of the load balancer | `list(string)` | `[]` | no |
