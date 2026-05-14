@@ -1,8 +1,3 @@
-provider "google" {
-  project = local.project
-  region  = local.region
-}
-
 locals {
   create         = coalesce(var.create, true)
   project        = lower(trimspace(coalesce(var.project_id, var.project)))
@@ -14,7 +9,7 @@ locals {
   description    = trimspace(coalesce(var.description, "PSC to ${local.target}"))
   target_project = lower(trimspace(coalesce(var.target_project, local.project)))
   target_region  = var.target != null ? lower(element(split("/", var.target), 3)) : lower(trimspace(coalesce(var.target_region, var.region)))
-  target_name    = var.target != null ? lower(element(split("/", var.target), 5)) : null
+  target_name    = var.target != null ? lower(element(split("/", var.target), 5)) : lower(trimspace(coalesce(var.target_name, var.name)))
   target = trimspace(coalesce(
     var.target,
     var.target_id,
@@ -41,4 +36,5 @@ module "psc-endpoint" {
   set_null_subnetwork = local.set_null_subnetwork
   global_access       = local.global_access
 }
+
 
