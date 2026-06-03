@@ -11,7 +11,7 @@ locals {
       region                 = coalesce(v.region, local.region, k)
       zone                   = v.zone
       network                = try(coalesce(v.network, var.network), null)
-      host_project_id        = var.host_project_id
+      host_project_id        = coalesce(var.host_project_id, local.project)
       subnetwork             = coalesce(v.subnetwork, "default")
       machine_type           = coalesce(v.machine_type, var.machine_type, "e2-small")
       startup_script         = coalesce(v.startup_script, var.startup_script, "")
@@ -67,7 +67,7 @@ locals {
 module "instance" {
   source          = "../modules/instance"
   for_each        = { for i, v in local.instances : coalesce(v.zone, v.region) => v if v.create }
-  project_id      = var.project_id
+  project_id      = local.project
   host_project_id = each.value.host_project_id
   name = lower(trimspace(coalesce(
     each.value.name,
