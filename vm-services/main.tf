@@ -42,6 +42,10 @@ locals {
     europe-west2            = "euwe2"
     europe-west3            = "euwe3"
     europe-west4            = "euwe4"
+    europe-west5            = "euwe5"
+    europe-west6            = "euwe6"
+    europe-north1            = "euno1"
+    europe-north2            = "euno2"
     australia-southeast1    = "ause1"
     australia-southeast2    = "ause2"
     asia-northeast1         = "asne1"
@@ -53,7 +57,9 @@ locals {
     asia-south1             = "asso1"
     asia-south2             = "asso2"
     southamerica-east1      = "saea1"
+    me-west1                = "mewe1"
     me-central1             = "mece1"
+    me-central2             = "mece2"
   }
 }
 
