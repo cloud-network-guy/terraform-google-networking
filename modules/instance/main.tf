@@ -16,7 +16,7 @@ locals {
   network = trimspace(coalesce(
     startswith(var.network, "${local.api_prefix}/projects/") ? var.network : null,
     startswith(var.network, "projects/") ? "${local.api_prefix}/${var.network}" : null,
-    "${local.api_prefix}/projects/${local.project}/global/networks/${var.network}"
+    "${local.api_prefix}/projects/${local.host_project}/global/networks/${var.network}"
   ))
   subnetwork = trimspace(coalesce(
     startswith(var.subnetwork, local.api_prefix) ? var.subnetwork : null,

@@ -10,8 +10,8 @@ locals {
       name                   = v.name
       region                 = coalesce(v.region, local.region, k)
       zone                   = v.zone
-      network                = try(coalesce(v.network, var.network), null)
-      host_project_id        = coalesce(var.host_project_id, local.project)
+      network                = coalesce(v.network, var.network, "default")
+      host_project_id        = coalesce(var.host_project_id, var.host_project, local.project)
       subnetwork             = coalesce(v.subnetwork, "default")
       machine_type           = coalesce(v.machine_type, var.machine_type, "e2-small")
       startup_script         = coalesce(v.startup_script, var.startup_script, "")

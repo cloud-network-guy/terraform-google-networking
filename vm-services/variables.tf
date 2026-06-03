@@ -75,6 +75,11 @@ variable "host_project_id" {
   type        = string
   default     = null
 }
+variable "host_project" {
+  description = "If using Shared VPC, the Project ID that hosts the VPC network"
+  type        = string
+  default     = null
+}
 variable "network" {
   description = "Name of the VPC Network"
   type        = string
