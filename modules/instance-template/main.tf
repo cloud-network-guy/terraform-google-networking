@@ -80,7 +80,7 @@ resource "google_compute_instance_template" "default" {
     network            = local.network
     queue_count        = 0
     subnetwork         = local.subnetwork
-    subnetwork_project = local.project
+    subnetwork_project = local.host_project
   }
   scheduling {
     automatic_restart           = true
