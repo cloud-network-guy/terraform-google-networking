@@ -91,6 +91,7 @@ module "instance-template" {
   source                = "../modules/instance-template"
   for_each              = { for k, v in local.instance_templates : k => v }
   project               = local.project
+  host_project          = local.host_project
   region                = each.value.region
   name_prefix           = each.value.name_prefix
   service_account_email = each.value.service_account_email
