@@ -14,10 +14,7 @@ output "address_name" {
   ) : null
 }
 output "psc_connected_endpoints" {
-  value = local.create && local.psc_publish ? coalesce(
-    local.is_global ? "not_supported" : null,
-    local.is_regional ? one(google_compute_service_attachment.default).connected_endpoints : null,
-  ) : null
+  value = local.create && local.psc_publish && local.is_regional ? one(google_compute_service_attachment.default).connected_endpoints : null
 }
 output "psc_connection_id" {
   value = local.create && local.is_psc ? coalesce(
