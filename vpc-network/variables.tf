@@ -203,7 +203,7 @@ variable "regions" {
         name  = optional(string)
         range = string
       })))
-      psc_endpoints = optional(list(object({
+      psc_consumers = optional(list(object({
         create              = optional(bool, true)
         project             = optional(string)
         target              = optional(string)
@@ -315,6 +315,19 @@ variable "firewall_rules" {
     })))
     enforcement = optional(bool)
     disabled    = optional(bool)
+  }))
+  default = []
+}
+variable "psc_consumers" {
+  description = "PSC Consumer Endpoints"
+  type = list(object({
+    create              = optional(bool, true)
+    target              = optional(string)
+    name                = optional(string)
+    address             = optional(string)
+    address_name        = optional(string)
+    address_description = optional(string)
+    global_access       = optional(bool)
   }))
   default = []
 }

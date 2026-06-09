@@ -20,7 +20,7 @@ variable "create" {
 }
 variable "region" {
   type    = string
-  default = null
+  default = "global"
 }
 variable "name" {
   type    = string

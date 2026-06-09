@@ -56,7 +56,7 @@ locals {
           attached_projects = coalesce(subnet.attached_projects, [])
           shared_accounts   = coalesce(subnet.shared_accounts, [])
           viewer_accounts   = coalesce(subnet.viewer_accounts, [])
-          psc_endpoints     = coalesce(subnet.psc_endpoints, [])
+          psc_consumers     = coalesce(subnet.psc_consumers, [])
         })
       ]
     ]),
@@ -198,44 +198,72 @@ module "shared-vpc" {
 
 # PSC Consumer Endpoints
 locals {
-  psc_endpoints = flatten([for s, subnet in local.subnets :
-    [for e, endpoint in lookup(subnet, "psc_endpoints", []) :
+  psc_consumers = concat(
+    # Regional PSC consumers on a specific subnet
+    flatten([for s, subnet in local.subnets :
+      [for e, endpoint in lookup(subnet, "psc_consumers", []) :
+        {
+          create              = local.create ? coalesce(endpoint.create, true) : false
+          name                = try(coalesce(endpoint.name, endpoint.target_name), null)
+          address             = endpoint.address
+          address_name        = endpoint.address_name
+          address_description = endpoint.address_description
+          region              = subnet.region
+          subnetwork          = subnet.name
+          target = try(coalesce(
+            endpoint.target,
+            endpoint.target_project != null && endpoint.target_name != null ? "projects/${endpoint.target_project}/regions/${coalesce(endpoint.target_region, subnet.region)}/serviceAttachments/${endpoint.target_name}" : null
+          ), null)
+          target_name = try(coalesce(
+            endpoint.target_name,
+            endpoint.target != null ? split("/", endpoint.target)[-1] : null
+          ), null)
+          global_access = coalesce(endpoint.global_access, false)
+        }
+      ]
+    ])
+    ,
+    # Global PSC Endpoints
+    [for i, endpoint in coalesce(var.psc_consumers, []) :
       {
         create              = local.create ? coalesce(endpoint.create, true) : false
-        project             = coalesce(endpoint.project, local.project)
-        name                = try(coalesce(endpoint.name, endpoint.target_name), null)
+        name                = coalesce(endpoint.name, "global-psc-consumer-${i}")
         address             = endpoint.address
         address_name        = endpoint.address_name
         address_description = endpoint.address_description
-        region              = subnet.region
-        subnetwork          = subnet.name
-        target = try(coalesce(
-          endpoint.target,
-          endpoint.target_project != null && endpoint.target_name != null ? "projects/${endpoint.target_project}/regions/${coalesce(endpoint.target_region, subnet.region)}/serviceAttachments/${endpoint.target_name}" : null
-        ), null)
-        target_name = try(coalesce(
-          endpoint.target_name,
-          endpoint.target != null ? split("/", endpoint.target)[-1] : null
-        ), null)
-        global_access = coalesce(endpoint.global_access, false)
+        region              = "global"
+        subnetwork          = null
+        target              = coalesce(endpoint.target, "all-apis")
+        target_name         = coalesce(endpoint.target, "all-apis")
       }
     ]
-  ])
+  )
 }
-module "psc-endpoints" {
+module "psc-consumers" {
   source              = "../modules/forwarding-rule"
-  for_each            = { for k, v in local.psc_endpoints : "${v.region}/${coalesce(v.name, v.target_name)}" => v }
+  for_each            = { for k, v in local.psc_consumers : "${v.region}/${coalesce(v.name, v.target_name)}" => v }
   create              = each.value.create
-  network             = module.vpc-network.self_link
-  project             = each.value.project
+  project             = lookup(each.value, "project", local.project)
   host_project        = local.project
-  name                = coalesce(each.value.name, each.value.target_name)
-  address             = each.value.address
-  address_name        = each.value.address_name
-  address_description = each.value.address_description
-  region              = each.value.region
-  subnetwork          = each.value.subnetwork
-  target              = try(coalesce(each.value.target, each.value.target_name), null)
-  global_access       = each.value.global_access
-  depends_on          = [module.vpc-network]
+  type                = "INTERNAL"
+  name                = lookup(each.value, "name", "psc-consumer-${each.key}")
+  address             = lookup(each.value, "address", null)
+  address_name        = lookup(each.value, "address_name", null)
+  address_description = lookup(each.value, "address_description", null)
+  region              = lookup(each.value, "region", null)
+  subnetwork          = lookup(each.value, "subnetwork", null)
+  target              = lookup(each.value, "target", each.value.target_name)
+  global_access       = lookup(each.value, "global_access", null)
+  network             = module.vpc-network.self_link
 }
+
+#/*
+moved {
+  from = google_compute_global_address.pga_address[0]
+  to   = module.psc-consumers["global/googleapis"].google_compute_global_address.default[0]
+}
+moved {
+  from = google_compute_global_forwarding_rule.pga_forwarding_rule[0]
+  to   = module.psc-consumers["global/googleapis"].google_compute_global_forwarding_rule.default[0]
+}
+#*/

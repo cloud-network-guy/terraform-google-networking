@@ -26,6 +26,7 @@ No resources.
 | <a name="input_disk_image"></a> [disk\_image](#input\_disk\_image) | Image to use | `string` | `null` | no |
 | <a name="input_disk_size"></a> [disk\_size](#input\_disk\_size) | Disk size in GB | `number` | `10` | no |
 | <a name="input_disk_type"></a> [disk\_type](#input\_disk\_type) | Disk Type | `string` | `"pd-standard"` | no |
+| <a name="input_host_project"></a> [host\_project](#input\_host\_project) | If using Shared VPC, the Project ID that hosts the VPC network | `string` | `null` | no |
 | <a name="input_host_project_id"></a> [host\_project\_id](#input\_host\_project\_id) | If using Shared VPC, the Project ID that hosts the VPC network | `string` | `null` | no |
 | <a name="input_labels"></a> [labels](#input\_labels) | n/a | `map(any)` | `null` | no |
 | <a name="input_machine_type"></a> [machine\_type](#input\_machine\_type) | Machine Type | `string` | `"e2-small"` | no |
