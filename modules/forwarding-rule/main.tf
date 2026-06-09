@@ -7,19 +7,19 @@ resource "random_string" "name" {
 }
 
 locals {
-  create       = coalesce(var.create, true)
-  is_redirect  = false # TODO
-  api_prefix   = "https://www.googleapis.com/compute/v1"
-  project      = lower(trimspace(coalesce(var.project_id, var.project)))
+  create         = coalesce(var.create, true)
+  is_redirect    = false # TODO
+  api_prefix     = "https://www.googleapis.com/compute/v1"
+  project        = lower(trimspace(coalesce(var.project_id, var.project)))
   project_prefix = "${local.api_prefix}/projects/${local.project}"
-  name         = lower(trimspace(var.name != null ? var.name : one(random_string.name).result))
-  description  = var.description != null ? trimspace(var.description) : null
-  is_global    = lower(var.region) == "global" ? true : false
-  is_regional  = !local.is_global
-  region       = local.is_regional ? lower(var.region) : "global"
-  type         = upper(coalesce(var.type, local.subnetwork != null ? "INTERNAL" : "EXTERNAL"))
-  is_internal  = local.type == "INTERNAL" ? true : false
-  host_project = lower(trimspace(coalesce(var.host_project_id, var.host_project, local.project)))
+  name           = lower(trimspace(var.name != null ? var.name : one(random_string.name).result))
+  description    = var.description != null ? trimspace(var.description) : null
+  is_global      = lower(var.region) == "global" ? true : false
+  is_regional    = !local.is_global
+  region         = local.is_regional ? lower(var.region) : "global"
+  type           = upper(coalesce(var.type, local.subnetwork != null ? "INTERNAL" : "EXTERNAL"))
+  is_internal    = local.type == "INTERNAL" ? true : false
+  host_project   = lower(trimspace(coalesce(var.host_project_id, var.host_project, local.project)))
   network = var.network != null ? trimspace(coalesce(
     startswith(var.network, local.api_prefix) ? var.network : null,
     startswith(var.network, "projects/") ? "${local.api_prefix}/${var.network}" : null,
@@ -38,11 +38,11 @@ locals {
     startswith(var.target, "projects/") ? "${local.api_prefix}/${var.target}" : null,
     "${local.project_prefix}/${local.is_regional ? "regions" : ""}/${local.region}/serviceAttachments/${var.target}"
   )) : null
-    is_psc       = local.target != null ? strcontains(local.target, "/serviceAttachments/") ||  local.target == "all-apis" ? true : false : false
-  create_static_ip    = local.create && var.address != null || var.address_name != null || local.is_psc ? true : false
-  address             = var.address != null ? trimspace(var.address) : null
-  address_type        = local.is_internal ? "INTERNAL" : "EXTERNAL"
-  address_purpose     = try(coalesce(
+  is_psc           = local.target != null ? strcontains(local.target, "/serviceAttachments/") || local.target == "all-apis" ? true : false : false
+  create_static_ip = local.create && var.address != null || var.address_name != null || local.is_psc ? true : false
+  address          = var.address != null ? trimspace(var.address) : null
+  address_type     = local.is_internal ? "INTERNAL" : "EXTERNAL"
+  address_purpose = try(coalesce(
     local.is_psc && local.is_global ? "PRIVATE_SERVICE_CONNECT" : null,
     local.is_psc && local.is_regional ? "GCE_ENDPOINT" : null,
     local.is_internal && local.is_redirect ? "SHARED_LOADBALANCER_VIP" : null
@@ -90,9 +90,9 @@ resource "google_compute_global_address" "default" {
 }
 
 locals {
-  port           = var.port
-  ports          = coalesce(var.ports, compact([local.port]))
-  port_range     = var.port_range
+  port       = var.port
+  ports      = coalesce(var.ports, compact([local.port]))
+  port_range = var.port_range
   backend_service = var.backend_service != null ? trimspace(coalesce(
     startswith(var.backend_service, local.api_prefix) ? var.backend_service : null,
     startswith(var.backend_service, "projects/") ? "${local.api_prefix}/${var.backend_service}" : null,

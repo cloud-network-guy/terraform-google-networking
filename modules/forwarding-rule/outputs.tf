@@ -16,7 +16,7 @@ output "address_name" {
 output "psc_connected_endpoints" {
   value = local.create && local.is_psc ? coalesce(
     local.is_global ? "not_supported" : null,
-    local.is_regional ? one(google_compute_forwarding_rule.default).connected_endpoints  : null,
+    local.is_regional ? one(google_compute_forwarding_rule.default).connected_endpoints : null,
   ) : null
 }
 output "psc_connection_id" {
