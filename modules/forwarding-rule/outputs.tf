@@ -14,15 +14,15 @@ output "address_name" {
   ) : null
 }
 output "psc_connected_endpoints" {
-  value = local.create && local.is_psc ? coalesce(
+  value = local.create && local.psc_publish ? coalesce(
     local.is_global ? "not_supported" : null,
-    local.is_regional ? one(google_compute_forwarding_rule.default).connected_endpoints : null,
+    local.is_regional ? one(google_compute_service_attachment.default).connected_endpoints : null,
   ) : null
 }
 output "psc_connection_id" {
   value = local.create && local.is_psc ? coalesce(
     local.is_global ? one(google_compute_global_forwarding_rule.default).psc_connection_id : null,
-    local.is_regional ? one(google_compute_forwarding_rule.default).psc_conntion_id : null,
+    local.is_regional ? one(google_compute_forwarding_rule.default).psc_connection_id : null,
   ) : null
 }
 output "target" {

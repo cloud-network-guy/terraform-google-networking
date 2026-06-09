@@ -322,6 +322,7 @@ variable "psc_consumers" {
   description = "PSC Consumer Endpoints"
   type = list(object({
     create              = optional(bool, true)
+    project             = optional(string)
     target              = optional(string)
     name                = optional(string)
     address             = optional(string)
@@ -331,3 +332,4 @@ variable "psc_consumers" {
   }))
   default = []
 }
+

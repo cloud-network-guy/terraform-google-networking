@@ -205,6 +205,7 @@ locals {
         {
           create              = local.create ? coalesce(endpoint.create, true) : false
           name                = try(coalesce(endpoint.name, endpoint.target_name), null)
+          project             = endpoint.project
           address             = endpoint.address
           address_name        = endpoint.address_name
           address_description = endpoint.address_description
@@ -228,6 +229,7 @@ locals {
       {
         create              = local.create ? coalesce(endpoint.create, true) : false
         name                = coalesce(endpoint.name, "global-psc-consumer-${i}")
+        project             = endpoint.project
         address             = endpoint.address
         address_name        = endpoint.address_name
         address_description = endpoint.address_description
@@ -254,16 +256,8 @@ module "psc-consumers" {
   subnetwork          = lookup(each.value, "subnetwork", null)
   target              = lookup(each.value, "target", each.value.target_name)
   global_access       = lookup(each.value, "global_access", null)
+  set_null_subnetwork = true
   network             = module.vpc-network.self_link
 }
 
-#/*
-moved {
-  from = google_compute_global_address.pga_address[0]
-  to   = module.psc-consumers["global/googleapis"].google_compute_global_address.default[0]
-}
-moved {
-  from = google_compute_global_forwarding_rule.pga_forwarding_rule[0]
-  to   = module.psc-consumers["global/googleapis"].google_compute_global_forwarding_rule.default[0]
-}
-#*/
+
