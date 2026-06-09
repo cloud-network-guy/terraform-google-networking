@@ -17,7 +17,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_psc-endpoints"></a> [psc-endpoints](#module\_psc-endpoints) | ../modules/forwarding-rule | n/a |
+| <a name="module_psc-consumers"></a> [psc-consumers](#module\_psc-consumers) | ../modules/forwarding-rule | n/a |
 | <a name="module_shared-vpc"></a> [shared-vpc](#module\_shared-vpc) | ../modules/shared-vpc | n/a |
 | <a name="module_vpc-network"></a> [vpc-network](#module\_vpc-network) | ../modules/vpc-network | n/a |
 | <a name="module_vpn-to-hub"></a> [vpn-to-hub](#module\_vpn-to-hub) | ../modules/hybrid-networking | n/a |
@@ -74,7 +74,7 @@
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | GCP Project ID | `string` | n/a | yes |
 | <a name="input_proxy_only_cidr"></a> [proxy\_only\_cidr](#input\_proxy\_only\_cidr) | n/a | `string` | `null` | no |
 | <a name="input_proxy_only_purpose"></a> [proxy\_only\_purpose](#input\_proxy\_only\_purpose) | n/a | `string` | `"REGIONAL_MANAGED_PROXY"` | no |
-| <a name="input_psc_endpoints"></a> [psc\_endpoints](#input\_psc\_endpoints) | n/a | <pre>list(object({<br/>    project_id             = optional(string)<br/>    name                   = optional(string)<br/>    description            = optional(string)<br/>    subnet                 = optional(string)<br/>    ip_address             = optional(string)<br/>    ip_address_name        = optional(string)<br/>    ip_address_description = optional(string)<br/>    target                 = string<br/>    global_access          = optional(bool)<br/>  }))</pre> | `[]` | no |
+| <a name="input_psc_consumers"></a> [psc\_consumers](#input\_psc\_consumers) | PSC Consumer Endpoints | <pre>list(object({<br/>    create              = optional(bool, true)<br/>    project             = optional(string)<br/>    subnetwork          = optional(string)<br/>    target              = optional(string)<br/>    name                = optional(string)<br/>    address             = optional(string)<br/>    address_name        = optional(string)<br/>    address_description = optional(string)<br/>    global_access       = optional(bool)<br/>  }))</pre> | `[]` | no |
 | <a name="input_psc_prefix_base"></a> [psc\_prefix\_base](#input\_psc\_prefix\_base) | n/a | `string` | `null` | no |
 | <a name="input_psc_purpose"></a> [psc\_purpose](#input\_psc\_purpose) | n/a | `string` | `"PRIVATE_SERVICE_CONNECT"` | no |
 | <a name="input_psc_subnet_length"></a> [psc\_subnet\_length](#input\_psc\_subnet\_length) | n/a | `number` | `28` | no |

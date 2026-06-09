@@ -392,33 +392,35 @@ module "vpn-to-spoke" {
 
 # PSC Consumer Endpoints
 locals {
-  # Create PSC Consumer Endpoints inside each region for each service
-  psc_endpoints = [for i, v in var.psc_endpoints :
-    merge(v, {
-      project_id      = coalesce(v.project_id, var.project_id)
-      host_project_id = var.project_id
-      network         = local.name
-      region          = var.region
-      target          = startswith(v.target, local.url_prefix) ? v.target : "${local.url_prefix}/${v.target}"
-      global_access   = coalesce(v.global_access, false)
-    })
+  psc_consumers = [for i, endpoint in coalesce(var.psc_consumers, []) :
+    {
+      create              = local.create ? coalesce(endpoint.create, true) : false
+      project             = coalesce(endpoint.project, local.project)
+      name                = coalesce(endpoint.name, "global-psc-consumer-${i}")
+      address             = endpoint.address
+      address_name        = endpoint.address_name
+      address_description = endpoint.address_description
+      region              = local.region
+      subnetwork          = v.subnetwork
+      target              = startswith(v.target, local.url_prefix) ? v.target : "${local.url_prefix}/${v.target}"
+      global_access       = coalesce(v.global_access, false)
+    }
   ]
 }
-module "psc-endpoints" {
+module "psc-consumers" {
   source              = "../modules/forwarding-rule"
-  for_each            = { for k, v in local.psc_endpoints : "${v.project_id}/${v.region}/${v.name}" => v }
-  create              = local.create
-  project_id          = each.value.project_id
-  host_project_id     = each.value.host_project_id
-  name                = each.value.name
-  description         = each.value.description
-  region              = each.value.region
-  address             = each.value.ip_address
-  address_name        = each.value.ip_address_name
-  address_description = each.value.ip_address_description
-  network             = each.value.network
-  subnetwork          = each.value.subnet
-  target              = each.value.target
-  global_access       = each.value.global_access
-  depends_on          = [module.vpc-network]
+  for_each            = { for k, v in local.psc_consumers : "${v.region}/${coalesce(v.name, v.target_name)}" => v }
+  create              = each.value.create
+  project             = lookup(each.value, "project", local.project)
+  host_project        = local.project
+  type                = "INTERNAL"
+  name                = lookup(each.value, "name", "psc-consumer-${each.key}")
+  address             = lookup(each.value, "address", null)
+  address_name        = lookup(each.value, "address_name", null)
+  address_description = lookup(each.value, "address_description", null)
+  region              = lookup(each.value, "region", null)
+  subnetwork          = lookup(each.value, "subnetwork", null)
+  target              = lookup(each.value, "target", each.value.target_name)
+  global_access       = lookup(each.value, "global_access", null)
+  network             = module.vpc-network.self_link
 }

@@ -254,18 +254,19 @@ variable "firewall_rules" {
   }))
   default = []
 }
-variable "psc_endpoints" {
+
+variable "psc_consumers" {
+  description = "PSC Consumer Endpoints"
   type = list(object({
-    project_id             = optional(string)
-    name                   = optional(string)
-    description            = optional(string)
-    subnet                 = optional(string)
-    ip_address             = optional(string)
-    ip_address_name        = optional(string)
-    ip_address_description = optional(string)
-    target                 = string
-    global_access          = optional(bool)
+    create              = optional(bool, true)
+    project             = optional(string)
+    subnetwork          = optional(string)
+    target              = optional(string)
+    name                = optional(string)
+    address             = optional(string)
+    address_name        = optional(string)
+    address_description = optional(string)
+    global_access       = optional(bool)
   }))
   default = []
 }
-
