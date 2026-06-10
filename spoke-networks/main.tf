@@ -401,7 +401,7 @@ locals {
       address_name        = endpoint.address_name
       address_description = endpoint.address_description
       region              = local.region
-      subnetwork          = v.subnetwork
+      subnetwork          = endpoint.subnetwork
       target              = startswith(endpoint.target, local.url_prefix) ? endpoint.target : "${local.url_prefix}/${endpoint.target}"
       global_access       = coalesce(endpoint.global_access, false)
     }
@@ -424,4 +424,5 @@ module "psc-consumers" {
   global_access       = lookup(each.value, "global_access", null)
   network             = module.vpc-network.self_link
 }
+
 
