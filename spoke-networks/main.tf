@@ -396,7 +396,7 @@ locals {
     {
       create              = local.create ? coalesce(endpoint.create, true) : false
       project             = coalesce(endpoint.project, local.project)
-      name                = coalesce(endpoint.name, "global-psc-consumer-${i}")
+      name                = coalesce(endpoint.name, "psc-consumer-${i}")
       address             = endpoint.address
       address_name        = endpoint.address_name
       address_description = endpoint.address_description
@@ -409,19 +409,20 @@ locals {
 }
 module "psc-consumers" {
   source              = "../modules/forwarding-rule"
-  for_each            = { for k, v in local.psc_consumers : "${v.region}/${coalesce(v.name, v.target_name)}" => v }
+  for_each            = { for k, v in local.psc_consumers : "${v.project}/${v.region}/${v.name}" => v }
   create              = each.value.create
-  project             = lookup(each.value, "project", local.project)
+  project             = each.value.project
   host_project        = local.project
   type                = "INTERNAL"
-  name                = lookup(each.value, "name", "psc-consumer-${each.key}")
-  address             = lookup(each.value, "address", null)
-  address_name        = lookup(each.value, "address_name", null)
-  address_description = lookup(each.value, "address_description", null)
-  region              = lookup(each.value, "region", null)
-  subnetwork          = lookup(each.value, "subnetwork", null)
-  target              = lookup(each.value, "target", each.value.target_name)
-  global_access       = lookup(each.value, "global_access", null)
+  name                = each.value.name
+  address             = each.value.address
+  address_name        = each.value.address_name
+  address_description = each.value.address_description
+  region              = each.value.region
+  subnetwork          = each.value.subnetwork
+  set_null_subnetwork = true
+  target              = each.value.target
+  global_access       = each.value.global_access
   network             = module.vpc-network.self_link
 }
 
