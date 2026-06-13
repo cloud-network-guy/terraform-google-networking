@@ -6,7 +6,6 @@ locals {
       purpose              = upper(trimspace(coalesce(v.purpose, "PRIVATE")))
       region               = coalesce(v.region, var.default_region)
       private_access       = coalesce(v.private_access, false)
-      ip_range             = trimspace(v.ip_range)
       aggregation_interval = upper(coalesce(v.log_aggregation_interval, "INTERVAL_5_SEC"))
       flow_sampling        = coalesce(v.log_sampling_rate, 0.5)
       log_metadata         = "INCLUDE_ALL_METADATA"
@@ -18,7 +17,7 @@ locals {
       secondary_ranges = [for i, r in coalesce(v.secondary_ranges, []) :
         {
           name                    = trimspace(coalesce(r.name, "secondary-range-${i}"))
-          range                   = trimspace(r.range)
+          range                   = r.range
           reserved_internal_range = r.reserved_internal_range
         }
       ]
