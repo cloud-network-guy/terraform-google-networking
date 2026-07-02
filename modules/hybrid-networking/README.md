@@ -206,13 +206,10 @@ vpns = [
 |------|---------|
 | <a name="provider_google"></a> [google](#provider\_google) | >= 5.16, < 8.0.0 |
 | <a name="provider_null"></a> [null](#provider\_null) | >= 3.1.0 |
-| <a name="provider_random"></a> [random](#provider\_random) | >= 3.4.0 |
 
 ## Modules
 
-| Name | Source | Version |
-|------|--------|---------|
-| <a name="module_vpns"></a> [vpns](#module\_vpns) | ../modules/hybrid-networking | n/a |
+No modules.
 
 ## Resources
 
@@ -226,21 +223,21 @@ vpns = [
 | [google_compute_vpn_tunnel.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_vpn_tunnel) | resource |
 | [null_resource.peer_vpn_gateways](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
 | [null_resource.vpn_tunnels](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
-| [random_integer.tunnel_range](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) | resource |
-| [random_string.shared_secrets](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
-| [google_compute_router.cloud_router](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_router) | data source |
+| [google_compute_ha_vpn_gateway.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/compute_ha_vpn_gateway) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_cloud_router"></a> [cloud\_router](#input\_cloud\_router) | Name of the Cloud Router | `string` | `null` | no |
-| <a name="input_cloud_vpn_gateway"></a> [cloud\_vpn\_gateway](#input\_cloud\_vpn\_gateway) | Name of the Cloud VPN Gateway | `string` | `null` | no |
-| <a name="input_network"></a> [network](#input\_network) | Name of the Network attached to Cloud VPN Gateway & Cloud Router | `string` | `"default"` | no |
-| <a name="input_peer_set"></a> [peer\_set](#input\_peer\_set) | Settings for External (Peer) VPN Gateways | <pre>object({<br/>    name                 = string<br/>    description          = optional(string)<br/>    bgp_asn              = optional(number, 65000)<br/>    advertised_ip_ranges = optional(list(string), [])<br/>    advertised_priority  = optional(number, 100)<br/>    learned_ip_ranges    = optional(list(string), [])<br/>    peers = list(object({<br/>      name                = string<br/>      description         = optional(string)<br/>      ip_address          = string<br/>      shared_secret       = optional(string)<br/>      advertised_priority = optional(number)<br/>      cloud_router_ip     = optional(string)<br/>      peer_bgp_ip         = optional(string)<br/>      interface_index     = optional(number)<br/>    }))<br/>  })</pre> | n/a | yes |
-| <a name="input_project_id"></a> [project\_id](#input\_project\_id) | Project ID of GCP Project | `string` | n/a | yes |
-| <a name="input_region"></a> [region](#input\_region) | Name of the GCP Region | `string` | n/a | yes |
-| <a name="input_tunnel_range"></a> [tunnel\_range](#input\_tunnel\_range) | IP Prefix to use for tunnel interfaces (i.e. 169.254.42.80/28) | `string` | `null` | no |
+| <a name="input_cloud_router"></a> [cloud\_router](#input\_cloud\_router) | Default Cloud Router Name (can be overridden at resource level) | `string` | `null` | no |
+| <a name="input_cloud_vpn_gateways"></a> [cloud\_vpn\_gateways](#input\_cloud\_vpn\_gateways) | GCP Cloud VPN Gateways | <pre>list(object({<br/>    create       = optional(bool, true)<br/>    project_id   = optional(string)<br/>    name         = optional(string)<br/>    network      = optional(string)<br/>    network_name = optional(string)<br/>    region       = string<br/>    stack_type   = optional(string)<br/>  }))</pre> | `[]` | no |
+| <a name="input_defaults"></a> [defaults](#input\_defaults) | n/a | <pre>object({<br/>    cloud_router_bgp_asn                = optional(number, 64512)<br/>    cloud_router_bgp_keepalive_interval = optional(number, 20)<br/>    vpn_ike_version                     = optional(number, 2)<br/>    vpn_ike_psk_length                  = optional(number, 20)<br/>    vpn_ike_psk                         = optional(string)<br/>  })</pre> | `{}` | no |
+| <a name="input_interconnects"></a> [interconnects](#input\_interconnects) | Dedicated and Partner Interconnects | <pre>list(object({<br/>    create              = optional(bool, true)<br/>    project_id          = optional(string)<br/>    type                = string<br/>    name_prefix         = optional(string)<br/>    region              = optional(string)<br/>    cloud_router        = optional(string)<br/>    advertised_priority = optional(number)<br/>    advertised_groups   = optional(list(string))<br/>    advertised_ip_ranges = optional(list(object({<br/>      range       = string<br/>      description = optional(string)<br/>    })))<br/>    mtu            = optional(number)<br/>    enable         = optional(bool)<br/>    enable_bfd     = optional(bool)<br/>    bfd_parameters = optional(list(number))<br/>    attachments = list(object({<br/>      name                = optional(string)<br/>      description         = optional(string)<br/>      mtu                 = optional(number)<br/>      interface_index     = optional(number)<br/>      interface_name      = optional(string)<br/>      cloud_router_ip     = optional(string)<br/>      peer_bgp_name       = optional(string)<br/>      peer_bgp_ip         = optional(string)<br/>      peer_bgp_asn        = optional(number)<br/>      advertised_priority = optional(number)<br/>      advertised_groups   = optional(list(string))<br/>      advertised_ip_ranges = optional(list(object({<br/>        range       = string<br/>        description = optional(string)<br/>      })))<br/>    }))<br/>  }))</pre> | `[]` | no |
+| <a name="input_network"></a> [network](#input\_network) | Default VPC Network Name to attach to | `string` | `"default"` | no |
+| <a name="input_peer_vpn_gateways"></a> [peer\_vpn\_gateways](#input\_peer\_vpn\_gateways) | Peer (External) VPN Gateways | <pre>list(object({<br/>    create       = optional(bool, true)<br/>    project_id   = optional(string)<br/>    name         = optional(string)<br/>    description  = optional(string)<br/>    ip_addresses = optional(list(string))<br/>    labels       = optional(map(string))<br/>  }))</pre> | `[]` | no |
+| <a name="input_project_id"></a> [project\_id](#input\_project\_id) | Default GCP Project ID (can be overridden at resource level) | `string` | `null` | no |
+| <a name="input_region"></a> [region](#input\_region) | Default GCP Region Name (can be overridden at resource level) | `string` | `"us-central1"` | no |
+| <a name="input_vpns"></a> [vpns](#input\_vpns) | HA VPNs | <pre>list(object({<br/>    create                          = optional(bool, true)<br/>    project_id                      = optional(string)<br/>    name                            = optional(string)<br/>    description                     = optional(string)<br/>    ike_version                     = optional(number)<br/>    region                          = optional(string)<br/>    cloud_router                    = optional(string)<br/>    cloud_vpn_gateway               = optional(string)<br/>    peer_vpn_gateway                = optional(string)<br/>    peer_gcp_vpn_gateway_project_id = optional(string)<br/>    peer_gcp_vpn_gateway            = optional(string)<br/>    peer_bgp_asn                    = optional(number)<br/>    advertised_priority             = optional(number)<br/>    advertised_groups               = optional(list(string))<br/>    advertised_ip_ranges = optional(list(object({<br/>      range       = string<br/>      description = optional(string)<br/>    })))<br/>    learned_ip_ranges = optional(list(object({<br/>      range       = string<br/>    })))<br/>    enable_bfd     = optional(bool)<br/>    bfd_multiplier = optional(number)<br/>    tunnels = list(object({<br/>      create               = optional(bool)<br/>      name                 = optional(string)<br/>      interface_index      = optional(number)<br/>      interface_name       = optional(string)<br/>      description          = optional(string)<br/>      ike_version          = optional(number)<br/>      ike_psk              = optional(string)<br/>      cloud_router_ip      = optional(string)<br/>      peer_bgp_name        = optional(string)<br/>      peer_bgp_ip          = optional(string)<br/>      peer_bgp_asn         = optional(number)<br/>      peer_interface_index = optional(number)<br/>      advertised_priority  = optional(number)<br/>      advertised_groups    = optional(list(string))<br/>      advertised_ip_ranges = optional(list(object({<br/>        range       = string<br/>        description = optional(string)<br/>      })))<br/>      learned_ip_ranges = optional(list(object({<br/>        range       = string<br/>      })))<br/>      enable      = optional(bool)<br/>      enable_bfd  = optional(bool)<br/>      enable_ipv6 = optional(bool)<br/>    }))<br/>  }))</pre> | `[]` | no |
 
 ## Outputs
 

@@ -93,18 +93,18 @@ resource "null_resource" "vpn_tunnels" {
 }
 
 resource "google_compute_vpn_tunnel" "default" {
-  for_each              = { for i, v in local.vpn_tunnels : v.index_key => v }
-  project               = each.value.project_id
-  name                  = each.value.name
-  description           = each.value.description
-  region                = each.value.region
-  router                = each.value.router
-  peer_ip               = null # Classic VPN only?
-  vpn_gateway           = each.value.vpn_gateway
-  peer_external_gateway = each.value.peer_external_gateway
-  peer_gcp_gateway      = each.value.peer_gcp_gateway
-  ike_version           = each.value.ike_version
-  shared_secret         = each.value.shared_secret
+  for_each                        = { for i, v in local.vpn_tunnels : v.index_key => v }
+  project                         = each.value.project_id
+  name                            = each.value.name
+  description                     = each.value.description
+  region                          = each.value.region
+  router                          = each.value.router
+  peer_ip                         = null # Classic VPN only?
+  vpn_gateway                     = each.value.vpn_gateway
+  peer_external_gateway           = each.value.peer_external_gateway
+  peer_gcp_gateway                = each.value.peer_gcp_gateway
+  ike_version                     = each.value.ike_version
+  shared_secret                   = each.value.shared_secret
   #shared_secret_wo     = each.value.shared_secret
   #  #shared_secret_wo_version        = 0
   vpn_gateway_interface           = each.value.vpn_gateway_interface

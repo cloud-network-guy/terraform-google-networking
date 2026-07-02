@@ -34,6 +34,7 @@ variable "peer_set" {
     bgp_asn              = optional(number, 65000)
     advertised_ip_ranges = optional(list(string), [])
     advertised_priority  = optional(number, 100)
+    learned_ip_ranges    = optional(list(string), [])
     peers = list(object({
       name                = string
       description         = optional(string)

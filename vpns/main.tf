@@ -23,6 +23,7 @@ locals {
     network              = var.network
     cloud_vpn_gateway    = coalesce(var.cloud_vpn_gateway, "${var.network}-${var.region}")
     advertised_ip_ranges = [for i, v in var.peer_set.advertised_ip_ranges : { range = v }]
+    learned_ip_ranges    = [for i, v in var.peer_set.learned_ip_ranges : { range = v }]
     peer_vpn_gateway     = local.peer_vpn_gateway.name
     peer_bgp_asn         = var.peer_set.bgp_asn
     tunnels = [for i, peer in var.peer_set.peers :
@@ -47,11 +48,6 @@ resource "random_string" "shared_secrets" {
   special  = false
 }
 
-moved {
-  from = module.hybrid-networking
-  to   = module.vpns
-}
-
 # Call Child Module
 module "vpns" {
   source     = "../modules/hybrid-networking"
@@ -72,6 +68,7 @@ module "vpns" {
       peer_vpn_gateway     = local.vpn.peer_vpn_gateway
       peer_bgp_asn         = local.vpn.peer_bgp_asn
       advertised_ip_ranges = local.vpn.advertised_ip_ranges
+      learned_ip_ranges    = local.vpn.learned_ip_ranges
       tunnels = [for i, tunnel in local.vpn.tunnels :
         merge(tunnel, {
           ike_psk = coalesce(try(random_string.shared_secrets[tunnel.name].result, null), tunnel.ike_psk, "")
