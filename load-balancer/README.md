@@ -47,6 +47,7 @@ No resources.
 | <a name="input_preserve_ip_addresses"></a> [preserve\_ip\_addresses](#input\_preserve\_ip\_addresses) | n/a | `bool` | `null` | no |
 | <a name="input_project"></a> [project](#input\_project) | n/a | `string` | `null` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | n/a | `string` | `null` | no |
+| <a name="input_proxy"></a> [proxy](#input\_proxy) | n/a | `bool` | `null` | no |
 | <a name="input_redirect_http_to_https"></a> [redirect\_http\_to\_https](#input\_redirect\_http\_to\_https) | n/a | `bool` | `false` | no |
 | <a name="input_region"></a> [region](#input\_region) | n/a | `string` | `null` | no |
 | <a name="input_security_policies"></a> [security\_policies](#input\_security\_policies) | CloudArmor Security Policies | <pre>map(object({<br/>    create       = optional(bool, true)<br/>    project_id   = optional(string)<br/>    name         = optional(string)<br/>    description  = optional(string)<br/>    layer_7_ddos = optional(bool)<br/>    rules = list(object({<br/>      action      = optional(string)<br/>      priority    = number<br/>      ip_ranges   = optional(list(string))<br/>      expr        = optional(string)<br/>      description = optional(string)<br/>    }))<br/>  }))</pre> | `{}` | no |

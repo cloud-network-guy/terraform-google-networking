@@ -42,6 +42,10 @@ variable "type" {
   type    = string
   default = "INTERNAL"
 }
+variable "proxy" {
+  type    = bool
+  default = false
+}
 variable "protocol" {
   type    = string
   default = null

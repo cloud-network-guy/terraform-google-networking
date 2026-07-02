@@ -19,6 +19,7 @@ locals {
           ike_psk                         = tunnel.ike_psk
           vpn_gateway_interface           = coalesce(tunnel.interface_index, t % 2 == 0 ? 0 : 1)
           peer_external_gateway_interface = coalesce(lookup(tunnel, "peer_interface_index", null), t)
+          learned_ip_ranges               = try(coalesce(tunnel.learned_ip_ranges, vpn.learned_ip_ranges), null)
           advertised_ip_ranges            = try(coalesce(tunnel.advertised_ip_ranges, vpn.advertised_ip_ranges), null)
           advertised_groups               = try(coalesce(tunnel.advertised_groups, vpn.advertised_groups), null)
           advertised_priority             = try(coalesce(tunnel.advertised_priority, vpn.advertised_priority), null)
@@ -92,18 +93,20 @@ resource "null_resource" "vpn_tunnels" {
 }
 
 resource "google_compute_vpn_tunnel" "default" {
-  for_each                        = { for i, v in local.vpn_tunnels : v.index_key => v }
-  project                         = each.value.project_id
-  name                            = each.value.name
-  description                     = each.value.description
-  region                          = each.value.region
-  router                          = each.value.router
-  peer_ip                         = null # Classic VPN only?
-  vpn_gateway                     = each.value.vpn_gateway
-  peer_external_gateway           = each.value.peer_external_gateway
-  peer_gcp_gateway                = each.value.peer_gcp_gateway
-  ike_version                     = each.value.ike_version
-  shared_secret                   = each.value.shared_secret
+  for_each              = { for i, v in local.vpn_tunnels : v.index_key => v }
+  project               = each.value.project_id
+  name                  = each.value.name
+  description           = each.value.description
+  region                = each.value.region
+  router                = each.value.router
+  peer_ip               = null # Classic VPN only?
+  vpn_gateway           = each.value.vpn_gateway
+  peer_external_gateway = each.value.peer_external_gateway
+  peer_gcp_gateway      = each.value.peer_gcp_gateway
+  ike_version           = each.value.ike_version
+  shared_secret         = each.value.shared_secret
+  #shared_secret_wo     = each.value.shared_secret
+  #  #shared_secret_wo_version        = 0
   vpn_gateway_interface           = each.value.vpn_gateway_interface
   peer_external_gateway_interface = each.value.peer_external_gateway_interface
   depends_on = [

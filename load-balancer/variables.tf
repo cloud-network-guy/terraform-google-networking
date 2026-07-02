@@ -26,6 +26,10 @@ variable "type" {
   type    = string
   default = null
 }
+variable "proxy" {
+  type    = bool
+  default = null
+}
 variable "network" {
   type    = string
   default = null

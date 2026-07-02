@@ -20,6 +20,7 @@ locals {
   is_internal    = local.type == "INTERNAL" ? true : false
   protocol       = var.protocol != null ? upper(trimspace(var.protocol)) : "TCP"
   is_tcp         = local.protocol == "TCP" ? true : false
+  is_proxy       = coalesce(var.proxy, local.is_tcp ? false : true)
   is_psc         = local.is_application && local.is_regional && !local.is_internal ? true : false
   _health_checks = var.health_check != null ? [var.health_check] : compact(coalesce(var.health_checks, []))
   health_checks = local.is_gnegs || local.is_psc ? null : [for hc in local._health_checks :

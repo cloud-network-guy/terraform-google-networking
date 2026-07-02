@@ -67,6 +67,10 @@ variable "protocol" {
   type    = string
   default = null
 }
+variable "proxy" {
+  type    = bool
+  default = false
+}
 variable "all_ports" {
   type    = bool
   default = null

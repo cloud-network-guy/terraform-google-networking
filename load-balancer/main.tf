@@ -187,6 +187,7 @@ module "backends" {
   host_project_id              = each.value.host_project
   region                       = each.value.region
   type                         = each.value.type
+  proxy                        = each.value.proxy
   name                         = each.value.name
   description                  = each.value.description
   port                         = each.value.port

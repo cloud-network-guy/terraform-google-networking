@@ -12,6 +12,7 @@ locals {
       advertised_groups         = coalesce(lookup(v, "advertised_groups", null), [])
       advertised_route_priority = coalesce(lookup(v, "advertised_priority", null), 100)
       advertised_ip_ranges      = coalesce(lookup(v, "advertised_ip_ranges", null), [])
+      learned_ip_ranges         = coalesce(lookup(v, "learned_ip_ranges", null), [])
       enable_bfd                = coalesce(lookup(v, "enable_bfd", null), false)
       bfd_min_transmit_interval = coalesce(lookup(v, "bfd_min_transmit_interval", null), 1000)
       bfd_min_receive_interval  = coalesce(lookup(v, "bfd_min_receive_interval", null), 1000)
@@ -29,22 +30,29 @@ locals {
 }
 
 resource "google_compute_router_peer" "default" {
-  for_each                  = { for i, v in local.router_peers : v.index_key => v }
-  project                   = each.value.project_id
-  name                      = each.value.name
-  region                    = each.value.region
-  router                    = each.value.router
-  interface                 = each.value.interface
-  peer_ip_address           = each.value.peer_ip_address
-  peer_asn                  = each.value.peer_asn
-  advertised_route_priority = each.value.advertised_route_priority
-  advertised_groups         = each.value.advertised_groups
-  advertise_mode            = each.value.advertise_mode
+  for_each                           = { for i, v in local.router_peers : v.index_key => v }
+  project                            = each.value.project_id
+  name                               = each.value.name
+  region                             = each.value.region
+  router                             = each.value.router
+  interface                          = each.value.interface
+  peer_ip_address                    = each.value.peer_ip_address
+  peer_asn                           = each.value.peer_asn
+  zero_custom_learned_route_priority = false # TODO
+  advertised_route_priority          = each.value.advertised_route_priority
+  advertised_groups                  = each.value.advertised_groups
+  advertise_mode                     = each.value.advertise_mode
   dynamic "advertised_ip_ranges" {
     for_each = each.value.advertised_ip_ranges
     content {
       range       = advertised_ip_ranges.value.range
       description = advertised_ip_ranges.value.description
+    }
+  }
+  dynamic "custom_learned_ip_ranges" {
+    for_each = each.value.learned_ip_ranges
+    content {
+      range = custom_learned_ip_ranges.value.range
     }
   }
   dynamic "bfd" {
