@@ -36,6 +36,7 @@ locals {
         peer_bgp_name       = peer.name
         advertised_priority = coalesce(peer.advertised_priority, var.peer_set.advertised_priority)
         interface_index     = coalesce(peer.interface_index, i)
+        learned_ip_ranges   = [for ip_range in coalesce(peer.learned_ip_ranges, []) : { range = ip_range }]
       }
     ]
   }

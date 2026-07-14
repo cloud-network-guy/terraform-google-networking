@@ -35,6 +35,7 @@ output "vpn_tunnels" {
       ike_version             = v.ike_version
       shared_secret           = v.shared_secret
       detailed_status         = try(google_compute_vpn_tunnel.default[v.index_key].detailed_status, "Unknown")
+      learned_ip_ranges       = v.learned_ip_ranges
     }
   }
 }

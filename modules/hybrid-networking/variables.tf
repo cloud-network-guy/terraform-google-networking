@@ -66,6 +66,7 @@ variable "vpns" {
     })))
     learned_ip_ranges = optional(list(object({
       range       = string
+      description = optional(string)
     })))
     enable_bfd     = optional(bool)
     bfd_multiplier = optional(number)
@@ -90,6 +91,7 @@ variable "vpns" {
       })))
       learned_ip_ranges = optional(list(object({
         range       = string
+        description = optional(string)
       })))
       enable      = optional(bool)
       enable_bfd  = optional(bool)

@@ -44,6 +44,7 @@ variable "peer_set" {
       cloud_router_ip     = optional(string)
       peer_bgp_ip         = optional(string)
       interface_index     = optional(number)
+      learned_ip_ranges   = optional(list(string), [])
     }))
   })
 }

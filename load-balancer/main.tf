@@ -40,6 +40,7 @@ locals {
     backend_key => merge(backend, {
       project                  = coalesce(backend.project, local.project)
       host_project             = coalesce(backend.host_project, var.host_project_id, var.host_project, local.project)
+      proxy                    = var.proxy
       region                   = try(coalesce(backend.region, var.region), null)
       name                     = coalesce(backend.name, var.name_prefix != null ? "${var.name_prefix}-${backend_key}" : backend_key)
       protocol                 = try(coalesce(backend.protocol, var.backend_protocol), null)

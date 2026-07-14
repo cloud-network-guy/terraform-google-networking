@@ -10,6 +10,7 @@ output "vpn_tunnels" {
       cloud_router_ip_address = v.cloud_router_ip_address
       peer_ip_address         = v.peer_ip_address
       peer_bgp_asn            = local.vpn.peer_bgp_asn
+      learned_ip_ranges       = v.learned_ip_ranges
       cloud_router_bgp_asn    = try(data.google_compute_router.cloud_router.bgp[0].asn, "ERROR")
     }
   ]

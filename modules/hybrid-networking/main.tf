@@ -15,4 +15,7 @@ data "google_compute_ha_vpn_gateway" "default" {
   project  = each.value.project_id
   region   = each.value.region
   name     = each.value.name
+  depends_on = [
+    google_compute_ha_vpn_gateway.default,
+  ]
 }
