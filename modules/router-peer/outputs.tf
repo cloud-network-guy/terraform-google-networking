@@ -22,9 +22,9 @@ output "bgp_peer_ip_addresses" {
 */
 output "interface_ip_range" {
   description = ""
-  value = local.create ? one(google_compute_router_interface.default).ip_range : null 
+  value       = local.create ? one(google_compute_router_interface.default).ip_range : null
 }
 output "peer_ip_address" {
   description = ""
-  value = local.create ? one(google_compute_router_peer.default).peer_ip_address : null
+  value       = local.create ? one(google_compute_router_peer.default).peer_ip_address : null
 }

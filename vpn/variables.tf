@@ -15,6 +15,7 @@ variable "project" {
 variable "region" {
   description = "Name of the GCP Region"
   type        = string
+  default     = null
 }
 variable "router" {
   description = "Name of the Cloud Router"
@@ -29,6 +30,7 @@ variable "network" {
 variable "cloud_vpn_gateway" {
   description = "Name of the Cloud VPN Gateway"
   type        = string
+  default     = null
 }
 
 variable "peer_vpn_gateways" {
@@ -81,7 +83,7 @@ variable "vpns" {
     peer_gcp_vpn_gateway_project = optional(string)
     peer_gcp_vpn_gateway         = optional(string)
     peer_bgp_asn                 = optional(number)
-    advertised_priority          = optional(number)
+    advertised_route_priority    = optional(number)
     advertised_groups            = optional(list(string))
     advertised_prefixes          = optional(list(string))
     advertised_ip_ranges = optional(list(object({
@@ -94,20 +96,21 @@ variable "vpns" {
     enable_bfd     = optional(bool)
     bfd_multiplier = optional(number)
     tunnels = list(object({
-      create               = optional(bool)
-      name                 = optional(string)
-      description          = optional(string)
-      interface_name       = optional(string)
-      interface_index      = optional(number)
-      shared_secret        = optional(string)
-      ip_range             = optional(string)
-      cloud_router_ip      = optional(string)
-      peer_bgp_name        = optional(string)
-      peer_bgp_ip          = optional(string)
-      peer_bgp_asn         = optional(number)
-      peer_interface_index = optional(number)
-      advertised_priority  = optional(number)
-      advertised_groups    = optional(list(string))
+      create                    = optional(bool)
+      name                      = optional(string)
+      description               = optional(string)
+      tunnel_name               = optional(string)
+      interface_name            = optional(string)
+      interface_index           = optional(number)
+      shared_secret             = optional(string)
+      ip_range                  = optional(string)
+      cloud_router_ip           = optional(string)
+      peer_bgp_name             = optional(string)
+      peer_bgp_ip               = optional(string)
+      peer_bgp_asn              = optional(number)
+      peer_interface_index      = optional(number)
+      advertised_route_priority = optional(number)
+      advertised_groups         = optional(list(string))
       advertised_ip_ranges = optional(list(object({
         range       = string
         description = optional(string)

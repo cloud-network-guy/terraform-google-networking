@@ -1,10 +1,10 @@
 locals {
   create            = coalesce(var.create, true)
   project           = lower(trimspace(coalesce(var.project_id, var.project)))
-  region            = var.region != null ? lower(trimspace(var.region)) : null
-  router            = var.router != null ? lower(trimspace(var.router)) : null
   network           = var.network != null ? lower(trimspace(var.network)) : null
-  cloud_vpn_gateway = var.cloud_vpn_gateway != null ? lower(trimspace(var.cloud_vpn_gateway)) : null
+  region            = var.region
+  router            = var.router
+  cloud_vpn_gateway = var.cloud_vpn_gateway
   peer_vpn_gateways = { for k, v in var.peer_vpn_gateways :
     k => {
       create      = v.create
@@ -22,14 +22,6 @@ locals {
       redundancy_type = length(v.interfaces) >= 2 ? "TWO_IPS_REDUNDANCY" : "SINGLE_IP_INTERNALLY_REDUNDANT"
     } if v.create
   }
-}
-
-# Query Cloud VPN Gateway to get its public IP addresses 
-data "google_compute_ha_vpn_gateway" "default" {
-  #for_each = { for k, v in local.ha_vpn_gateways : k => v }
-  project = local.project
-  region  = local.region
-  name    = local.cloud_vpn_gateway
 }
 
 # Create a null for each VPN gateway to force total destruction before re-creation
@@ -53,44 +45,36 @@ resource "google_compute_external_vpn_gateway" "default" {
 }
 
 locals {
-  routers = compact([local.router])
-}
-data "google_compute_router" "default" {
-  for_each = toset(local.network != null ? local.routers : [])
-  project  = local.project
-  network  = local.network
-  region   = local.region
-  name     = each.value
-}
-
-locals {
   vpns = [for vpn_key, vpn in var.vpns :
     merge(vpn, {
-      name = lower(trimspace(coalesce(vpn.name, vpn_key))
-    ) })
+      name              = lower(trimspace(coalesce(vpn.name, vpn_key)))
+      cloud_vpn_gateway = lower(trimspace(coalesce(vpn.cloud_vpn_gateway, local.cloud_vpn_gateway)))
+      region            = lower(trimspace(coalesce(vpn.region, local.region)))
+      router            = lower(trimspace(coalesce(vpn.router, local.router)))
+      }
+    )
   ]
   vpn_tunnels = flatten(
     [for vpn_key, vpn in local.vpns :
       [for t, tunnel in vpn.tunnels :
         {
           create                          = coalesce(tunnel.create, vpn.create, local.create)
-          project_id                      = coalesce(vpn.project_id, var.project, local.project)
-          region                          = coalesce(vpn.region, local.region)
-          router                          = coalesce(vpn.router, local.router)
-          cloud_vpn_gateway               = vpn.cloud_vpn_gateway
+          project                         = lower(trimspace(coalesce(vpn.project, var.project, local.project)))
+          region                          = lower(trimspace(coalesce(vpn.region, local.region)))
+          router                          = lower(trimspace(coalesce(vpn.router, local.router)))
           peer_gcp_vpn_gateway            = vpn.peer_gcp_vpn_gateway
           peer_external_gateway           = google_compute_external_vpn_gateway.default[vpn.peer_vpn_gateway].name
-          name                            = tunnel.name
+          name                            = coalesce(tunnel.tunnel_name, tunnel.name)
           description                     = tunnel.description
           ip_range                        = tunnel.ip_range
           ike_version                     = coalesce(vpn.ike_version, 2)
-          vpn_gateway                     = local.cloud_vpn_gateway
+          vpn_gateway                     = vpn.cloud_vpn_gateway
           vpn_gateway_interface           = coalesce(tunnel.interface_index, t % 2 == 0 ? 0 : 1)
           peer_external_gateway_interface = coalesce(lookup(tunnel, "peer_interface_index", null), t)
           advertised_prefixes             = vpn.advertised_prefixes
           advertised_ip_ranges            = try(coalesce(tunnel.advertised_ip_ranges, vpn.advertised_ip_ranges), null)
-          advertised_groups               = try(coalesce(tunnel.advertised_groups, vpn.advertised_groups), null)
-          advertised_priority             = try(coalesce(tunnel.advertised_priority, vpn.advertised_priority), null)
+          advertised_groups               = coalesce(tunnel.advertised_groups, vpn.advertised_groups, [])
+          advertised_route_priority       = coalesce(tunnel.advertised_route_priority, vpn.advertised_route_priority, 100)
           peer_bgp_name                   = tunnel.peer_bgp_name
           cloud_router_ip                 = tunnel.cloud_router_ip
           peer_bgp_ip                     = tunnel.peer_bgp_ip
@@ -105,7 +89,6 @@ locals {
           enable_bfd     = try(coalesce(tunnel.enable_bfd, vpn.enable_bfd), null)
           bfd_multiplier = vpn.bfd_multiplier
           vpn_name       = vpn.name
-          tunnel_name    = tunnel.name
           interface_name = tunnel.interface_name
           vpn_key        = vpn_key
           tunnel_index   = t
@@ -156,13 +139,15 @@ locals {
       vpn_tunnel_key                = "${v.region}/${v.name}"
       cloud_router_ip               = coalesce(v.cloud_router_ip, cidrhost(v.ip_range, 1)) # BGP peer uses the 1st IP in the /30
       peer_ip_address               = coalesce(v.peer_bgp_ip, cidrhost(v.ip_range, 2))     # BGP peer uses the 2nd IP in the /30
+      peer_bgp_name                 = coalesce(v.peer_bgp_name, v.name)
       peer_bgp_asn                  = v.peer_bgp_asn
       enable                        = true
       enable_ipv4                   = true
       enable_ipv6                   = false
+      advertised_groups             = v.advertised_groups
       advertised_prefixes           = v.advertised_prefixes
-      advertised_route_priority     = 100
-      custom_learned_route_priority = 0
+      advertised_route_priority     = v.advertised_route_priority
+      custom_learned_route_priority = null
     }
   }
 }
@@ -180,11 +165,46 @@ module "router-peers" {
   advertised_ip_ranges          = [for _ in each.value.advertised_prefixes : { range = _ }]
   advertised_route_priority     = each.value.advertised_route_priority
   custom_learned_route_priority = each.value.custom_learned_route_priority
+  advertised_groups             = each.value.advertised_groups
   enable                        = each.value.enable
   enable_ipv4                   = each.value.enable_ipv4
   enable_ipv6                   = each.value.enable_ipv6
   cloud_router_ip               = each.value.cloud_router_ip
   peer_ip_address               = each.value.peer_ip_address
   peer_bgp_asn                  = each.value.peer_bgp_asn
+  peer_bgp_name                 = each.value.peer_bgp_name
 }
 
+# Query all relevant Cloud routers for the network to get BGP ASN info
+locals {
+  routers = { for vpn in local.vpns :
+    "${vpn.region}/${vpn.router}" => {
+      name   = vpn.router
+      region = vpn.region
+    }
+  }
+}
+data "google_compute_router" "default" {
+  for_each = { for k, v in local.routers : k => v if local.network != null }
+  project  = local.project
+  network  = local.network
+  region   = each.value.region
+  name     = each.value.name
+}
+
+# Query all relevant Cloud VPN Gateway to get public IP addresses
+locals {
+  cloud_vpn_gateways = {
+    for vpn in local.vpns :
+    "${vpn.region}/${vpn.cloud_vpn_gateway}" => {
+      name   = vpn.cloud_vpn_gateway
+      region = vpn.region
+    }
+  }
+}
+data "google_compute_ha_vpn_gateway" "default" {
+  for_each = { for k, v in local.cloud_vpn_gateways : k => v }
+  project  = local.project
+  region   = each.value.region
+  name     = each.value.name
+}

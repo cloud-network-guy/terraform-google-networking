@@ -55,6 +55,10 @@ variable "name" {
 variable "cloud_router_ip" {
   type = string
 }
+variable "peer_bgp_name" {
+  type    = string
+  default = null
+}
 variable "peer_bgp_asn" {
   type    = number
   default = null
@@ -101,6 +105,10 @@ variable "advertised_ip_ranges" {
 variable "custom_learned_route_priority" {
   type    = number
   default = null
+}
+variable "zero_custom_learned_route_priority" {
+  type    = bool
+  default = false
 }
 variable "custom_learned_ip_ranges" {
   type    = list(string)

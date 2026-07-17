@@ -217,6 +217,7 @@ No modules.
 | <a name="input_md5_authentication_key"></a> [md5\_authentication\_key](#input\_md5\_authentication\_key) | n/a | <pre>object({<br/>    name = string<br/>    key  = string<br/>  })</pre> | `null` | no |
 | <a name="input_name"></a> [name](#input\_name) | Router Peer Name | `string` | `null` | no |
 | <a name="input_peer_bgp_asn"></a> [peer\_bgp\_asn](#input\_peer\_bgp\_asn) | n/a | `number` | `null` | no |
+| <a name="input_peer_bgp_name"></a> [peer\_bgp\_name](#input\_peer\_bgp\_name) | n/a | `string` | `null` | no |
 | <a name="input_peer_ip_address"></a> [peer\_ip\_address](#input\_peer\_ip\_address) | n/a | `string` | `null` | no |
 | <a name="input_project"></a> [project](#input\_project) | n/a | `string` | `null` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | n/a | `string` | `null` | no |
@@ -224,6 +225,7 @@ No modules.
 | <a name="input_router"></a> [router](#input\_router) | Name or URL of Cloud Router | `string` | n/a | yes |
 | <a name="input_router_appliance_instance"></a> [router\_appliance\_instance](#input\_router\_appliance\_instance) | n/a | `string` | `null` | no |
 | <a name="input_vpn_tunnel"></a> [vpn\_tunnel](#input\_vpn\_tunnel) | Name of the VPN tunnel that uses the interface | `string` | `null` | no |
+| <a name="input_zero_custom_learned_route_priority"></a> [zero\_custom\_learned\_route\_priority](#input\_zero\_custom\_learned\_route\_priority) | n/a | `bool` | `false` | no |
 
 ## Outputs
 
