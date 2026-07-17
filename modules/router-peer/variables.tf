@@ -13,81 +13,112 @@ variable "project" {
 variable "region" {
   description = "GCP Region Name"
   type        = string
-  default     = null
 }
 variable "router" {
   description = "Name or URL of Cloud Router"
   type        = string
 }
-variable "create_interfaces" {
+variable "create_interface" {
   description = "Automatically Create Router interfaces based on BGP peers"
   type        = bool
   default     = true
 }
-variable "interfaces" {
-  description = "Explicit list of router interfaces (each must be mapped to vpn tunnel or interconnect attachment)"
-  type = list(object({
-    create = optional(bool, true)
-    ip_range                = string
-    name                    = optional(string)
-    vpn_tunnel              = optional(string)
-    interconnect_attachment = optional(string)
-  }))
-  validation {
-    condition = alltrue([for interface in var.interfaces :
-      anytrue([interface.vpn_tunnel != null ? true : false], [interface.interconnect_attachment != null ? true : false])
-    ])
-    error_message = "Each interface must set exactly one of vpn_tunnel or interconnect_attachment."
-  }
-  validation {
-    condition     = length(var.interfaces) == length(distinct([for i in var.interfaces : i.name]))
-    error_message = "Interface names must be unique."
-  }
+variable "interface_name" {
+  description = "Explicit name of the Router Interface"
+  type        = string
+  default     = null
+}
+variable "interface_index" {
+  description = "Explicit index of the Router Interface"
+  type        = string
+  default     = null
+}
+variable "interface_ip_range" {
+  description = "IP Range to use on GCP Cloud Router interface"
+  type        = string
+}
+variable "vpn_tunnel" {
+  description = "Name of the VPN tunnel that uses the interface"
+  type        = string
+  default     = null
+}
+variable "interconnect_attachment" {
+  description = "Name of the Interconnect attachment that uses the interface"
+  type        = string
+  default     = null
+}
+variable "name" {
+  description = "Router Peer Name"
+  type        = string
+  default     = null
+}
+variable "cloud_router_ip" {
+  type = string
+}
+variable "peer_bgp_asn" {
+  type    = number
+  default = null
+}
+variable "peer_ip_address" {
+  type    = string
+  default = null
+}
+variable "enable" {
+  type    = bool
+  default = true
+}
+variable "enable_ipv4" {
+  type    = bool
+  default = true
+}
+variable "enable_ipv6" {
+  type    = bool
+  default = false
+}
+variable "advertised_route_priority" {
+  type    = number
+  default = null
+}
+variable "advertise_mode" {
+  type    = string
+  default = null
+}
+variable "advertised_groups" {
+  type    = list(string)
   default = []
 }
-
-variable "bgp_peers" {
-  description = "List of BGP Peers"
+variable "router_appliance_instance" {
+  type    = string
+  default = null
+}
+variable "advertised_ip_ranges" {
   type = list(object({
-    name                      = string
-    interface_name            = string
-    peer_asn                  = number
-    peer_ip_address           = optional(string)
-    peer_ipv6_nexthop_address = optional(string)
-    ip_address                = optional(string)
-    ipv6_nexthop_address      = optional(string)
-    enable                    = optional(bool, true)
-    enable_ipv6               = optional(bool, false)
-    advertised_route_priority = optional(number)
-    advertise_mode            = optional(string, "DEFAULT")
-    advertised_groups         = optional(list(string), [])
-    router_appliance_instance = optional(string)
-    advertised_ip_ranges = optional(list(object({
-      range       = string
-      description = optional(string)
-    })), [])
-    custom_learned_route_priority = optional(number)
-    custom_learned_ip_ranges      = optional(list(string), [])
-    bfd = optional(object({
-      session_initialization_mode = optional(string, "DISABLED")
-      min_transmit_interval       = optional(number)
-      min_receive_interval        = optional(number)
-      multiplier                  = optional(number)
-    }))
-    md5_authentication_key = optional(object({
-      name = string
-      key  = string
-    }))
+    range       = string
+    description = optional(string)
   }))
   default = []
-  validation {
-    condition = alltrue([
-      for p in var.bgp_peers : contains(["DEFAULT", "CUSTOM"], p.advertise_mode)
-    ])
-    error_message = "advertise_mode must be either \"DEFAULT\" or \"CUSTOM\"."
-  }
-  validation {
-    condition     = length(var.bgp_peers) == length(distinct([for p in var.bgp_peers : p.name]))
-    error_message = "Peer names must be unique."
-  }
+}
+variable "custom_learned_route_priority" {
+  type    = number
+  default = null
+}
+variable "custom_learned_ip_ranges" {
+  type    = list(string)
+  default = []
+}
+variable "bfd" {
+  type = object({
+    session_initialization_mode = optional(string, "DISABLED")
+    min_transmit_interval       = optional(number)
+    min_receive_interval        = optional(number)
+    multiplier                  = optional(number)
+  })
+  default = null
+}
+variable "md5_authentication_key" {
+  type = object({
+    name = string
+    key  = string
+  })
+  default = null
 }

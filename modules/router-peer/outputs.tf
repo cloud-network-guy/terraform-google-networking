@@ -1,3 +1,4 @@
+/*
 output "interfaces" {
   description = "Map (keyed by interface name) of the created google_compute_router_interface resources."
   value       = google_compute_router_interface.this
@@ -17,4 +18,13 @@ output "bgp_peer_ip_addresses" {
       peer_ip_address = v.peer_ip_address
     }
   }
+}
+*/
+output "interface_ip_range" {
+  description = ""
+  value = local.create ? one(google_compute_router_interface.default).ip_range : null 
+}
+output "peer_ip_address" {
+  description = ""
+  value = local.create ? one(google_compute_router_peer.default).peer_ip_address : null
 }
