@@ -4,7 +4,7 @@ output "service_accounts" {
       id     = google_service_account.default[k].id
       email  = google_service_account.default[k].email
       member = google_service_account.default[k].member
-    }
+    } if v.create
   }
 }
 output "group_roles" {

@@ -38,3 +38,13 @@ variable "network_viewers" {
   type        = list(string)
   default     = []
 }
+variable "storage_viewers" {
+  description = "Service Accounts with Storage Viewer Permissions"
+  type        = list(string)
+  default     = []
+}
+variable "bucket" {
+  type        = string
+  description = "Name of GCS Bucket to grant Storage Viewer Permissions on"
+  default     = null
+}
