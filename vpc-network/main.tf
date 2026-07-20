@@ -167,7 +167,7 @@ locals {
         name        = "${local.name_prefix}-${k}"
         description = ""
         region      = k
-      } if anytrue(compact([region.create_cloud_vpn_gateway, var.create_cloud_vpn_gateways, false]))
+      } if coalesce(region.create_cloud_vpn_gateway, var.create_cloud_vpn_gateways, false)
     ]
   )
 }

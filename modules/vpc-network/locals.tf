@@ -6,6 +6,7 @@ locals {
   description       = var.description
   network           = local.create ? one(google_compute_network.default).id : null
   network_id        = local.create ? one(google_compute_network.default).network_id : null
+  numeric_id        = local.create ? one(google_compute_network.default).numeric_id : null
   network_self_link = local.create ? one(google_compute_network.default).self_link : null
   network_name      = local.create ? one(google_compute_network.default).name : local.name
   network_fields    = compact([local.description, local.mtu])
