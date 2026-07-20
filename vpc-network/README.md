@@ -15,7 +15,6 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_cloud-vpn-gateway"></a> [cloud-vpn-gateway](#module\_cloud-vpn-gateway) | ../modules/hybrid-networking | n/a |
 | <a name="module_psc-consumers"></a> [psc-consumers](#module\_psc-consumers) | ../modules/forwarding-rule | n/a |
 | <a name="module_shared-vpc"></a> [shared-vpc](#module\_shared-vpc) | ../modules/shared-vpc | n/a |
 | <a name="module_vpc-network"></a> [vpc-network](#module\_vpc-network) | ../modules/vpc-network | n/a |
@@ -24,6 +23,7 @@
 
 | Name | Type |
 |------|------|
+| [google_compute_ha_vpn_gateway.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_ha_vpn_gateway) | resource |
 | [google_compute_shared_vpc_host_project.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_shared_vpc_host_project) | resource |
 
 ## Inputs

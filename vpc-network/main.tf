@@ -124,25 +124,6 @@ locals {
       })
     ]
   ])
-  cloud_vpn_gateways = concat(
-    # Manually specified
-    flatten([for k, region in var.regions :
-      [for cloud_vpn_gateway in coalesce(region.cloud_vpn_gateways, []) :
-        merge(cloud_vpn_gateway, {
-          name    = coalesce(cloud_vpn_gateway.name, "${local.name_prefix}-${k}")
-          network = var.name
-          region  = k
-        })
-      ]
-    ]),
-    [for k, region in var.regions :
-      {
-        name    = "${local.name_prefix}-${k}"
-        network = var.name
-        region  = k
-      } if coalesce(region.create_cloud_vpn_gateway, var.create_cloud_vpn_gateways) == true
-    ]
-  )
 }
 
 
@@ -168,12 +149,39 @@ module "vpc-network" {
 }
 
 # Cloud VPN Gateways
-module "cloud-vpn-gateway" {
-  source             = "../modules/hybrid-networking"
-  project_id         = local.project
-  cloud_vpn_gateways = local.cloud_vpn_gateways
+locals {
+  cloud_vpn_gateways = concat(
+    # Manually specified
+    flatten([for k, region in var.regions :
+      [for cloud_vpn_gateway in coalesce(region.cloud_vpn_gateways, []) :
+        {
+          name        = coalesce(cloud_vpn_gateway.name, "${local.name_prefix}-${k}")
+          description = ""
+          region      = k
+        }
+      ]
+    ]),
+    # Auto-generated via 'create_cloud_vpn_gateways' variable
+    [for k, region in var.regions :
+      {
+        name        = "${local.name_prefix}-${k}"
+        description = ""
+        region      = k
+      } if anytrue(compact([region.create_cloud_vpn_gateway, var.create_cloud_vpn_gateways, false]))
+    ]
+  )
 }
-
+resource "google_compute_ha_vpn_gateway" "default" {
+  for_each           = { for i, v in local.cloud_vpn_gateways : "${v.region}/${v.name}" => v }
+  project            = local.project
+  name               = each.value.name
+  description        = each.value.description
+  region             = each.value.region
+  gateway_ip_version = "IPV4"
+  labels             = {}
+  network            = module.vpc-network.self_link
+  stack_type         = "IPV4_ONLY"
+}
 
 # Shared VPC Permissions
 locals {
