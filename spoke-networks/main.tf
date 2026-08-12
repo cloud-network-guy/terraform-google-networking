@@ -384,7 +384,6 @@ resource "google_compute_vpn_tunnel" "default" {
 resource "google_compute_router_interface" "default" {
   for_each   = local.vpn_tunnels
   ip_range   = each.value.ip_range
-  ip_version = "IPV4"
   name       = each.value.interface_name
   project    = each.value.project
   region     = local.region
