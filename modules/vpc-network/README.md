@@ -216,8 +216,8 @@ No modules.
 | <a name="output_cloud_routers"></a> [cloud\_routers](#output\_cloud\_routers) | n/a |
 | <a name="output_id"></a> [id](#output\_id) | n/a |
 | <a name="output_name"></a> [name](#output\_name) | n/a |
-| <a name="output_network"></a> [network](#output\_network) | n/a |
 | <a name="output_network_id"></a> [network\_id](#output\_network\_id) | n/a |
+| <a name="output_numeric_id"></a> [numeric\_id](#output\_numeric\_id) | n/a |
 | <a name="output_peering_connections"></a> [peering\_connections](#output\_peering\_connections) | n/a |
 | <a name="output_project"></a> [project](#output\_project) | n/a |
 | <a name="output_self_link"></a> [self\_link](#output\_self\_link) | n/a |
