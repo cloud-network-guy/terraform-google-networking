@@ -284,6 +284,16 @@ resource "random_string" "ike_psks" {
   special  = false
 }
 
+# Create an HA VPN Gateway in the local project
+resource "google_compute_ha_vpn_gateway" "default" {
+  gateway_ip_version = "IPV4"
+  name               = local.name
+  network            = module.vpc-network.self_link
+  project            = local.project
+  region             = local.region
+  stack_type         = "IPV4_ONLY"
+}
+
 # Select random IPs for the Tunnel interior IP addresses
 resource "random_integer" "tunnel_third_octet" {
   min = 10
@@ -294,100 +304,116 @@ resource "random_integer" "tunnel_fourth_octet_base" {
   max = 31
 }
 
+# Configure HA VPNs from Spoke to Hub and vice-versa
 locals {
   tunnel_third_octet       = random_integer.tunnel_third_octet.result
   tunnel_fourth_octet_base = random_integer.tunnel_fourth_octet_base.result * 8
-  cloud_vpn_gateways = local.create ? [
+  interface_ip_prefix      = "169.254.${local.tunnel_third_octet}"
+  # VPN Tunnels from Spoke to Hub
+  spoke_vpn_tunnels = [for i in range(0, 2) :
     {
-      name    = local.name
-      network = local.name
-      region  = var.region
-    }
-  ] : []
-  local_vpns = local.create ? [
-    {
-      cloud_router                    = one(local.cloud_routers).name
-      cloud_vpn_gateway               = one(local.cloud_vpn_gateways).name
-      peer_gcp_vpn_gateway_project_id = coalesce(var.hub_vpc.project_id, var.project_id)
-      peer_gcp_vpn_gateway            = coalesce(var.hub_vpc.cloud_vpn_gateway, "${var.hub_vpc.network}-${var.region}")
-      peer_bgp_asn                    = var.hub_vpc.bgp_asn
+      tunnel_index     = i
+      index_key        = "spoke-${i}"
+      name             = "${local.name}-${var.hub_vpc.network}-${i}"
+      project          = local.project
+      router           = one(local.cloud_routers).name
+      vpn_gateway      = google_compute_ha_vpn_gateway.default.self_link
+      peer_gcp_gateway = "projects/${var.hub_vpc.project_id}/regions/${local.region}/vpnGateways/${coalesce(var.hub_vpc.cloud_vpn_gateway, "${var.hub_vpc.network}-${local.region}")}"
+      ip_range         = "${local.interface_ip_prefix}.${local.tunnel_fourth_octet_base + (i * 4 + 1)}/30"
+      peer_ip_address  = "${local.interface_ip_prefix}.${local.tunnel_fourth_octet_base + (i * 4 + 2)}"
+      interface_name   = "if-${local.name}-${var.hub_vpc.network}-${i}"
+      peer_name        = "${local.name}-${var.hub_vpc.network}-${i}"
+      peer_asn         = var.hub_vpc.bgp_asn
       advertised_ip_ranges = concat(
         coalescelist(
-          [for ip_range in var.advertised_ip_ranges : { range = ip_range }],
-          [for subnet in local.subnets : {
-            range       = subnet.ip_range
-            description = subnet.name
-          } if subnet.purpose == "PRIVATE"]
+          [for ip_range in var.advertised_ip_ranges :
+            { range = ip_range }
+          ],
+          [for subnet in local.subnets :
+            { range = subnet.ip_range, description = subnet.name }
+          if subnet.purpose == "PRIVATE"]
         ),
         local.advertise_servicenetworking_ip_range ? [
-          {
-
-            range       = var.servicenetworking_cidr
-            description = "Service Networking PSA Range"
-          }
+          { range = var.servicenetworking_cidr, description = "Service Networking PSA Range" }
         ] : [],
         local.advertise_netapp_ip_range ? [
-          {
-            range       = var.netapp_cidr
-            description = "NetApp PSA Range"
-          }
+          { range = var.netapp_cidr, description = "NetApp PSA Range" }
         ] : [],
       )
-      tunnels = [for i in range(0, 2) :
-        {
-          name                = "${local.name}-${var.hub_vpc.network}-${i}"
-          ike_psk             = random_string.ike_psks[i].result
-          interface_name      = "if-${local.name}-${var.hub_vpc.network}-${i}"
-          cloud_router_ip     = "169.254.${local.tunnel_third_octet}.${local.tunnel_fourth_octet_base + (i * 4 + 1)}/30"
-          peer_bgp_ip         = "169.254.${local.tunnel_third_octet}.${local.tunnel_fourth_octet_base + (i * 4 + 2)}"
-          peer_bgp_name       = "${local.name}-${var.hub_vpc.network}-${i}"
-          advertised_priority = 100 + i
-        }
-      ]
-    }
-  ] : []
-}
-# Create VPN connection from Spoke to Hub
-module "vpn-to-hub" {
-  source             = "../modules/hybrid-networking"
-  project_id         = var.project_id
-  region             = var.region
-  cloud_vpn_gateways = local.cloud_vpn_gateways
-  vpns               = local.local_vpns
-  depends_on         = [module.vpc-network]
-}
 
-locals {
-  remote_vpn_tunnels = local.create ? [
+    }
+  ]
+  # VPN Tunnels from Hub to Spoke
+  hub_vpn_tunnels = [for i in range(0, 2) :
     {
-      cloud_router                    = coalesce(var.hub_vpc.cloud_router, "${var.hub_vpc.network}-${var.region}")
-      cloud_vpn_gateway               = coalesce(var.hub_vpc.cloud_vpn_gateway, "${var.hub_vpc.network}-${var.region}")
-      peer_gcp_vpn_gateway_project_id = var.project_id
-      peer_gcp_vpn_gateway            = one(local.cloud_vpn_gateways).name
-      peer_bgp_asn                    = one(local.cloud_routers).bgp_asn
-      advertised_ip_ranges            = [for i, v in coalesce(var.hub_vpc.advertised_ip_ranges, var.internal_ips) : { range = v }]
-      tunnels = [for i in range(0, 2) :
-        {
-          name                = "${local.name}-${i}"
-          ike_psk             = random_string.ike_psks[i].result
-          interface_name      = "if-${local.name}-${i}"
-          cloud_router_ip     = "169.254.${local.tunnel_third_octet}.${local.tunnel_fourth_octet_base + (i * 4 + 2)}/30"
-          peer_bgp_ip         = "169.254.${local.tunnel_third_octet}.${local.tunnel_fourth_octet_base + (i * 4 + 1)}"
-          peer_bgp_name       = "${local.name}-${i}"
-          advertised_priority = 100 + i
-        }
-      ]
+      tunnel_index         = i
+      index_key            = "hub-${i}"
+      name                 = "${local.name}-${i}"
+      project              = var.hub_vpc.project_id
+      router               = coalesce(var.hub_vpc.cloud_router, "${var.hub_vpc.network}-${local.region}")
+      vpn_gateway          = coalesce(var.hub_vpc.cloud_vpn_gateway, "${var.hub_vpc.network}-${local.region}")
+      peer_gcp_gateway     = google_compute_ha_vpn_gateway.default.self_link
+      ip_range             = "${local.interface_ip_prefix}.${local.tunnel_fourth_octet_base + (i * 4 + 2)}/30"
+      peer_ip_address      = "${local.interface_ip_prefix}.${local.tunnel_fourth_octet_base + (i * 4 + 1)}"
+      interface_name       = "if-${local.name}-${i}"
+      peer_name            = "${local.name}-${i}"
+      peer_asn             = one(local.cloud_routers).bgp_asn
+      advertised_ip_ranges = [for i, v in coalesce(var.hub_vpc.advertised_ip_ranges, var.internal_ips) : { range = v }]
     }
-  ] : []
+  ]
+  vpn_tunnels = {
+    for i, v in concat(local.spoke_vpn_tunnels, local.hub_vpn_tunnels) : v.index_key => v
+  }
 }
 
-# Create VPN from Hub to Spoke
-module "vpn-to-spoke" {
-  source     = "../modules/hybrid-networking"
-  project_id = var.hub_vpc.project_id
-  region     = var.region
-  vpns       = local.remote_vpn_tunnels
-  depends_on = [module.vpc-network, module.vpn-to-hub]
+# VPN Tunnels
+resource "google_compute_vpn_tunnel" "default" {
+  for_each              = local.vpn_tunnels
+  ike_version           = 2
+  name                  = each.value.name
+  peer_gcp_gateway      = each.value.peer_gcp_gateway
+  project               = each.value.project
+  region                = local.region
+  router                = each.value.router
+  shared_secret         = random_string.ike_psks[each.value.tunnel_index].result
+  vpn_gateway           = each.value.vpn_gateway
+  vpn_gateway_interface = each.value.tunnel_index
+  depends_on            = [module.vpc-network]
+}
+# Router interfaces for VPN Tunnels
+resource "google_compute_router_interface" "default" {
+  for_each   = local.vpn_tunnels
+  ip_range   = each.value.ip_range
+  ip_version = "IPV4"
+  name       = each.value.interface_name
+  project    = each.value.project
+  region     = local.region
+  router     = each.value.router
+  vpn_tunnel = google_compute_vpn_tunnel.default[each.key].self_link
+}
+# BGP Peer sessions for VPN Tunnels
+resource "google_compute_router_peer" "default" {
+  for_each                           = local.vpn_tunnels
+  advertise_mode                     = "CUSTOM"
+  advertised_groups                  = []
+  advertised_route_priority          = 100 + each.value.tunnel_index
+  enable_ipv4                        = true
+  enable_ipv6                        = false
+  interface                          = google_compute_router_interface.default[each.key].name
+  name                               = each.value.peer_name
+  peer_asn                           = each.value.peer_asn
+  peer_ip_address                    = each.value.peer_ip_address
+  project                            = each.value.project
+  region                             = local.region
+  router                             = each.value.router
+  zero_custom_learned_route_priority = false
+  dynamic "advertised_ip_ranges" {
+    for_each = each.value.advertised_ip_ranges
+    content {
+      range       = advertised_ip_ranges.value.range
+      description = lookup(advertised_ip_ranges.value, "description", null)
+    }
+  }
 }
 
 # PSC Consumer Endpoints

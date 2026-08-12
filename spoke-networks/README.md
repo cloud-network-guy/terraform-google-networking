@@ -4,7 +4,12 @@
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5.7 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5.7 |
+| <a name="requirement_google"></a> [google](#requirement\_google) | >= 4.49.0, < 7.0.0 |
 | <a name="requirement_google"></a> [google](#requirement\_google) | >= 5.16.0, < 8.0.0 |
+| <a name="requirement_google-beta"></a> [google-beta](#requirement\_google-beta) | >= 5.34.0, < 7.0.0 |
+| <a name="requirement_null"></a> [null](#requirement\_null) | >= 3.1.0 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.4.0 |
 
 ## Providers
 
@@ -20,13 +25,15 @@
 | <a name="module_psc-consumers"></a> [psc-consumers](#module\_psc-consumers) | ../modules/forwarding-rule | n/a |
 | <a name="module_shared-vpc"></a> [shared-vpc](#module\_shared-vpc) | ../modules/shared-vpc | n/a |
 | <a name="module_vpc-network"></a> [vpc-network](#module\_vpc-network) | ../modules/vpc-network | n/a |
-| <a name="module_vpn-to-hub"></a> [vpn-to-hub](#module\_vpn-to-hub) | ../modules/hybrid-networking | n/a |
-| <a name="module_vpn-to-spoke"></a> [vpn-to-spoke](#module\_vpn-to-spoke) | ../modules/hybrid-networking | n/a |
 
 ## Resources
 
 | Name | Type |
 |------|------|
+| [google_compute_ha_vpn_gateway.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_ha_vpn_gateway) | resource |
+| [google_compute_router_interface.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_router_interface) | resource |
+| [google_compute_router_peer.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_router_peer) | resource |
+| [google_compute_vpn_tunnel.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_vpn_tunnel) | resource |
 | [random_integer.tunnel_fourth_octet_base](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) | resource |
 | [random_integer.tunnel_third_octet](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) | resource |
 | [random_string.ike_psks](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
