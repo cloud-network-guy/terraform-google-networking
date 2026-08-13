@@ -95,10 +95,24 @@ variable "router_appliance_instance" {
   type    = string
   default = null
 }
+variable "advertised_prefixes" {
+  type = list(string)
+  default = []
+}
 variable "advertised_ip_ranges" {
   type = list(object({
     range       = string
     description = optional(string)
+  }))
+  default = []
+}
+variable "custom_learned_prefixes" {
+  type = list(string)
+  default = []
+}
+variable "custom_learned_ip_ranges" {
+  type = list(object({
+    range       = string
   }))
   default = []
 }
@@ -109,10 +123,6 @@ variable "custom_learned_route_priority" {
 variable "zero_custom_learned_route_priority" {
   type    = bool
   default = false
-}
-variable "custom_learned_ip_ranges" {
-  type    = list(string)
-  default = []
 }
 variable "bfd" {
   type = object({

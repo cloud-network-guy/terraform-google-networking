@@ -200,12 +200,14 @@ No modules.
 | <a name="input_advertise_mode"></a> [advertise\_mode](#input\_advertise\_mode) | n/a | `string` | `null` | no |
 | <a name="input_advertised_groups"></a> [advertised\_groups](#input\_advertised\_groups) | n/a | `list(string)` | `[]` | no |
 | <a name="input_advertised_ip_ranges"></a> [advertised\_ip\_ranges](#input\_advertised\_ip\_ranges) | n/a | <pre>list(object({<br/>    range       = string<br/>    description = optional(string)<br/>  }))</pre> | `[]` | no |
+| <a name="input_advertised_prefixes"></a> [advertised\_prefixes](#input\_advertised\_prefixes) | n/a | `list(string)` | `[]` | no |
 | <a name="input_advertised_route_priority"></a> [advertised\_route\_priority](#input\_advertised\_route\_priority) | n/a | `number` | `null` | no |
 | <a name="input_bfd"></a> [bfd](#input\_bfd) | n/a | <pre>object({<br/>    session_initialization_mode = optional(string, "DISABLED")<br/>    min_transmit_interval       = optional(number)<br/>    min_receive_interval        = optional(number)<br/>    multiplier                  = optional(number)<br/>  })</pre> | `null` | no |
 | <a name="input_cloud_router_ip"></a> [cloud\_router\_ip](#input\_cloud\_router\_ip) | n/a | `string` | n/a | yes |
 | <a name="input_create"></a> [create](#input\_create) | n/a | `bool` | `true` | no |
 | <a name="input_create_interface"></a> [create\_interface](#input\_create\_interface) | Automatically Create Router interfaces based on BGP peers | `bool` | `true` | no |
-| <a name="input_custom_learned_ip_ranges"></a> [custom\_learned\_ip\_ranges](#input\_custom\_learned\_ip\_ranges) | n/a | `list(string)` | `[]` | no |
+| <a name="input_custom_learned_ip_ranges"></a> [custom\_learned\_ip\_ranges](#input\_custom\_learned\_ip\_ranges) | n/a | <pre>list(object({<br/>    range       = string<br/>  }))</pre> | `[]` | no |
+| <a name="input_custom_learned_prefixes"></a> [custom\_learned\_prefixes](#input\_custom\_learned\_prefixes) | n/a | `list(string)` | `[]` | no |
 | <a name="input_custom_learned_route_priority"></a> [custom\_learned\_route\_priority](#input\_custom\_learned\_route\_priority) | n/a | `number` | `null` | no |
 | <a name="input_enable"></a> [enable](#input\_enable) | n/a | `bool` | `true` | no |
 | <a name="input_enable_ipv4"></a> [enable\_ipv4](#input\_enable\_ipv4) | n/a | `bool` | `true` | no |

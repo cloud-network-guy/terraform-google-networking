@@ -5,6 +5,11 @@ locals {
   region            = var.region
   router            = var.router
   cloud_vpn_gateway = var.cloud_vpn_gateway
+  redundancy_types = {
+    0 = "SINGLE_IP_INTERNALLY_REDUNDANT"
+    1 = "TWO_IPS_REDUNDANCY"
+    2 = "FOUR_IPS_REDUNDANCY"
+  }
   peer_vpn_gateways = { for k, v in var.peer_vpn_gateways :
     k => {
       create      = v.create
@@ -19,7 +24,7 @@ locals {
           bgp_asn     = coalesce(interface.bgp_asn, v.bgp_asn)
         }
       ]
-      redundancy_type = length(v.interfaces) >= 2 ? "TWO_IPS_REDUNDANCY" : "SINGLE_IP_INTERNALLY_REDUNDANT"
+      redundancy_type = lookup(local.redundancy_types, floor(length(v.interfaces) / 2), null)
     } if v.create
   }
 }
@@ -72,12 +77,15 @@ locals {
           vpn_gateway_interface           = coalesce(tunnel.interface_index, t % 2 == 0 ? 0 : 1)
           peer_external_gateway_interface = coalesce(lookup(tunnel, "peer_interface_index", null), t)
           advertised_prefixes             = vpn.advertised_prefixes
-          advertised_ip_ranges            = try(coalesce(tunnel.advertised_ip_ranges, vpn.advertised_ip_ranges), null)
+          advertised_ip_ranges            = vpn.advertised_ip_ranges
           advertised_groups               = coalesce(tunnel.advertised_groups, vpn.advertised_groups, [])
           advertised_route_priority       = coalesce(tunnel.advertised_route_priority, vpn.advertised_route_priority, 100)
+          custom_learned_prefixes         = vpn.custom_learned_prefixes
+          custom_learned_ip_ranges        = vpn.custom_learned_ip_ranges
           peer_bgp_name                   = tunnel.peer_bgp_name
           cloud_router_ip                 = tunnel.cloud_router_ip
           peer_bgp_ip                     = tunnel.peer_bgp_ip
+          flip_ips                        = tunnel.flip_ips
           peer_bgp_asn = coalesce(
             tunnel.peer_bgp_asn,
             vpn.peer_bgp_asn,
@@ -86,7 +94,7 @@ locals {
           )
           enable         = coalesce(tunnel.enable, true)
           enable_ipv6    = coalesce(tunnel.enable, false)
-          enable_bfd     = try(coalesce(tunnel.enable_bfd, vpn.enable_bfd), null)
+          enable_bfd     = coalesce(tunnel.enable_bfd, vpn.enable_bfd, var.enable_bfd)
           bfd_multiplier = vpn.bfd_multiplier
           vpn_name       = vpn.name
           interface_name = tunnel.interface_name
@@ -99,7 +107,7 @@ locals {
   )
 }
 
-# Generate a null resource for each VPN tunnel, so n existing tunnel is completely destroyed before attempting re-create
+# Generate a null resource for each VPN tunnel to force an existing tunnel to be destroyed prior to re-create
 # https://github.com/hashicorp/terraform-provider-google/issues/16619
 resource "null_resource" "vpn_tunnels" {
   for_each = { for i, v in local.vpn_tunnels : "${v.region}/${v.name}" => true if v.create }
@@ -135,18 +143,22 @@ locals {
       region                        = v.region
       router                        = v.router
       interface_name                = coalesce(v.interface_name, "if-${v.name}")
-      interface_ip_range            = "${cidrhost(v.ip_range, 1)}/30"
+      interface_ip_range            = coalesce(v.cloud_router_ip, "${cidrhost(v.ip_range, v.flip_ips ? 2 : 1)}/30")
       vpn_tunnel_key                = "${v.region}/${v.name}"
-      cloud_router_ip               = coalesce(v.cloud_router_ip, cidrhost(v.ip_range, 1)) # BGP peer uses the 1st IP in the /30
-      peer_ip_address               = coalesce(v.peer_bgp_ip, cidrhost(v.ip_range, 2))     # BGP peer uses the 2nd IP in the /30
+      cloud_router_ip               = coalesce(v.cloud_router_ip, cidrhost(v.ip_range, v.flip_ips ? 2 : 1))
+      peer_ip_address               = coalesce(v.peer_bgp_ip, cidrhost(v.ip_range, v.flip_ips ? 1 : 2))
       peer_bgp_name                 = coalesce(v.peer_bgp_name, v.name)
       peer_bgp_asn                  = v.peer_bgp_asn
-      enable                        = true
+      enable                        = v.enable
       enable_ipv4                   = true
-      enable_ipv6                   = false
+      enable_ipv6                   = v.enable_ipv6
+      enable_bfd                    = v.enable_bfd
       advertised_groups             = v.advertised_groups
       advertised_prefixes           = v.advertised_prefixes
+      advertised_ip_ranges          = v.advertised_ip_ranges
       advertised_route_priority     = v.advertised_route_priority
+      custom_learned_prefixes       = coalesce(v.custom_learned_prefixes, [])
+      custom_learned_ip_ranges      = v.custom_learned_ip_ranges
       custom_learned_route_priority = null
     }
   }
@@ -162,8 +174,11 @@ module "router-peers" {
   interface_name                = each.value.interface_name
   interface_ip_range            = each.value.interface_ip_range
   vpn_tunnel                    = google_compute_vpn_tunnel.default[each.value.vpn_tunnel_key].name
-  advertised_ip_ranges          = [for _ in each.value.advertised_prefixes : { range = _ }]
+  advertised_prefixes           = each.value.advertised_prefixes
+  advertised_ip_ranges          = each.value.advertised_ip_ranges
   advertised_route_priority     = each.value.advertised_route_priority
+  custom_learned_prefixes       = each.value.custom_learned_prefixes
+  custom_learned_ip_ranges      = each.value.custom_learned_ip_ranges
   custom_learned_route_priority = each.value.custom_learned_route_priority
   advertised_groups             = each.value.advertised_groups
   enable                        = each.value.enable
@@ -173,6 +188,7 @@ module "router-peers" {
   peer_ip_address               = each.value.peer_ip_address
   peer_bgp_asn                  = each.value.peer_bgp_asn
   peer_bgp_name                 = each.value.peer_bgp_name
+  bfd                           = each.value.enable_bfd ? {} : null
 }
 
 # Query all relevant Cloud routers for the network to get BGP ASN info

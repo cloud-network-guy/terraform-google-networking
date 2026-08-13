@@ -62,7 +62,7 @@ variable "advertised_ip_ranges" {
   type    = list(string)
   default = []
 }
-variable "bfd" {
+variable "enable_bfd" {
   description = "Enable BFD for all BGP Sessions"
   type        = bool
   default     = false
@@ -86,6 +86,7 @@ variable "vpns" {
     advertised_route_priority    = optional(number)
     advertised_groups            = optional(list(string))
     advertised_prefixes          = optional(list(string))
+    custom_learned_prefixes      = optional(list(string))
     advertised_ip_ranges = optional(list(object({
       range       = string
       description = optional(string)
@@ -105,22 +106,16 @@ variable "vpns" {
       shared_secret             = optional(string)
       ip_range                  = optional(string)
       cloud_router_ip           = optional(string)
+      flip_ips                  = optional(bool, false)
       peer_bgp_name             = optional(string)
       peer_bgp_ip               = optional(string)
       peer_bgp_asn              = optional(number)
       peer_interface_index      = optional(number)
       advertised_route_priority = optional(number)
       advertised_groups         = optional(list(string))
-      advertised_ip_ranges = optional(list(object({
-        range       = string
-        description = optional(string)
-      })), [])
-      custom_learned_ip_ranges = optional(list(object({
-        range = string
-      })), [])
-      enable      = optional(bool)
-      enable_bfd  = optional(bool)
-      enable_ipv6 = optional(bool)
+      enable                    = optional(bool)
+      enable_bfd                = optional(bool)
+      enable_ipv6               = optional(bool)
     }))
   }))
   default = {}

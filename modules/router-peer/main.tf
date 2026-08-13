@@ -19,17 +19,17 @@ locals {
   enable_ipv4                        = var.enable_ipv4
   enable_ipv6                        = var.enable_ipv6
   advertised_route_priority          = var.advertised_route_priority
-  ip_address                         = var.cloud_router_ip
+  ip_address                         = trimspace(var.cloud_router_ip)
   peer_bgp_name                      = lower(trimspace(coalesce(var.peer_bgp_name, local.name)))
   peer_ip_address                    = var.peer_ip_address
-  advertise_mode                     = coalesce(var.advertise_mode, length(var.advertised_ip_ranges) > 0 ? "CUSTOM" : "DEFAULT")
   peer_ipv6_nexthop_address          = null # TODO
   ipv6_nexthop_address               = null # TODO
   router_appliance_instance          = null # TODO
   custom_learned_route_priority      = null # TODO
   zero_custom_learned_route_priority = var.zero_custom_learned_route_priority
-  advertised_ip_ranges               = var.advertised_ip_ranges
-  custom_learned_ip_ranges           = []
+  advertised_ip_ranges               = concat(var.advertised_ip_ranges, [for _ in var.advertised_prefixes : {range = _}])
+  advertise_mode                     = coalesce(var.advertise_mode, length(local.advertised_ip_ranges) > 0 ? "CUSTOM" : "DEFAULT")
+  custom_learned_ip_ranges           = concat(var.custom_learned_ip_ranges, [ for _ in var.custom_learned_prefixes : {range = _}])
   advertised_groups                  = var.advertised_groups
   use_bfd                            = var.bfd != null ? true : false
   bfd = {
@@ -46,7 +46,7 @@ locals {
 }
 
 resource "google_compute_router_interface" "default" {
-  count                   = local.create ? 1 : 0
+  count                   = local.create && var.create_interface ? 1 : 0
   project                 = local.project
   region                  = local.region
   name                    = local.interface_name
@@ -66,7 +66,7 @@ resource "google_compute_router_peer" "default" {
   peer_asn                           = local.peer_asn
   peer_ip_address                    = local.peer_ip_address
   peer_ipv6_nexthop_address          = local.peer_ipv6_nexthop_address
-  ip_address                         = local.ip_address
+  ip_address                         = split("/", local.ip_address)[0]
   ipv6_nexthop_address               = local.ipv6_nexthop_address
   enable                             = local.enable
   enable_ipv6                        = local.enable_ipv6
@@ -80,7 +80,7 @@ resource "google_compute_router_peer" "default" {
     for_each = local.advertised_ip_ranges
     content {
       range       = advertised_ip_ranges.value.range
-      description = advertised_ip_ranges.value.description
+      description = lookup(advertised_ip_ranges.value, "description", null)
     }
   }
   dynamic "custom_learned_ip_ranges" {
