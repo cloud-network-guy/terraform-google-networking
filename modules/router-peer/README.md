@@ -208,7 +208,7 @@ No modules.
 | <a name="input_create_interface"></a> [create\_interface](#input\_create\_interface) | Automatically Create Router interfaces based on BGP peers | `bool` | `true` | no |
 | <a name="input_custom_learned_ip_ranges"></a> [custom\_learned\_ip\_ranges](#input\_custom\_learned\_ip\_ranges) | n/a | <pre>list(object({<br/>    range       = string<br/>  }))</pre> | `[]` | no |
 | <a name="input_custom_learned_prefixes"></a> [custom\_learned\_prefixes](#input\_custom\_learned\_prefixes) | n/a | `list(string)` | `[]` | no |
-| <a name="input_custom_learned_route_priority"></a> [custom\_learned\_route\_priority](#input\_custom\_learned\_route\_priority) | n/a | `number` | `null` | no |
+| <a name="input_custom_learned_route_priority"></a> [custom\_learned\_route\_priority](#input\_custom\_learned\_route\_priority) | n/a | `number` | `100` | no |
 | <a name="input_enable"></a> [enable](#input\_enable) | n/a | `bool` | `true` | no |
 | <a name="input_enable_ipv4"></a> [enable\_ipv4](#input\_enable\_ipv4) | n/a | `bool` | `true` | no |
 | <a name="input_enable_ipv6"></a> [enable\_ipv6](#input\_enable\_ipv6) | n/a | `bool` | `false` | no |

@@ -82,6 +82,7 @@ locals {
           advertised_route_priority       = coalesce(tunnel.advertised_route_priority, vpn.advertised_route_priority, 100)
           custom_learned_prefixes         = vpn.custom_learned_prefixes
           custom_learned_ip_ranges        = vpn.custom_learned_ip_ranges
+          custom_learned_route_priority   = try(coalesce(tunnel.custom_learned_route_priority, vpn.custom_learned_route_priority), null)
           peer_bgp_name                   = tunnel.peer_bgp_name
           cloud_router_ip                 = tunnel.cloud_router_ip
           peer_bgp_ip                     = tunnel.peer_bgp_ip
@@ -159,7 +160,7 @@ locals {
       advertised_route_priority     = v.advertised_route_priority
       custom_learned_prefixes       = coalesce(v.custom_learned_prefixes, [])
       custom_learned_ip_ranges      = v.custom_learned_ip_ranges
-      custom_learned_route_priority = null
+      custom_learned_route_priority = v.custom_learned_route_priority
     }
   }
 }

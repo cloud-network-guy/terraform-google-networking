@@ -118,7 +118,7 @@ variable "custom_learned_ip_ranges" {
 }
 variable "custom_learned_route_priority" {
   type    = number
-  default = null
+  default = 100
 }
 variable "zero_custom_learned_route_priority" {
   type    = bool
