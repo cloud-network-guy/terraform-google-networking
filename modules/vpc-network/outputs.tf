@@ -1,6 +1,6 @@
 output "project" { value = local.project }
 output "name" { value = local.name }
-output "numeric_id" { value = local.numeric_id }
+#output "numeric_id" { value = local.numeric_id }
 output "network_id" { value = local.network_id }
 output "id" {
   value = local.create ? replace(one(google_compute_network.default).self_link, "${local.api_prefix}/", "") : null
@@ -13,7 +13,7 @@ output "subnets" {
       name     = subnet.name
       region   = subnet.region
       ip_range = subnet.ip_range
-      id       = try(google_compute_subnetwork.default["${subnet.region}/${subnet.name}"].id, null)
+      id       = subnet.create ? google_compute_subnetwork.default["${subnet.region}/${subnet.name}"].id : null
       purpose  = subnet.purpose
     }
   ]
