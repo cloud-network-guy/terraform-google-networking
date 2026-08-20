@@ -149,9 +149,9 @@ Examples
 
 | Name | Version |
 |------|---------|
-| <a name="provider_google"></a> [google](#provider\_google) | >= 5.16.0, < 8.0.0 |
-| <a name="provider_null"></a> [null](#provider\_null) | >= 3.1.0 |
-| <a name="provider_random"></a> [random](#provider\_random) | n/a |
+| <a name="provider_google"></a> [google](#provider\_google) | 7.45.0 |
+| <a name="provider_null"></a> [null](#provider\_null) | 3.3.1 |
+| <a name="provider_random"></a> [random](#provider\_random) | 3.9.0 |
 
 ## Modules
 
@@ -214,10 +214,8 @@ No modules.
 |------|-------------|
 | <a name="output_cloud_nats"></a> [cloud\_nats](#output\_cloud\_nats) | n/a |
 | <a name="output_cloud_routers"></a> [cloud\_routers](#output\_cloud\_routers) | n/a |
-| <a name="output_id"></a> [id](#output\_id) | n/a |
+| <a name="output_id"></a> [id](#output\_id) | output "numeric\_id" { value = local.numeric\_id } output "network\_id" { value = local.network\_id } |
 | <a name="output_name"></a> [name](#output\_name) | n/a |
-| <a name="output_network_id"></a> [network\_id](#output\_network\_id) | n/a |
-| <a name="output_numeric_id"></a> [numeric\_id](#output\_numeric\_id) | n/a |
 | <a name="output_peering_connections"></a> [peering\_connections](#output\_peering\_connections) | n/a |
 | <a name="output_project"></a> [project](#output\_project) | n/a |
 | <a name="output_self_link"></a> [self\_link](#output\_self\_link) | n/a |

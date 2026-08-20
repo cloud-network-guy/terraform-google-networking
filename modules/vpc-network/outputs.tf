@@ -1,9 +1,9 @@
 output "project" { value = local.project }
 output "name" { value = local.name }
 #output "numeric_id" { value = local.numeric_id }
-output "network_id" { value = local.network_id }
+#output "network_id" { value = local.network_id }
 output "id" {
-  value = local.create ? replace(one(google_compute_network.default).self_link, "${local.api_prefix}/", "") : null
+  value = local.create ? "projects/${local.project}/global/networks/${local.name}" : null
 }
 output "self_link" { value = local.network_self_link }
 output "subnets" {
