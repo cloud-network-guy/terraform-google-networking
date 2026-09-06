@@ -11,17 +11,16 @@ output "cloud_vpn_gateways" {
 }
 output "peer_vpn_gateways" {
   value = {
-    for k, v in local.
-    peer_vpn_gateways :
+    for k, v in local.peer_vpn_gateways :
     k => {
-      name        = v.name
-      description = v.description
+      name        = google_compute_external_vpn_gateway.default[v.name].name
+      description = google_compute_external_vpn_gateway.default[v.name].description
       interfaces = [
         for i, interface in v.interfaces :
         {
           bgp_asn     = interface.bgp_asn
           description = interface.description
-          ip_address  = interface.ip_address
+          ip_address  = google_compute_external_vpn_gateway.default[v.name].interface[interface.id].ip_address
         }
       ]
     }
@@ -47,11 +46,39 @@ output "vpn_tunnels" {
   ]
 }
 output "router_interfaces" {
-  value = local.router_interfaces
+  value = [
+    for i, v in local.router_interfaces :
+    {
+      name                    = v.name
+      region                  = v.region
+      router                  = v.router
+      ip_range                = v.ip_range
+      ip_version              = v.ip_version
+      attachment_name         = v.attachment_name
+      vpn_tunnel              = v.vpn_tunnel
+      interconnect_attachment = v.interconnect_attachment
+    } if v.create
+  ]
 }
 output "router_peers" {
-  value = local.router_peers
+  value = [
+    for i, v in local.router_peers :
+    {
+      advertise_mode            = v.advertise_mode
+      advertised_ip_ranges      = v.advertised_ip_ranges
+      advertised_route_priority = v.advertised_route_priority
+      name                      = v.name
+      interface_name            = v.interface_name
+      peer_asn                  = v.peer_bgp_asn
+      peer_ip_address           = v.peer_ip_address
+      region                    = v.region
+      router                    = v.router
+    } if v.create
+  ]
 }
 output "tunnel_ranges" {
-  value = { for i, v in local.vpns : i => random_integer.tunnel_ranges["${v.region}/${v.name}"].result }
+  value = {
+    for i, v in local.vpns :
+    i => random_integer.tunnel_ranges["${v.region}/${v.name}"].result
+  }
 }

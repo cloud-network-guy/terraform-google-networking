@@ -348,14 +348,14 @@ resource "google_compute_vpn_tunnel" "default" {
   name                            = each.value.name
   description                     = each.value.description
   router                          = each.value.router
-  peer_ip                         = null # only used in Classic VPN
   vpn_gateway                     = each.value.vpn_gateway
   peer_external_gateway           = each.value.peer_external_gateway
-  peer_gcp_gateway                = null
   ike_version                     = local.vpn_ike_version
   shared_secret                   = each.value.shared_secret
   vpn_gateway_interface           = each.value.vpn_gateway_interface
   peer_external_gateway_interface = each.value.peer_external_gateway_interface
+  peer_gcp_gateway                = null # only used for Internal VPN
+  peer_ip                         = null # only used in Classic VPN
   depends_on                      = [null_resource.vpn_tunnels]
 }
 
@@ -397,7 +397,7 @@ locals {
         interface_name            = interconnect.interface_names[attachment_index]
         ip_range                  = interconnect.ip_ranges[attachment_index]
         peer_name                 = interconnect.peer_names[attachment_index]
-        stack_type                = "IPV4_ONLY" #TODO
+        stack_type                = "IPV4_ONLY" # TODO
         type                      = "PARTNER"   # TODO
         admin_enabled             = true        # TODO
         encryption                = "NONE"      # TODO
@@ -426,78 +426,22 @@ resource "google_compute_interconnect_attachment" "default" {
   }
 }
 
-/*
-locals {
-  _router_interfaces = [for i, v in concat(local.vpn_tunnels, local.interconnect_attachments) :
-    {
-      create                    = v.create
-      is_vpn                    = v.is_vpn
-      is_interconnect           = v.is_interconnect
-      index                     = v.index
-      attachment_name           = v.is_interconnect ? v.name : null
-      name                      = v.is_interconnect ? v.interface_name : v.name
-      region                    = v.region
-      router                    = v.router
-      peer_external_gateway     = v.is_vpn ? v.peer_external_gateway : null
-      vpn_name                  = v.is_vpn ? v.vpn_name : null
-      peer_name                 = v.is_interconnect ? v.peer_name : null
-      peer_asn                  = v.peer_asn
-      ip_range                  = v.ip_range
-      advertised_ip_ranges      = local.regions[v.region].advertised_ip_ranges
-      advertised_route_priority = v.advertised_route_priority
-      attachment_name           = v.is_interconnect ? v.name : null
-      name                      = v.is_interconnect ? v.interface_name : v.name
-      region                    = v.region
-      router                    = v.router
-      peer_external_gateway     = v.is_vpn ? v.peer_external_gateway : null
-      vpn_name                  = v.is_vpn ? v.vpn_name : null
-
-
-    }
-  ]
-}
-locals {
-  router_interfaces = [for i, v in local._router_interfaces :
-    merge(v, {
-      redundant_interface     = null   # TODO
-      ip_version              = "IPV4" # TODO
-      vpn_tunnel              = v.is_vpn ? google_compute_vpn_tunnel.default["${v.region}/${v.name}"].name : null
-      interconnect_attachment = v.is_interconnect ? google_compute_interconnect_attachment.default["${v.region}/${v.attachment_name}"].self_link : null
-      advertised_ip_ranges = coalescelist(
-        v.advertised_ip_ranges,
-        [for subnet in module.vpc-network.subnets : { range = subnet.ip_range, description = null }
-          if subnet.region == v.region && subnet.purpose == "PRIVATE"
-        ]
-      )
-      # Give each interface a /30
-      ip_range = coalesce(
-        v.ip_range,
-        # Use auto-generated CIDR base number to define tunnel IP ranges
-        v.is_vpn ? cidrsubnet(
-          local.vpn_tunnel_cidr,
-          14, # 30 - 16 = 14, so we need to move 14 bits
-          (4 * random_integer.tunnel_ranges["${v.region}/${v.vpn_name}"].result) + v.index
-        ) : null
-      )
-    }) if v.create
-  ]
-}
-
-*/
 locals {
   _router_interfaces = [
     for i, v in concat(local.vpn_tunnels, local.interconnect_attachments) :
     {
-      create          = v.create
-      is_vpn          = v.is_vpn
-      is_interconnect = v.is_interconnect
-      name            = v.is_interconnect ? v.interface_name : v.name
-      region          = v.region
-      router          = v.router
-      attachment_name = v.is_interconnect ? v.name : null
-      vpn_name        = v.is_vpn ? v.vpn_name : null
-      ip_range        = v.ip_range
-      ip_version      = "IPV4"
+      create              = v.create
+      index               = v.index
+      is_vpn              = v.is_vpn
+      is_interconnect     = v.is_interconnect
+      name                = v.is_interconnect ? v.interface_name : v.name
+      region              = v.region
+      router              = v.router
+      attachment_name     = v.is_interconnect ? v.name : null
+      vpn_name            = v.is_vpn ? v.vpn_name : null
+      ip_range            = v.is_vpn ? "${cidrhost(v.ip_range, 1)}/30" : v.ip_range
+      ip_version          = "IPV4" # TODO
+      redundant_interface = null   # TODO
     }
   ]
   router_interfaces = [
@@ -505,8 +449,6 @@ locals {
     merge(v, {
       vpn_tunnel              = v.is_vpn ? google_compute_vpn_tunnel.default["${v.region}/${v.name}"].self_link : null
       interconnect_attachment = v.is_interconnect ? google_compute_interconnect_attachment.default["${v.region}/${v.attachment_name}"].self_link : null
-      ip_range                = v.is_vpn ? "${cidrhost(v.ip_range, 1)}/30" : v.ip_range
-      redundant_interface     = null # TODO
     })
   ]
 }
@@ -514,42 +456,44 @@ resource "null_resource" "router_ip_ranges" {
   for_each = { for i, v in local.router_interfaces : v.ip_range => true if v.create }
 }
 
-resource "google_compute_router_interface" "default" {
-  for_each                = { for i, v in local.router_interfaces : "${v.region}/${v.name}" => v if v.create }
-  project                 = local.project
-  region                  = each.value.region
-  name                    = each.value.name
-  router                  = each.value.router
-  ip_range                = each.value.ip_range
-  vpn_tunnel              = each.value.vpn_tunnel
-  interconnect_attachment = each.value.interconnect_attachment
-  redundant_interface     = each.value.redundant_interface
-  ip_version              = each.value.ip_version
-}
-
 locals {
   _router_peers = [
     for i, v in concat(local.vpn_tunnels, local.interconnect_attachments) :
     {
-      create                             = v.create
-      name                               = v.is_vpn ? v.name : v.peer_name
-      attachment_name                    = v.is_interconnect ? v.name : null
-      region                             = v.region
-      router                             = v.router
-      peer_ip_address                    = cidrhost(v.ip_range, 2) # BGP peer uses the 2nd IP in the /30
-      peer_asn                           = v.peer_asn
-      advertised_route_priority          = v.advertised_route_priority
-      custom_learned_route_priority      = v.is_vpn ? coalesce(local.vpns[index(local.vpns.*.name, v.vpn_name)].custom_learned_route_priority, 100) : null
-      advertised_ip_ranges               = local.regions[v.region].advertised_ip_ranges
-      interface_name                     = v.is_interconnect ? v.interface_name : v.name
-      zero_custom_learned_route_priority = false # TODO
-      advertised_groups                  = []    # TODO
+      create = v.create
+      name   = v.is_vpn ? v.name : v.peer_name
+      region = v.region
+      router = v.router
+      interface_name = one([for _ in local.router_interfaces :
+        _.name if _.region == v.region && _.router == v.router && _.index == v.index
+      ])
+      interface_ip_range = one([for _ in local.router_interfaces :
+        _.ip_range if _.region == v.region && _.router == v.router && _.index == v.index
+      ])
+      vpn_tunnel                    = v.is_vpn ? google_compute_vpn_tunnel.default["${v.region}/${v.name}"].name : null
+      interconnect_attachment       = v.is_interconnect ? google_compute_interconnect_attachment.default["${v.region}/${v.name}"].self_link : null
+      peer_ip_address               = cidrhost(v.ip_range, 2) # BGP peer uses the 2nd IP in the /30
+      peer_bgp_asn                  = v.peer_asn
+      advertised_route_priority     = v.advertised_route_priority
+      custom_learned_route_priority = v.is_vpn ? coalesce(local.vpns[index(local.vpns.*.name, v.vpn_name)].custom_learned_route_priority, 100) : null
+      advertised_ip_ranges          = local.regions[v.region].advertised_ip_ranges
+      enable                        = true                                          # TODO
+      enable_ipv4                   = true                                          # TODO
+      enable_ipv6                   = false                                         # TODO
+      custom_learned_route_priority = v.is_interconnect ? 0 : v.is_vpn ? 100 : null # TODO
+      advertised_groups             = []                                            # TODO
+      bfd = {
+        min_receive_interval        = 1000
+        min_transmit_interval       = 1000
+        multiplier                  = 5
+        session_initialization_mode = "DISABLED"
+      }
     }
   ]
   __router_peers = [
     for i, v in local._router_peers :
     merge(v, {
-      interface = google_compute_router_interface.default["${v.region}/${v.interface_name}"].name
+      cloud_router_ip = cidrhost(v.interface_ip_range, 1)
       advertised_ip_ranges = coalescelist(
         v.advertised_ip_ranges,
         [
@@ -570,68 +514,29 @@ locals {
   ]
 }
 
-resource "google_compute_router_peer" "default" {
-  for_each                           = { for i, v in local.router_peers : "${v.region}/${v.name}" => v if v.create }
-  project                            = local.project
-  region                             = each.value.region
-  name                               = each.value.name
-  router                             = each.value.router
-  interface                          = each.value.interface
-  peer_ip_address                    = each.value.peer_ip_address
-  peer_asn                           = each.value.peer_asn
-  custom_learned_route_priority      = each.value.custom_learned_route_priority
-  zero_custom_learned_route_priority = each.value.zero_custom_learned_route_priority
-  advertised_route_priority          = each.value.advertised_route_priority
-  advertised_groups                  = each.value.advertised_groups
-  advertise_mode                     = each.value.advertise_mode
-  dynamic "advertised_ip_ranges" {
-    for_each = each.value.advertised_ip_ranges
-    content {
-      range       = advertised_ip_ranges.value.range
-      description = lookup(advertised_ip_ranges.value, "description", "")
-    }
-  }
-  dynamic "bfd" {
-    for_each = [true]
-    content {
-      min_receive_interval        = 1000
-      min_transmit_interval       = 1000
-      multiplier                  = 5
-      session_initialization_mode = "DISABLED"
-    }
-  }
-  enable      = true
-  enable_ipv6 = false
-  depends_on  = [google_compute_router_interface.default]
-}
-
-/*
+# Call Child Module for Cloud Router Interfaces & BGP Peers
 module "router-peers" {
   source                        = "../modules/router-peer"
-  for_each                      = { for k, v in local.router_peers : k => v if v.create }
+  for_each                      = { for i, v in local.router_peers : "${v.region}/${v.name}" => v if v.create }
   project                       = local.project
   name                          = each.value.name
   region                        = each.value.region
   router                        = each.value.router
   interface_name                = each.value.interface_name
   interface_ip_range            = each.value.interface_ip_range
-  vpn_tunnel                    = google_compute_vpn_tunnel.default[each.value.vpn_tunnel_key].name
-  advertised_prefixes           = each.value.advertised_prefixes
+  cloud_router_ip               = each.value.cloud_router_ip
+  peer_ip_address               = each.value.peer_ip_address
+  vpn_tunnel                    = each.value.vpn_tunnel
+  interconnect_attachment       = each.value.interconnect_attachment
   advertised_ip_ranges          = each.value.advertised_ip_ranges
   advertised_route_priority     = each.value.advertised_route_priority
-  custom_learned_prefixes       = each.value.custom_learned_prefixes
-  custom_learned_ip_ranges      = each.value.custom_learned_ip_ranges
-  custom_learned_route_priority = each.value.custom_learned_route_priority
-  advertised_groups             = each.value.advertised_groups
   enable                        = each.value.enable
   enable_ipv4                   = each.value.enable_ipv4
   enable_ipv6                   = each.value.enable_ipv6
-  cloud_router_ip               = each.value.cloud_router_ip
-  peer_ip_address               = each.value.peer_ip_address
   peer_bgp_asn                  = each.value.peer_bgp_asn
-  peer_bgp_name                 = each.value.peer_bgp_name
-  bfd                           = {}
+  custom_learned_route_priority = each.value.custom_learned_route_priority
+  advertised_groups             = each.value.advertised_groups
+  bfd                           = each.value.bfd
 }
-*/
 
 # Outbound PSC w/ Hybrid Negs
