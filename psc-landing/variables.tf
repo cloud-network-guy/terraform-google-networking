@@ -44,7 +44,7 @@ variable "regions" {
     })), [])
     vpns = optional(list(object({
       create                             = optional(bool, true)
-      name                               = string
+      name                               = optional(string)
       description                        = optional(string)
       peer_bgp_asn                       = optional(number)
       peer_vpn_gateway                   = string
@@ -91,26 +91,12 @@ variable "peer_vpn_gateways" {
   default = {}
 }
 variable "dns_zones" {
-  description = "List of DNS zones"
+  description = "List of Private DNS Zones"
   type = map(object({
-    create          = optional(bool, true)
-    project_id      = optional(string)
-    host_project_id = optional(string)
-    host_project    = optional(string)
-    key             = optional(string)
-    dns_name        = string
-    name            = optional(string)
-    description     = optional(string)
-    visibility      = optional(string)
-    networks        = optional(list(string))
-    peer_project    = optional(string)
-    peer_network    = optional(string)
-    logging         = optional(bool)
-    force_destroy   = optional(bool)
-    target_name_servers = optional(list(object({
-      ipv4_address    = string
-      forwarding_path = optional(string, "default")
-    })))
+    create      = optional(bool, true)
+    dns_name    = string
+    name        = optional(string)
+    description = optional(string)
     records = optional(list(object({
       create  = optional(bool, true)
       key     = optional(string)
