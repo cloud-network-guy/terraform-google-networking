@@ -70,6 +70,7 @@ resource "google_compute_instance_template" "default" {
   metadata                = local.metadata
   metadata_startup_script = local.startup_script
   tags                    = local.tags
+  labels              = local.labels
   disk {
     auto_delete           = local.disk.auto_delete
     boot                  = local.disk.boot
