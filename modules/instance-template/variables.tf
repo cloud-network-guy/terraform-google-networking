@@ -38,6 +38,11 @@ variable "labels" {
   type    = map(string)
   default = {}
 }
+variable "add_standard_labels" {
+  description = "Auto-generate labels for machine type & OS info"
+  type        = bool
+  default     = false
+}
 variable "tags" {
   type    = list(string)
   default = null

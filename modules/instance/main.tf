@@ -25,21 +25,13 @@ locals {
   ))
   machine_type   = lower(trimspace(coalesce(var.machine_type, "e2-micro")))
   can_ip_forward = coalesce(var.can_ip_forward, false)
-  labels = coalesce(
-    var.labels != null ? { for k, v in var.labels : k => lower(replace(v, " ", "_")) } : null,
-    {
-      os           = coalesce(local.os, split("/", local.boot_disk.image)[1])
-      image        = substr(replace(local.boot_disk.image, "/", "-"), 0, 63)
-      machine_type = local.machine_type
-    }
-  )
   metadata = merge(
     var.metadata,
     { startup-script = var.startup_script }
   )
   delete_protection         = coalesce(var.delete_protection, false)
   allow_stopping_for_update = coalesce(var.allow_stopping_for_update, true)
-  os                        = lower(trimspace(coalesce(var.os, "debian-12")))
+  os                        = lower(trimspace(coalesce(var.os, "debian-13")))
   os_projects = {
     debian     = "debian-cloud"
     ubuntu-pro = "ubutnu-os-pro-cloud"
@@ -65,6 +57,14 @@ locals {
     size  = coalesce(lookup(var.disk, "size_gb", null), lookup(var.disk, "size", null), 10)
     image = coalesce(lookup(var.disk, "image", null), "${local.os_project}/${local.os}")
   }
+    labels = merge(
+    { for k, v in coalesce(var.labels, {}) : k => lower(replace(v, " ", "_")) },
+    var.add_standard_labels ? {
+      os           = coalesce(local.os, split("/", local.boot_disk.image)[1])
+      image        = substr(replace(local.boot_disk.image, "/", "-"), 0, 63)
+      machine_type = local.machine_type
+    } : {}
+  )
   service_account = {
     email  = var.service_account_email
     scopes = coalescelist(var.service_account_scopes, ["https://www.googleapis.com/auth/cloud-platform"])

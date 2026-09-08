@@ -32,6 +32,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_add_standard_labels"></a> [add\_standard\_labels](#input\_add\_standard\_labels) | Auto-generate labels for machine type & OS info | `bool` | `false` | no |
 | <a name="input_base_instance_name"></a> [base\_instance\_name](#input\_base\_instance\_name) | n/a | `string` | `null` | no |
 | <a name="input_can_ip_forward"></a> [can\_ip\_forward](#input\_can\_ip\_forward) | n/a | `bool` | `false` | no |
 | <a name="input_create"></a> [create](#input\_create) | n/a | `bool` | `true` | no |

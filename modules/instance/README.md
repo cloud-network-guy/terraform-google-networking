@@ -11,8 +11,8 @@
 
 | Name | Version |
 |------|---------|
-| <a name="provider_google"></a> [google](#provider\_google) | >= 4.49.0, < 8.0.0 |
-| <a name="provider_random"></a> [random](#provider\_random) | >= 3.4.0 |
+| <a name="provider_google"></a> [google](#provider\_google) | 7.46.1 |
+| <a name="provider_random"></a> [random](#provider\_random) | 3.9.0 |
 
 ## Modules
 
@@ -30,6 +30,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_add_standard_labels"></a> [add\_standard\_labels](#input\_add\_standard\_labels) | Auto-generate labels for machine type & OS info | `bool` | `true` | no |
 | <a name="input_allow_stopping_for_update"></a> [allow\_stopping\_for\_update](#input\_allow\_stopping\_for\_update) | n/a | `bool` | `null` | no |
 | <a name="input_can_ip_forward"></a> [can\_ip\_forward](#input\_can\_ip\_forward) | n/a | `bool` | `false` | no |
 | <a name="input_create"></a> [create](#input\_create) | n/a | `bool` | `true` | no |
@@ -39,7 +40,7 @@ No modules.
 | <a name="input_host_project"></a> [host\_project](#input\_host\_project) | n/a | `string` | `null` | no |
 | <a name="input_host_project_id"></a> [host\_project\_id](#input\_host\_project\_id) | n/a | `string` | `null` | no |
 | <a name="input_image"></a> [image](#input\_image) | n/a | `string` | `null` | no |
-| <a name="input_labels"></a> [labels](#input\_labels) | n/a | `map(string)` | `null` | no |
+| <a name="input_labels"></a> [labels](#input\_labels) | n/a | `map(string)` | `{}` | no |
 | <a name="input_machine_type"></a> [machine\_type](#input\_machine\_type) | n/a | `string` | `"e2-micro"` | no |
 | <a name="input_metadata"></a> [metadata](#input\_metadata) | n/a | `map(string)` | <pre>{<br/>  "enable-osconfig": "true"<br/>}</pre> | no |
 | <a name="input_name"></a> [name](#input\_name) | n/a | `string` | `null` | no |

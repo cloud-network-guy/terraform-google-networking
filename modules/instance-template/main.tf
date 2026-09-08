@@ -29,7 +29,7 @@ locals {
   startup_script     = var.startup_script
   can_ip_forward     = coalesce(var.can_ip_forward, false)
   os_project         = lower(trimspace(coalesce(var.os_project, "debian-cloud")))
-  os                 = lower(trimspace(coalesce(var.os, "debian-12")))
+  os                 = lower(trimspace(coalesce(var.os, "debian-13")))
   disk = {
     source_image = coalesce(var.disk.source_image, var.image, "${local.os_project}/${local.os}")
     boot         = coalesce(var.disk.boot, true)
@@ -40,6 +40,14 @@ locals {
     mode         = coalesce(var.disk.mode, "READ_WRITE")
     labels       = coalesce(var.disk.labels, {})
   }
+  labels = merge(
+    { for k, v in coalesce(var.labels, {}) : k => lower(replace(v, " ", "_")) },
+    var.add_standard_labels ? {
+      os           = coalesce(local.os, split("/", local.disk.source_image)[1])
+      image        = substr(replace(local.disk.source_image, "/", "-"), 0, 63)
+      machine_type = local.machine_type
+    } : {}
+  )
   service_account = {
     email  = var.service_account_email
     scopes = coalescelist(var.service_account_scopes, ["https://www.googleapis.com/auth/cloud-platform"])
