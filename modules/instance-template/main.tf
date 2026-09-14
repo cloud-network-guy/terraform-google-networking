@@ -30,16 +30,6 @@ locals {
   can_ip_forward     = coalesce(var.can_ip_forward, false)
   os_project         = lower(trimspace(coalesce(var.os_project, "debian-cloud")))
   os                 = lower(trimspace(coalesce(var.os, "debian-13")))
-  disk = {
-    source_image = coalesce(var.disk.source_image, var.image, "${local.os_project}/${local.os}")
-    boot         = coalesce(var.disk.boot, true)
-    auto_delete  = coalesce(var.disk.auto_delete, true)
-    type         = coalesce(var.disk.type, "pd-standard")
-    size_gb      = coalesce(var.disk.size_gb, 10)
-    interface    = coalesce(var.disk.interface, "SCSI")
-    mode         = coalesce(var.disk.mode, "READ_WRITE")
-    labels       = coalesce(var.disk.labels, {})
-  }
   labels = merge(
     { for k, v in coalesce(var.labels, {}) : k => lower(replace(v, " ", "_")) },
     var.add_standard_labels ? {
@@ -48,6 +38,16 @@ locals {
       machine_type = local.machine_type
     } : {}
   )
+  disk = {
+    source_image = coalesce(var.disk.source_image, var.image, "projects/${local.os_project}/global/images/${local.os}")
+    boot         = coalesce(var.disk.boot, true)
+    auto_delete  = coalesce(var.disk.auto_delete, true)
+    type         = coalesce(var.disk.type, "pd-standard")
+    size_gb      = coalesce(var.disk.size_gb, 10)
+    interface    = coalesce(var.disk.interface, "SCSI")
+    mode         = coalesce(var.disk.mode, "READ_WRITE")
+    labels       = { for k, v in coalesce(var.disk.labels, {}) : k => lower(replace(v, " ", "_")) }
+  }
   service_account = {
     email  = var.service_account_email
     scopes = coalescelist(var.service_account_scopes, ["https://www.googleapis.com/auth/cloud-platform"])
@@ -70,7 +70,7 @@ resource "google_compute_instance_template" "default" {
   metadata                = local.metadata
   metadata_startup_script = local.startup_script
   tags                    = local.tags
-  labels              = local.labels
+  labels                  = local.labels
   disk {
     auto_delete           = local.disk.auto_delete
     boot                  = local.disk.boot
@@ -84,6 +84,7 @@ resource "google_compute_instance_template" "default" {
     source_image          = local.disk.source_image
     source_snapshot       = null
     type                  = "PERSISTENT"
+    labels                = local.disk.labels
   }
   network_interface {
     network            = local.network

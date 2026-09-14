@@ -8,6 +8,7 @@ locals {
   lb_session_affinity = coalesce(var.session_affinity, "NONE")
   name_prefix         = lower(trimspace(coalesce(var.name_prefix, "network-service")))
   network             = coalesce(var.network, "default")
+  labels              = coalesce(var.labels, {})
   deployments = { for k, v in var.deployments :
     k => merge(v, {
       name_prefix     = local.name_prefix
@@ -73,14 +74,15 @@ locals {
       region                = v.region
       network               = v.network
       subnetwork            = v.subnetwork
+      labels                = coalesce(v.labels, local.labels)
       machine_type          = coalesce(v.machine_type, var.machine_type, "e2-small")
       disk_type             = coalesce(v.disk_type, var.disk_type, "pd-standard")
       disk_size             = coalesce(v.disk_size, var.disk_size, 10)
+      disk_labels           = var.set_disk_labels ? coalesce(var.labels, {}) : null
       os_project            = coalesce(v.os_project, var.os_project, "debian-cloud")
       os                    = coalesce(v.os, var.os, "debian-12")
       service_account_email = var.service_account_email
       network_tags          = var.network_tags
-      labels                = var.labels
       startup_script        = try(coalesce(v.startup_script, var.startup_script), null)
     } if length(v.instance_groups) == 0
   }
@@ -102,6 +104,7 @@ module "instance-template" {
   disk = {
     type    = each.value.disk_type
     size_gb = each.value.disk_size
+    labels  = each.value.disk_labels
   }
   os_project     = each.value.os_project
   os             = each.value.os

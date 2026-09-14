@@ -118,6 +118,7 @@ variable "disk" {
     type    = optional(string)
     size    = optional(number)
     size_gb = optional(number)
+    labels  = optional(map(string))
   })
   default = {}
 }

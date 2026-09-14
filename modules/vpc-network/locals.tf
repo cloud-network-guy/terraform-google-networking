@@ -1,9 +1,9 @@
 locals {
-  api_prefix        = "https://www.googleapis.com/compute/v1"
-  create            = coalesce(var.create, true)
-  project           = lower(trimspace(coalesce(var.project_id, var.project)))
-  name              = lower(trimspace(var.name != null ? var.name : one(random_string.name).result))
-  description       = var.description
+  api_prefix  = "https://www.googleapis.com/compute/v1"
+  create      = coalesce(var.create, true)
+  project     = lower(trimspace(coalesce(var.project_id, var.project)))
+  name        = lower(trimspace(var.name != null ? var.name : one(random_string.name).result))
+  description = var.description
   #network_id        = local.create ? one(google_compute_network.default).network_id : null
   #numeric_id        = local.create ? one(google_compute_network.default).numeric_id : null
   network_self_link = local.create ? one(google_compute_network.default).self_link : null

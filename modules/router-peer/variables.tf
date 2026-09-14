@@ -111,7 +111,7 @@ variable "zero_custom_learned_route_priority" {
   default = false
 }
 variable "custom_learned_prefixes" {
-  type = list(string)
+  type    = list(string)
   default = []
 }
 variable "custom_learned_ip_ranges" {

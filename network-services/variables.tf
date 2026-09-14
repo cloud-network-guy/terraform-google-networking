@@ -132,6 +132,11 @@ variable "labels" {
   type    = map(any)
   default = null
 }
+variable "set_disk_labels" {
+  description = "Also apply Labels to Boot Disk"
+  type        = bool
+  default     = false
+}
 variable "update_type" {
   type    = string
   default = null
@@ -155,6 +160,7 @@ variable "deployments" {
     disk_size             = optional(number)
     os_project            = optional(string)
     os                    = optional(string)
+    labels                = optional(map(string))
     startup_script        = optional(string)
     existing_health_check = optional(string)
     network               = optional(string)

@@ -53,11 +53,12 @@ locals {
   )))
   tags = [for tag in coalesce(var.network_tags, var.tags, []) : lower(trimspace(tag))]
   boot_disk = {
-    type  = coalesce(lookup(var.disk, "type", null), "pd-standard")
-    size  = coalesce(lookup(var.disk, "size_gb", null), lookup(var.disk, "size", null), 10)
-    image = coalesce(lookup(var.disk, "image", null), "${local.os_project}/${local.os}")
+    type   = coalesce(lookup(var.disk, "type", null), "pd-standard")
+    size   = coalesce(lookup(var.disk, "size_gb", null), lookup(var.disk, "size", null), 10)
+    image  = coalesce(lookup(var.disk, "image", null), "projects/${local.os_project}/global/images/${local.os}")
+    labels = { for k, v in coalesce(var.disk.labels, {}) : k => lower(replace(v, " ", "_")) }
   }
-    labels = merge(
+  labels = merge(
     { for k, v in coalesce(var.labels, {}) : k => lower(replace(v, " ", "_")) },
     var.add_standard_labels ? {
       os           = coalesce(local.os, split("/", local.boot_disk.image)[1])

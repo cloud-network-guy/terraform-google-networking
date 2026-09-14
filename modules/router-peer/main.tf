@@ -29,7 +29,7 @@ locals {
   custom_learned_route_priority      = local.zero_custom_learned_route_priority ? null : var.custom_learned_route_priority
   zero_custom_learned_route_priority = var.zero_custom_learned_route_priority
   advertised_ip_ranges               = var.advertised_ip_ranges
-  custom_learned_ip_ranges           = concat(var.custom_learned_ip_ranges, [ for _ in var.custom_learned_prefixes : {range = _}])
+  custom_learned_ip_ranges           = concat(var.custom_learned_ip_ranges, [for _ in var.custom_learned_prefixes : { range = _ }])
   advertised_groups                  = var.advertised_groups
   use_bfd                            = var.bfd != null ? true : false
   bfd = {

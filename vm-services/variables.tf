@@ -38,17 +38,17 @@ variable "disk_size" {
 variable "os_project" {
   description = "GCP OS Project"
   type        = string
-  default     = null
+  default     = "debian-cloud"
 }
 variable "os" {
   description = "GCP OS Name"
   type        = string
-  default     = "debian-12"
+  default     = "debian-13"
 }
 variable "disk_image" {
   description = "Image to use"
   type        = string
-  default     = null
+  default     = "debian-13"
 }
 variable "startup_script" {
   description = "Startup Script"
@@ -89,6 +89,11 @@ variable "labels" {
   type    = map(any)
   default = null
 }
+variable "set_disk_labels" {
+  description = "Also apply Labels to Boot Disk"
+  type        = bool
+  default     = false
+}
 variable "deployments" {
   description = "Regions to deploy instances to"
   type = map(object({
@@ -102,6 +107,7 @@ variable "deployments" {
     disk_size              = optional(number)
     os_project             = optional(string)
     os                     = optional(string)
+    labels                 = optional(map(string))
     network                = optional(string)
     subnetwork             = optional(string)
     startup_script         = optional(string)
