@@ -21,6 +21,7 @@ No resources.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_add_standard_labels"></a> [add\_standard\_labels](#input\_add\_standard\_labels) | Auto-generate labels for machine type & OS info | `bool` | `false` | no |
 | <a name="input_create"></a> [create](#input\_create) | n/a | `bool` | `true` | no |
 | <a name="input_deployments"></a> [deployments](#input\_deployments) | Regions to deploy instances to | <pre>map(object({<br/>    create                 = optional(bool)<br/>    name                   = optional(string)<br/>    region                 = optional(string)<br/>    zone                   = optional(string)<br/>    machine_type           = optional(string)<br/>    disk_image             = optional(string)<br/>    disk_type              = optional(string)<br/>    disk_size              = optional(number)<br/>    os_project             = optional(string)<br/>    os                     = optional(string)<br/>    labels                 = optional(map(string))<br/>    network                = optional(string)<br/>    subnetwork             = optional(string)<br/>    startup_script         = optional(string)<br/>    network_tags           = optional(list(string))<br/>    service_account_email  = optional(string)<br/>    service_account_scopes = optional(list(string))<br/>  }))</pre> | `{}` | no |
 | <a name="input_disk_image"></a> [disk\_image](#input\_disk\_image) | Image to use | `string` | `"debian-13"` | no |

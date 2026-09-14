@@ -26,7 +26,6 @@ locals {
       disk_type              = coalesce(v.disk_type, var.disk_type)
       disk_size              = coalesce(v.disk_size, var.disk_size)
       disk_labels            = var.set_disk_labels ? coalesce(v.labels, local.labels) : null
-      add_standard_labels    = true
     }
   ]
   region_codes = {
@@ -101,6 +100,6 @@ module "instance" {
   os_project          = each.value.os_project
   os                  = each.value.os
   labels              = each.value.labels
-  add_standard_labels = each.value.add_standard_labels
+  add_standard_labels = var.add_standard_labels
   startup_script      = each.value.startup_script
 }

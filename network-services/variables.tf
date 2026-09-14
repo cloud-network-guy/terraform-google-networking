@@ -137,6 +137,11 @@ variable "set_disk_labels" {
   type        = bool
   default     = false
 }
+variable "add_standard_labels" {
+  description = "Auto-generate labels for machine type & OS info"
+  type        = bool
+  default     = false
+}
 variable "update_type" {
   type    = string
   default = null

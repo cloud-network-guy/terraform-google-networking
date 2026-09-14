@@ -78,7 +78,7 @@ locals {
       machine_type          = coalesce(v.machine_type, var.machine_type, "e2-small")
       disk_type             = coalesce(v.disk_type, var.disk_type, "pd-standard")
       disk_size             = coalesce(v.disk_size, var.disk_size, 10)
-      disk_labels           = var.set_disk_labels ? coalesce(var.labels, {}) : null
+      disk_labels           = var.set_disk_labels ? coalesce(v.labels, local.labels) : null
       os_project            = coalesce(v.os_project, var.os_project, "debian-cloud")
       os                    = coalesce(v.os, var.os, "debian-12")
       service_account_email = var.service_account_email
@@ -106,10 +106,11 @@ module "instance-template" {
     size_gb = each.value.disk_size
     labels  = each.value.disk_labels
   }
-  os_project     = each.value.os_project
-  os             = each.value.os
-  labels         = each.value.labels
-  startup_script = each.value.startup_script
+  os_project          = each.value.os_project
+  os                  = each.value.os
+  labels              = each.value.labels
+  add_standard_labels = var.add_standard_labels
+  startup_script      = each.value.startup_script
   metadata = {
     enable-guest-attributes = "true"
     enable-osconfig         = "true"

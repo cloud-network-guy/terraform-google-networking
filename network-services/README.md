@@ -32,6 +32,7 @@
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_add_ops_agent_roles"></a> [add\_ops\_agent\_roles](#input\_add\_ops\_agent\_roles) | n/a | `bool` | `true` | no |
+| <a name="input_add_standard_labels"></a> [add\_standard\_labels](#input\_add\_standard\_labels) | Auto-generate labels for machine type & OS info | `bool` | `false` | no |
 | <a name="input_autoscaling_mode"></a> [autoscaling\_mode](#input\_autoscaling\_mode) | n/a | `string` | `"OFF"` | no |
 | <a name="input_cool_down_period"></a> [cool\_down\_period](#input\_cool\_down\_period) | n/a | `number` | `60` | no |
 | <a name="input_cpu_predictive_method"></a> [cpu\_predictive\_method](#input\_cpu\_predictive\_method) | n/a | `string` | `null` | no |
