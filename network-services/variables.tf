@@ -31,17 +31,17 @@ variable "disk_type" {
 variable "disk_size" {
   description = "Disk size in GB"
   type        = number
-  default     = 12
+  default     = 10
 }
 variable "os_project" {
   description = "GCP OS Project"
   type        = string
-  default     = "debian-cloud"
+  default     = null
 }
 variable "os" {
   description = "GCP OS Name"
   type        = string
-  default     = "debian-12"
+  default     = "debian-13"
 }
 variable "startup_script" {
   description = "Startup Script"

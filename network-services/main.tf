@@ -79,8 +79,8 @@ locals {
       disk_type             = coalesce(v.disk_type, var.disk_type, "pd-standard")
       disk_size             = coalesce(v.disk_size, var.disk_size, 10)
       disk_labels           = var.set_disk_labels ? coalesce(v.labels, local.labels) : null
-      os_project            = coalesce(v.os_project, var.os_project, "debian-cloud")
-      os                    = coalesce(v.os, var.os, "debian-12")
+      os_project            = try(coalesce(v.os_project, var.os_project), null)
+      os                    = coalesce(v.os, var.os)
       service_account_email = var.service_account_email
       network_tags          = var.network_tags
       startup_script        = try(coalesce(v.startup_script, var.startup_script), null)

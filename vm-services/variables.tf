@@ -38,7 +38,7 @@ variable "disk_size" {
 variable "os_project" {
   description = "GCP OS Project"
   type        = string
-  default     = "debian-cloud"
+  default     = null
 }
 variable "os" {
   description = "GCP OS Name"
@@ -48,7 +48,7 @@ variable "os" {
 variable "disk_image" {
   description = "Image to use"
   type        = string
-  default     = "debian-13"
+  default     = null
 }
 variable "startup_script" {
   description = "Startup Script"

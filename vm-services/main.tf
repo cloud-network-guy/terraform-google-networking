@@ -20,9 +20,9 @@ locals {
       service_account_email  = try(coalesce(v.service_account_email, var.service_account_email), null)
       service_account_scopes = coalesce(v.service_account_scopes, var.service_account_scopes)
       os                     = coalesce(v.os, var.os)
-      os_project             = coalesce(v.os_project, var.os_project)
+      os_project             = try(coalesce(v.os_project, var.os_project), null)
       labels                 = coalesce(v.labels, local.labels)
-      disk_image             = coalesce(v.disk_image, var.disk_image)
+      disk_image             = try(coalesce(v.disk_image, var.disk_image), null)
       disk_type              = coalesce(v.disk_type, var.disk_type)
       disk_size              = coalesce(v.disk_size, var.disk_size)
       disk_labels            = var.set_disk_labels ? coalesce(v.labels, local.labels) : null
