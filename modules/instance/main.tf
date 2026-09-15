@@ -131,9 +131,10 @@ resource "google_compute_instance" "default" {
   metadata            = local.metadata
   boot_disk {
     initialize_params {
-      type  = local.boot_disk.type
-      size  = local.boot_disk.size
-      image = local.boot_disk.image
+      type   = local.boot_disk.type
+      size   = local.boot_disk.size
+      image  = local.boot_disk.image
+      labels = local.boot_disk.labels
     }
   }
   dynamic "network_interface" {
