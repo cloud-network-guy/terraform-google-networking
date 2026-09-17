@@ -4,11 +4,14 @@
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5.7 |
-| <a name="requirement_google"></a> [google](#requirement\_google) | >= 5.16.0, < 8.0.0 |
+| <a name="requirement_google"></a> [google](#requirement\_google) | >= 7.14.0, < 8.0.0 |
 
 ## Providers
 
-No providers.
+| Name | Version |
+|------|---------|
+| <a name="provider_google"></a> [google](#provider\_google) | 7.46.1 |
+| <a name="provider_null"></a> [null](#provider\_null) | 3.3.2 |
 
 ## Modules
 
@@ -18,7 +21,11 @@ No providers.
 
 ## Resources
 
-No resources.
+| Name | Type |
+|------|------|
+| [google_compute_address.regional_endpoint](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_address) | resource |
+| [google_network_connectivity_regional_endpoint.regional_endpoint](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/network_connectivity_regional_endpoint) | resource |
+| [null_resource.regional_endpoint](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
 
 ## Inputs
 
@@ -28,6 +35,7 @@ No resources.
 | <a name="input_address_description"></a> [address\_description](#input\_address\_description) | n/a | `string` | `null` | no |
 | <a name="input_address_name"></a> [address\_name](#input\_address\_name) | n/a | `string` | `null` | no |
 | <a name="input_create"></a> [create](#input\_create) | n/a | `bool` | `true` | no |
+| <a name="input_create_static_ip"></a> [create\_static\_ip](#input\_create\_static\_ip) | Create and use Static IP address | `bool` | `true` | no |
 | <a name="input_description"></a> [description](#input\_description) | n/a | `string` | `null` | no |
 | <a name="input_global_access"></a> [global\_access](#input\_global\_access) | n/a | `bool` | `false` | no |
 | <a name="input_host_project"></a> [host\_project](#input\_host\_project) | n/a | `string` | `null` | no |

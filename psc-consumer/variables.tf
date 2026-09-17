@@ -30,6 +30,11 @@ variable "description" {
   type    = string
   default = null
 }
+variable "create_static_ip" {
+  description = "Create and use Static IP address"
+  type        = bool
+  default     = true
+}
 variable "address" {
   type    = string
   default = null
