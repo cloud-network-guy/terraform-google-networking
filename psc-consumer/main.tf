@@ -54,7 +54,7 @@ resource "google_compute_address" "regional_endpoint" {
   region       = local.region
   subnetwork   = local.subnetwork
   address_type = "INTERNAL"
- # depends_on   = [null_resource.regional_endpoint]
+  depends_on   = [null_resource.regional_endpoint]
 }
 
 resource "google_network_connectivity_regional_endpoint" "regional_endpoint" {
