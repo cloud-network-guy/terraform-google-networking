@@ -3,7 +3,7 @@
 from pathlib import Path
 from tempfile import gettempdir
 from traceback import format_exc
-from shutil import rmtree
+from uuid import uuid4
 import yaml
 import git
 
@@ -44,7 +44,8 @@ def sync_tf_files(source_dir: Path, target_dir: Path) -> bool:
 
 def main():
 
-    temp_dir = TEMP_DIR.joinpath(GIT_REPO)
+    random_string = str(uuid4().hex)
+    temp_dir = TEMP_DIR.joinpath(f"{GIT_REPO}-{random_string}")
 
     successful_pull = False
     if temp_dir.exists():
@@ -54,8 +55,6 @@ def main():
             repo.git.reset('--hard', f'origin/{GIT_BRANCH}')
             repo.remotes.origin.pull()
             successful_pull = True
-        except git.InvalidGitRepositoryError:
-            rmtree(temp_dir)
         except Exception as e:
             raise e
 
