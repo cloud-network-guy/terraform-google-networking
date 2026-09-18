@@ -12,6 +12,7 @@ GIT_USER = "cloud-network-guy"
 GIT_REPO = "terraform-google-networking"
 GIT_BRANCH = "main"
 GIT_URL = f"https://{GIT_HOST}/{GIT_USER}/{GIT_REPO}"
+GIT_CLONE_DEPTH = 1
 SETTINGS_FILE = "settings.yaml"
 TF_FILE_EXTENSIONS = ('.tf', '.md')
 ENCODING = 'utf-8'
@@ -59,7 +60,13 @@ def main():
             raise e
 
     if not successful_pull:
-        repo = git.Repo.clone_from(url=GIT_URL, to_path=temp_dir, branch=GIT_BRANCH)  # Perform git clone
+        # Perform git clone
+        repo = git.Repo.clone_from(
+            url=GIT_URL,
+            to_path=temp_dir,
+            branch=GIT_BRANCH,
+            depth=GIT_CLONE_DEPTH
+        )
 
     # Sync Parent Modules
     settings_path = Path(__file__).parent.joinpath(SETTINGS_FILE)
