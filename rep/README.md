@@ -46,7 +46,7 @@ No modules.
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | n/a | `string` | `null` | no |
 | <a name="input_region"></a> [region](#input\_region) | n/a | `string` | `null` | no |
 | <a name="input_subnetwork"></a> [subnetwork](#input\_subnetwork) | n/a | `string` | n/a | yes |
-| <a name="input_target"></a> [target](#input\_target) | PSC Target | `string` | `null` | no |
+| <a name="input_target_google_api"></a> [target\_google\_api](#input\_target\_google\_api) | n/a | `string` | `null` | no |
 
 ## Outputs
 

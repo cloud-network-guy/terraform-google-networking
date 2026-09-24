@@ -53,10 +53,9 @@ variable "network" {
 variable "subnetwork" {
   type = string
 }
-variable "target" {
-  description = "PSC Target"
-  type        = string
-  default     = null
+variable "target_google_api" {
+  type    = string
+  default = null
 }
 variable "global_access" {
   type    = bool
