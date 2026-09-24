@@ -47,6 +47,10 @@ variable "address_description" {
   type    = string
   default = null
 }
+variable "set_address_labels" {
+  type    = bool
+  default = false
+}
 variable "network" {
   type = string
 }
