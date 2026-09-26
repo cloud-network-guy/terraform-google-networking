@@ -75,6 +75,9 @@ resource "google_compute_subnetwork" "default" {
       metadata_fields      = []
     }
   }
+  lifecycle {
+    create_before_destroy = true
+  }
   depends_on = [null_resource.subnets]
 }
 
