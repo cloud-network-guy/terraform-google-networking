@@ -102,6 +102,10 @@ variable "locality_lb_policy" {
   type    = string
   default = null
 }
+variable "minimum_ring_size" {
+  type    = number
+  default = 1024
+}
 variable "balancing_mode" {
   type    = string
   default = null

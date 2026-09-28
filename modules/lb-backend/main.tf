@@ -82,6 +82,7 @@ locals {
   load_balancing_scheme           = local.is_application && !local.is_classic ? "${local.type}_MANAGED" : local.type
   is_managed                      = endswith(local.load_balancing_scheme, "_MANAGED")
   locality_lb_policy              = local.is_application && !local.is_classic ? upper(coalesce(var.locality_lb_policy, "ROUND_ROBIN")) : ""
+  minimum_ring_size               = local.locality_lb_policy == "RING_HASH" ? var.minimum_ring_size : null
   session_affinity                = local.is_tcp ? trimspace(coalesce(var.session_affinity, "NONE")) : null
   connection_draining_timeout_sec = coalesce(var.connection_draining_timeout_sec, 300)
   timeout_sec                     = local.is_tcp ? null : coalesce(var.timeout, 30)
@@ -154,7 +155,7 @@ resource "google_compute_region_backend_service" "default" {
   dynamic "consistent_hash" {
     for_each = local.locality_lb_policy == "RING_HASH" ? [true] : []
     content {
-      minimum_ring_size = 1
+      minimum_ring_size = local.minimum_ring_size
     }
   }
   depends_on = [null_resource.backend_service]
@@ -203,7 +204,7 @@ resource "google_compute_backend_service" "default" {
   dynamic "consistent_hash" {
     for_each = local.locality_lb_policy == "RING_HASH" ? [true] : []
     content {
-      minimum_ring_size = 1
+      minimum_ring_size = local.minimum_ring_size
     }
   }
   enable_cdn = local.enable_cdn

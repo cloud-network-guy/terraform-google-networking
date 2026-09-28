@@ -134,6 +134,7 @@ variable "backends" {
     existing_security_policy    = optional(string)
     session_affinity            = optional(string)
     locality_lb_policy          = optional(string)
+    minimum_ring_size           = optional(number)
     classic                     = optional(bool)
     network                     = optional(string)
     subnetwork                  = optional(string)
