@@ -8,9 +8,10 @@ locals {
   health_checks = { for k, v in var.health_checks : k =>
     merge(v, {
       project     = coalesce(v.project_id, local.project)
+      region      = coalesce(v.region, local.region)
       name        = coalesce(v.name, var.name_prefix != null ? "${var.name_prefix}-${k}" : k)
       description = trimspace(coalesce(v.description, "Managed by Terraform"))
-      logging     = try(coalesce(v.logging, var.logging), null)
+      logging     = coalesce(v.logging, var.logging, false)
     })
   }
 }
@@ -20,7 +21,7 @@ module "healthchecks" {
   project             = each.value.project
   name                = each.value.name
   description         = each.value.description
-  region              = each.value.region
+  region              = each.value.region == "global" ? null : each.value.region
   host                = each.value.host
   port                = each.value.port
   protocol            = each.value.protocol
@@ -46,6 +47,11 @@ locals {
       protocol                 = try(coalesce(backend.protocol, var.backend_protocol), null)
       existing_security_policy = try(coalesce(backend.existing_security_policy, var.existing_security_policy), null)
       security_policy          = try(coalesce(backend.security_policy, var.security_policy), null)
+      instance_groups = [for instance_group in coalesce(backend.instance_groups, []) :
+        merge(instance_group, {
+          project = coalesce(instance_group.project, backend.project, local.project)
+        })
+      ]
     })
   }
 }
@@ -157,9 +163,12 @@ locals {
       description = trimspace(coalesce(backend.description, "Managed by Terraform"))
       type        = local.type
       name_prefix = var.name_prefix
-      groups = concat(coalesce(
+      groups = concat(coalescelist(
         backend.groups,
-        [for neg in local.negs : module.negs["${neg.backend_key}/${neg.neg_key}"].self_link if neg.backend_key == backend_key]
+        [for neg in local.negs : module.negs["${neg.backend_key}/${neg.neg_key}"].self_link if neg.backend_key == backend_key],
+        [for instance_group in backend.instance_groups :
+          "projects/${instance_group.project}/zones/${instance_group.zone}/instanceGroups/${instance_group.name}"
+        ]
       ))
       timeout = try(coalesce(backend.timeout, var.backend_timeout), null)
       security_policy = one(coalescelist(
@@ -170,7 +179,7 @@ locals {
       session_affinity            = try(coalesce(backend.session_affinity, var.session_affinity), null)
       locality_lb_policy          = try(coalesce(backend.locality_lb_policy, var.locality_lb_policy), null)
       ip_address_selection_policy = try(coalesce(backend.ip_address_selection_policy, var.backend_ip_address_selection_policy), null)
-      is_ig                       = length(coalesce(backend.instance_groups, {})) > 0 ? true : false
+      is_ig                       = length(backend.instance_groups) > 0 ? true : false
       classic                     = coalesce(backend.classic, var.classic)
       health_checks               = [for hc in keys(local.health_checks) : module.healthchecks[hc].self_link if hc == backend.health_check]
       negs                        = backend.negs
@@ -179,7 +188,30 @@ locals {
       logging                     = try(coalesce(backend.logging, var.logging), null)
     })
   }
+  named_ports = flatten([
+    for backend_key, backend in local.backends : [
+      for instance_group in backend.instance_groups :
+      {
+        project = coalesce(lookup(instance_group, "project", null), backend.project)
+        name    = coalesce(backend.port_name, "${backend.name}-${backend.port}")
+        port    = coalesce(backend.port, 443)
+        group   = instance_group.name
+        zone    = instance_group.zone
+      }
+    ]
+  ])
 }
+
+# Add Named ports to any existing Instance Groups
+resource "google_compute_instance_group_named_port" "default" {
+  for_each = { for i, v in local.named_ports : "${v.zone}/${v.group}/${v.name}" => v }
+  project  = each.value.project
+  group    = each.value.group
+  name     = each.value.name
+  port     = each.value.port
+  zone     = each.value.zone
+}
+
 # Backend Services, Buckets, and Network Endpoint Groups
 module "backends" {
   source                       = "../modules/lb-backend"
@@ -213,6 +245,7 @@ module "backends" {
   max_connections              = each.value.max_connections
   max_connections_per_instance = each.value.max_connections_per_instance
   max_connections_per_endpoint = each.value.max_connections_per_endpoint
+  depends_on                   = [google_compute_instance_group_named_port.default]
 }
 
 locals {
@@ -246,58 +279,6 @@ locals {
     })
   }
 }
-
-
-/*
-locals {
-  _domains = {
-    test = {
-      create = true
-      name = "gcp-whamola-net"
-      domain = "gcp.whamola.net"
-      description = "Test"
-      labels = {}
-      scope = null
-    }
-  }
-  scope = "DEFAULT"
-  domains = {
-    for k, v in local._domains :
-    k => {
-      create      = coalesce(v.create, true)
-      name        = lower(replace(replace(coalesce(v.name, v.domain, k), ".", "-"), "*", "wildcard"))
-      description = v.description
-      domain      = lower(replace(replace(coalesce(v.domain, v.name, k), "-", "."), "wildcard", "*"))
-      scope       = upper(coalesce(v.scope, local.scope))
-      labels      = { for k, v in coalesce(v.labels, {}) : k => lower(v) }
-    }
-  }
-}
-
-resource "google_certificate_manager_dns_authorization" "default" {
-  for_each    = { for k, v in local.domains : k => v if v.create }
-  name        = each.value.name
-  description = each.value.description
-  domain      = each.value.domain
-  labels      = each.value.labels
-}
-
-resource "google_certificate_manager_certificate" "default" {
-  for_each    = { for k, v in local.domains : k => v if v.create }
-  name        = each.value.name
-  description = each.value.description
-  scope       = each.value.scope
-  labels      = each.value.labels
-  managed {
-    domains = [
-      google_certificate_manager_dns_authorization.default[each.key].domain
-    ]
-    dns_authorizations = [
-      google_certificate_manager_dns_authorization.default[each.key].id
-    ]
-  }
-}
-*/
 
 # Frontends (Forwarding Rules, Target Proxies, URL maps, etc)
 module "frontends" {

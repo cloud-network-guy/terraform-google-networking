@@ -121,6 +121,7 @@ variable "backends" {
     description                 = optional(string)
     region                      = optional(string)
     port                        = optional(number)
+    port_name                   = optional(string)
     protocol                    = optional(string)
     timeout                     = optional(number)
     logging                     = optional(bool)
@@ -142,11 +143,12 @@ variable "backends" {
     psc_target                  = optional(string)
     cloud_run_service           = optional(string)
     ip_address_selection_policy = optional(string)
-    instance_groups = optional(map(object({
-      id         = optional(string)
-      project_id = optional(string)
-      zone       = optional(string)
-      name       = optional(string)
+    instance_groups = optional(list(object({
+      id        = optional(string)
+      project   = optional(string)
+      name      = string
+      zone      = string
+      instances = optional(list(string))
     })))
     negs = optional(map(object({
       name              = optional(string)

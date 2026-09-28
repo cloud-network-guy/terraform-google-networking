@@ -70,7 +70,7 @@ locals {
     max_rate                     = local.use_rate_balancing ? coalesce(var.max_rate, 1024) : null
     max_rate_per_endpoint        = local.use_rate_balancing ? coalesce(var.max_rate_per_endpoint, 0) : null
     max_rate_per_instance        = local.use_rate_balancing ? coalesce(var.max_rate_per_instance, 0) : null
-    max_utilization              = local.use_utilization_balancing ? coalesce(var.max_utilization, 0) : null
+    max_utilization              = local.use_utilization_balancing ? coalesce(var.max_utilization, 0.8) : null
   }
   is_classic                      = coalesce(var.classic, false)
   is_application                  = startswith(local.protocol, "HTTP") ? true : false
@@ -159,7 +159,7 @@ resource "google_compute_region_backend_service" "default" {
   }
   depends_on = [null_resource.backend_service]
   region     = local.region
-  network    = local.is_tcp && local.is_internal ? null : local.network
+  network    = local.is_tcp && local.is_internal || local.is_igs ? null : local.network
 }
 
 # Global Backend Service

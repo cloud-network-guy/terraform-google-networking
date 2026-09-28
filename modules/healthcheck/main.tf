@@ -12,8 +12,9 @@ locals {
   project             = lower(trimspace(coalesce(var.project_id, var.project)))
   name                = lower(trimspace(var.name != null ? var.name : one(random_string.name).result))
   description         = var.description != null ? trimspace(var.description) : null
-  is_regional         = var.region != null ? true : false
-  region              = local.is_regional ? var.region : "global"
+  region              = lower(trimspace(coalesce(var.region, "global")))
+  is_regional         = local.region != "global" ? true : false
+  is_global           = !local.is_regional
   port                = coalesce(var.port, 80)
   host                = var.host != null ? trimspace(var.host) : null
   proxy_header        = coalesce(var.proxy_header, "NONE")
@@ -90,7 +91,7 @@ resource "google_compute_region_health_check" "default" {
 
 # Global Health Check
 resource "google_compute_health_check" "default" {
-  count       = local.create && !local.is_regional && !local.is_legacy ? 1 : 0
+  count       = local.create && local.is_global && !local.is_legacy ? 1 : 0
   project     = local.project
   name        = local.name
   description = local.description
