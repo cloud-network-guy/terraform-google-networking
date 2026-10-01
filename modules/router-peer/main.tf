@@ -22,13 +22,13 @@ locals {
   ip_address                         = var.cloud_router_ip
   peer_bgp_name                      = lower(trimspace(coalesce(var.peer_bgp_name, local.name)))
   peer_ip_address                    = var.peer_ip_address
-  advertise_mode                     = coalesce(var.advertise_mode, length(var.advertised_ip_ranges) > 0 ? "CUSTOM" : "DEFAULT")
   peer_ipv6_nexthop_address          = null # TODO
   ipv6_nexthop_address               = null # TODO
   router_appliance_instance          = null # TODO
   custom_learned_route_priority      = local.zero_custom_learned_route_priority ? null : var.custom_learned_route_priority
   zero_custom_learned_route_priority = var.zero_custom_learned_route_priority
-  advertised_ip_ranges               = var.advertised_ip_ranges
+  advertised_ip_ranges               = concat(var.advertised_ip_ranges, [for _ in var.advertised_prefixes : {range = _}])
+  advertise_mode                     = coalesce(var.advertise_mode, length(local.advertised_ip_ranges) > 0 ? "CUSTOM" : "DEFAULT")
   custom_learned_ip_ranges           = concat(var.custom_learned_ip_ranges, [for _ in var.custom_learned_prefixes : { range = _ }])
   advertised_groups                  = var.advertised_groups
   use_bfd                            = var.bfd != null ? true : false
@@ -80,7 +80,7 @@ resource "google_compute_router_peer" "default" {
     for_each = local.advertised_ip_ranges
     content {
       range       = advertised_ip_ranges.value.range
-      description = advertised_ip_ranges.value.description
+      description = lookup(advertised_ip_ranges.value, "description", "")
     }
   }
   dynamic "custom_learned_ip_ranges" {
