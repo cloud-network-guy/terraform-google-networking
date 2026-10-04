@@ -120,7 +120,7 @@ variable "capacity_scaler" {
 }
 variable "max_utilization" {
   type    = number
-  default = null
+  default = 0.8
 }
 variable "max_rate" {
   type    = number

@@ -61,7 +61,7 @@ No modules.
 | <a name="input_max_rate"></a> [max\_rate](#input\_max\_rate) | n/a | `number` | `0` | no |
 | <a name="input_max_rate_per_endpoint"></a> [max\_rate\_per\_endpoint](#input\_max\_rate\_per\_endpoint) | n/a | `number` | `0` | no |
 | <a name="input_max_rate_per_instance"></a> [max\_rate\_per\_instance](#input\_max\_rate\_per\_instance) | n/a | `number` | `0` | no |
-| <a name="input_max_utilization"></a> [max\_utilization](#input\_max\_utilization) | n/a | `number` | `null` | no |
+| <a name="input_max_utilization"></a> [max\_utilization](#input\_max\_utilization) | n/a | `number` | `0.8` | no |
 | <a name="input_minimum_ring_size"></a> [minimum\_ring\_size](#input\_minimum\_ring\_size) | n/a | `number` | `1024` | no |
 | <a name="input_name"></a> [name](#input\_name) | n/a | `string` | `null` | no |
 | <a name="input_network"></a> [network](#input\_network) | n/a | `string` | `null` | no |

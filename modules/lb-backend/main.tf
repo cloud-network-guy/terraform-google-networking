@@ -70,7 +70,7 @@ locals {
     max_rate                     = local.use_rate_balancing ? coalesce(var.max_rate, 1024) : null
     max_rate_per_endpoint        = local.use_rate_balancing ? coalesce(var.max_rate_per_endpoint, 0) : null
     max_rate_per_instance        = local.use_rate_balancing ? coalesce(var.max_rate_per_instance, 0) : null
-    max_utilization              = local.use_utilization_balancing ? coalesce(var.max_utilization, 0.8) : null
+    max_utilization              = local.is_tcp ? 0 : local.use_utilization_balancing ? coalesce(var.max_utilization, 0.8) : null
   }
   is_classic                      = coalesce(var.classic, false)
   is_application                  = startswith(local.protocol, "HTTP") ? true : false

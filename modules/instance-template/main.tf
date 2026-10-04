@@ -42,7 +42,7 @@ locals {
     source_image = coalesce(var.disk.source_image, var.image, "projects/${local.os_project}/global/images/${local.os}")
     boot         = coalesce(var.disk.boot, true)
     auto_delete  = coalesce(var.disk.auto_delete, true)
-    type         = coalesce(var.disk.type, "pd-standard")
+    type         = coalesce(var.disk.type, startswith(local.machine_type, "n4-") ? "hyperdisk-balanced" : "pd-standard")
     size_gb      = coalesce(var.disk.size_gb, 10)
     interface    = coalesce(var.disk.interface, "SCSI")
     mode         = coalesce(var.disk.mode, "READ_WRITE")
