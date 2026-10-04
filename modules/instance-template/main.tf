@@ -104,10 +104,27 @@ resource "google_compute_instance_template" "default" {
     email  = local.service_account.email
     scopes = local.service_account.scopes
   }
-  shielded_instance_config {
-    enable_integrity_monitoring = true
-    enable_secure_boot          = true
-    enable_vtpm                 = true
+  dynamic "shielded_instance_config" {
+    for_each = var.enable_shielded_vm ? [true] : []
+    content {
+      enable_integrity_monitoring = true
+      enable_secure_boot          = true
+      enable_vtpm                 = true
+    }
+  }
+  dynamic "advanced_machine_features" {
+    for_each = var.enable_advanced_machine_features ? [true] : []
+    content {
+      enable_nested_virtualization = false
+      enable_uefi_networking       = false
+      performance_monitoring_unit  = null
+      threads_per_core             = 0
+      turbo_mode                   = null
+      visible_core_count           = 0
+    }
+  }
+  lifecycle {
+    ignore_changes = [metadata, metadata_startup_script]
   }
   depends_on = [null_resource.instance_template]
 }

@@ -114,3 +114,11 @@ variable "disk" {
   })
   default = {}
 }
+variable "enable_shielded_vm" {
+  type    = bool
+  default = true
+}
+variable "enable_advanced_machine_features" {
+  type    = bool
+  default = false
+}

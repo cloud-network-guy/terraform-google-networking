@@ -38,6 +38,8 @@ No modules.
 | <a name="input_create"></a> [create](#input\_create) | n/a | `bool` | `true` | no |
 | <a name="input_description"></a> [description](#input\_description) | n/a | `string` | `null` | no |
 | <a name="input_disk"></a> [disk](#input\_disk) | n/a | <pre>object({<br/>    source_image = optional(string)<br/>    boot         = optional(bool)<br/>    auto_delete  = optional(bool)<br/>    type         = optional(string)<br/>    size_gb      = optional(number)<br/>    interface    = optional(string)<br/>    mode         = optional(string)<br/>    labels       = optional(map(string))<br/>  })</pre> | `{}` | no |
+| <a name="input_enable_advanced_machine_features"></a> [enable\_advanced\_machine\_features](#input\_enable\_advanced\_machine\_features) | n/a | `bool` | `false` | no |
+| <a name="input_enable_shielded_vm"></a> [enable\_shielded\_vm](#input\_enable\_shielded\_vm) | n/a | `bool` | `true` | no |
 | <a name="input_host_project"></a> [host\_project](#input\_host\_project) | n/a | `string` | `null` | no |
 | <a name="input_host_project_id"></a> [host\_project\_id](#input\_host\_project\_id) | n/a | `string` | `null` | no |
 | <a name="input_image"></a> [image](#input\_image) | n/a | `string` | `null` | no |
