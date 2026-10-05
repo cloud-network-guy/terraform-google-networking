@@ -27,7 +27,7 @@ locals {
   router_appliance_instance          = null # TODO
   custom_learned_route_priority      = local.zero_custom_learned_route_priority ? null : var.custom_learned_route_priority
   zero_custom_learned_route_priority = var.zero_custom_learned_route_priority
-  advertised_ip_ranges               = concat(var.advertised_ip_ranges, [for _ in var.advertised_prefixes : {range = _}])
+  advertised_ip_ranges               = concat(var.advertised_ip_ranges, [for _ in var.advertised_prefixes : { range = _ }])
   advertise_mode                     = coalesce(var.advertise_mode, length(local.advertised_ip_ranges) > 0 ? "CUSTOM" : "DEFAULT")
   custom_learned_ip_ranges           = concat(var.custom_learned_ip_ranges, [for _ in var.custom_learned_prefixes : { range = _ }])
   advertised_groups                  = var.advertised_groups
@@ -52,6 +52,7 @@ resource "google_compute_router_interface" "default" {
   name                    = local.interface_name
   router                  = local.router
   ip_range                = local.ip_range
+  ip_version              = local.enable_ipv4 ? "IPV4" : null
   vpn_tunnel              = local.vpn_tunnel
   interconnect_attachment = local.interconnect_attachment
 }

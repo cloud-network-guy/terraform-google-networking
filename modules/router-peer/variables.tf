@@ -96,7 +96,7 @@ variable "router_appliance_instance" {
   default = null
 }
 variable "advertised_prefixes" {
-  type = list(string)
+  type    = list(string)
   default = []
 }
 variable "advertised_ip_ranges" {
@@ -120,7 +120,7 @@ variable "custom_learned_prefixes" {
 }
 variable "custom_learned_ip_ranges" {
   type = list(object({
-    range       = string
+    range = string
   }))
   default = []
 }

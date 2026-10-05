@@ -53,7 +53,7 @@ locals {
   )))
   tags = [for tag in coalesce(var.network_tags, var.tags, []) : lower(trimspace(tag))]
   boot_disk = {
-    type   = coalesce(var.disk.type, startswith(local.machine_type, "n4-") ? "hyperdisk-balanced" : "pd-standard")
+    type   = coalesce(lookup(var.disk, "type", null), "pd-standard")
     size   = coalesce(lookup(var.disk, "size_gb", null), lookup(var.disk, "size", null), 10)
     image  = coalesce(lookup(var.disk, "image", null), "projects/${local.os_project}/global/images/${local.os}")
     labels = { for k, v in coalesce(var.disk.labels, {}) : k => lower(replace(v, " ", "_")) }
@@ -156,5 +156,8 @@ resource "google_compute_instance" "default" {
     scopes = local.service_account.scopes
   }
   allow_stopping_for_update = local.allow_stopping_for_update
+  lifecycle {
+    ignore_changes = [metadata_startup_script]
+  }
 }
 
