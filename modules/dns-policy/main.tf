@@ -23,7 +23,7 @@ locals {
   networks = [for network in coalesce(var.networks, compact([var.network])) : trimspace(coalesce(
     startswith(network, "${local.api_prefix}/projects/") ? network : null,
     startswith(network, "projects/") ? "${local.api_prefix}/${network}" : null,
-    "${local.api_prefix}/projects/${local.project}/global/networks/${network}"
+    "${local.api_prefix}/projects/${local.host_project}/global/networks/${network}"
     ))
   ]
 }
