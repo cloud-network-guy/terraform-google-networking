@@ -11,6 +11,7 @@ locals {
       name            = lower(trimspace(coalesce(v.name, k)))
       project_id      = lower(trimspace(coalesce(v.project_id, local.project)))
       host_project_id = lower(trimspace(coalesce(v.host_project_id, v.host_project, local.host_project_id)))
+      networks        = coalesce(v.networks, var.networks, compact([var.network]))
     })
   }
 }

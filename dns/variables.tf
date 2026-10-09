@@ -22,6 +22,16 @@ variable "host_project" {
   description = "If using Shared VPC, the Project ID that hosts the VPC network"
   default     = null
 }
+variable "network" {
+  type        = string
+  description = "Default VPC Network to associate Private Zones to"
+  default     = null
+}
+variable "networks" {
+  type        = list(string)
+  description = "Default list of VPC Networks to associate Private Zones to"
+  default     = null
+}
 variable "dns_zones" {
   description = "List of DNS zones"
   type = map(object({

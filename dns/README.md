@@ -4,14 +4,14 @@
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5.7 |
-| <a name="requirement_google"></a> [google](#requirement\_google) | >= 5.16.0, < 7.27.0 |
+| <a name="requirement_google"></a> [google](#requirement\_google) | >= 6.12.0, < 8.0.0 |
 | <a name="requirement_null"></a> [null](#requirement\_null) | >= 3.1.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_null"></a> [null](#provider\_null) | 3.2.4 |
+| <a name="provider_null"></a> [null](#provider\_null) | 3.3.2 |
 
 ## Modules
 
@@ -36,6 +36,8 @@
 | <a name="input_dns_zones"></a> [dns\_zones](#input\_dns\_zones) | List of DNS zones | <pre>map(object({<br/>    create          = optional(bool, true)<br/>    project_id      = optional(string)<br/>    host_project_id = optional(string)<br/>    host_project    = optional(string)<br/>    key             = optional(string)<br/>    dns_name        = string<br/>    name            = optional(string)<br/>    description     = optional(string)<br/>    visibility      = optional(string)<br/>    networks        = optional(list(string))<br/>    peer_project    = optional(string)<br/>    peer_network    = optional(string)<br/>    logging         = optional(bool)<br/>    force_destroy   = optional(bool)<br/>    target_name_servers = optional(list(object({<br/>      ipv4_address    = string<br/>      forwarding_path = optional(string, "default")<br/>    })))<br/>    records = optional(list(object({<br/>      create  = optional(bool, true)<br/>      key     = optional(string)<br/>      name    = string<br/>      type    = optional(string)<br/>      ttl     = optional(number)<br/>      rrdatas = list(string)<br/>    })))<br/>  }))</pre> | `{}` | no |
 | <a name="input_host_project"></a> [host\_project](#input\_host\_project) | If using Shared VPC, the Project ID that hosts the VPC network | `string` | `null` | no |
 | <a name="input_host_project_id"></a> [host\_project\_id](#input\_host\_project\_id) | If using Shared VPC, the Project ID that hosts the VPC network | `string` | `null` | no |
+| <a name="input_network"></a> [network](#input\_network) | Default VPC Network to associate Private Zones to | `string` | `null` | no |
+| <a name="input_networks"></a> [networks](#input\_networks) | Default list of VPC Networks to associate Private Zones to | `list(string)` | `null` | no |
 | <a name="input_project"></a> [project](#input\_project) | Default GCP Project ID (can be overridden at resource level) | `string` | `null` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | Default GCP Project ID (can be overridden at resource level) | `string` | `null` | no |
 
