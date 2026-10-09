@@ -40,7 +40,8 @@ module "dns-zone" {
 locals {
   dns_policies = { for k, v in var.dns_policies :
     k => merge(v, {
-      name = lower(trimspace(coalesce(v.name, k)))
+      name     = lower(trimspace(coalesce(v.name, k)))
+      networks = coalesce(v.networks, var.networks, compact([var.network]))
     })
   }
 }
