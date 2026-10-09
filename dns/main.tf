@@ -1,7 +1,8 @@
 locals {
   create          = coalesce(var.create, true)
   project         = lower(trimspace(coalesce(var.project_id, var.project)))
-  host_project_id = lower(trimspace(coalesce(var.host_project_id, var.host_project, local.project)))
+  project_id      = local.project
+  host_project_id = lower(trimspace(coalesce(var.host_project_id, var.host_project, local.project_id)))
 }
 
 # DNS Zones
@@ -9,7 +10,7 @@ locals {
   dns_zones = { for k, v in var.dns_zones :
     k => merge(v, {
       name            = lower(trimspace(coalesce(v.name, k)))
-      project_id      = lower(trimspace(coalesce(v.project_id, local.project)))
+      project_id      = lower(trimspace(coalesce(v.project_id, local.project_id)))
       host_project_id = lower(trimspace(coalesce(v.host_project_id, v.host_project, local.host_project_id)))
       networks        = coalesce(v.networks, var.networks, compact([var.network]))
     })
@@ -21,7 +22,7 @@ resource "null_resource" "dns_zone" {
 module "dns-zone" {
   source              = "../modules/dns-zone"
   for_each            = { for k, v in local.dns_zones : k => v if local.create }
-  project_id          = local.project
+  project_id          = each.value.project_id
   host_project_id     = each.value.host_project_id
   create              = each.value.create
   name                = each.value.name
@@ -51,7 +52,8 @@ resource "null_resource" "dns_policy" {
 module "dns-policy" {
   source                    = "../modules/dns-policy"
   for_each                  = { for k, v in local.dns_policies : k => v if local.create }
-  project_id                = local.project
+  project_id                = each.value.project_id
+  host_project_id           = each.value.host_project_id
   create                    = each.value.create
   name                      = each.value.name
   description               = each.value.description

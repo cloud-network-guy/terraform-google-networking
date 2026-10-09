@@ -10,6 +10,7 @@ locals {
   api_prefix                = "https://www.googleapis.com/compute/v1"
   create                    = coalesce(var.create, true)
   project                   = lower(trimspace(coalesce(var.project, var.project_id)))
+  host_project              = lower(trimspace(coalesce(var.host_project, var.host_project_id, local.project)))
   name                      = lower(trimspace(var.name != null ? var.name : one(random_string.name).result))
   description               = var.description
   logging                   = coalesce(var.logging, false)

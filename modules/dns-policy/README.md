@@ -32,12 +32,14 @@ No modules.
 | <a name="input_create"></a> [create](#input\_create) | n/a | `bool` | `true` | no |
 | <a name="input_description"></a> [description](#input\_description) | n/a | `string` | `null` | no |
 | <a name="input_enable_inbound_forwarding"></a> [enable\_inbound\_forwarding](#input\_enable\_inbound\_forwarding) | n/a | `bool` | `false` | no |
+| <a name="input_host_project"></a> [host\_project](#input\_host\_project) | n/a | `string` | `null` | no |
+| <a name="input_host_project_id"></a> [host\_project\_id](#input\_host\_project\_id) | n/a | `string` | `null` | no |
 | <a name="input_logging"></a> [logging](#input\_logging) | n/a | `bool` | `false` | no |
 | <a name="input_name"></a> [name](#input\_name) | n/a | `string` | `null` | no |
 | <a name="input_network"></a> [network](#input\_network) | n/a | `string` | `null` | no |
 | <a name="input_networks"></a> [networks](#input\_networks) | n/a | `list(string)` | `null` | no |
 | <a name="input_project"></a> [project](#input\_project) | n/a | `string` | `null` | no |
-| <a name="input_project_id"></a> [project\_id](#input\_project\_id) | n/a | `string` | n/a | yes |
+| <a name="input_project_id"></a> [project\_id](#input\_project\_id) | n/a | `string` | `null` | no |
 | <a name="input_target_name_servers"></a> [target\_name\_servers](#input\_target\_name\_servers) | n/a | <pre>list(object({<br/>    ipv4_address    = string<br/>    forwarding_path = optional(string)<br/>  }))</pre> | `[]` | no |
 
 ## Outputs
