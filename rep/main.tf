@@ -22,6 +22,7 @@ locals {
   )))
   create_static_ip  = var.create_static_ip
   address           = var.address
+  global_access     = var.global_access
   target_google_api = trimspace(var.target_google_api)
   labels            = { for k, v in coalesce(var.labels, {}) : k => lower(replace(v, " ", "_")) }
   address_labels    = var.set_address_labels ? local.labels : null
@@ -51,7 +52,7 @@ resource "google_network_connectivity_regional_endpoint" "default" {
   description       = local.description
   labels            = local.labels
   target_google_api = local.target_google_api
-  access_type       = local.is_regional ? "REGIONAL" : "GLOBAL"
+  access_type       = local.global_access || local.is_global ? "GLOBAL": "REGIONAL"
   network           = local.network
   subnetwork        = local.subnetwork
   address           = local.create_static_ip ? one(google_compute_address.default).id : var.address
