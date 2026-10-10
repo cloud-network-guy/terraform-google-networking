@@ -69,6 +69,8 @@ variable "dns_policies" {
   type = map(object({
     create                    = optional(bool, true)
     project_id                = optional(string)
+    host_project_id           = optional(string)
+    host_project              = optional(string)
     key                       = optional(string)
     name                      = optional(string)
     description               = optional(string)
