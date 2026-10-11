@@ -173,7 +173,7 @@ locals {
     vpn_key        = v.vpn_key
   }]
   route_policies = flatten([for i, v in local._route_policies : [
-    for route_policy_key, route_policy in v.route_policies :
+    for route_policy_key, route_policy in coalesce(v.route_policies, {}) :
     {
       region  = v.region
       router  = v.router
