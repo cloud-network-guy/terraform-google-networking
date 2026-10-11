@@ -70,3 +70,17 @@ variable "labels" {
   type        = map(string)
   default     = {}
 }
+variable "dns_zones" {
+  description = "List of DNS zones"
+  type = list(object({
+    create          = optional(bool, true)
+    project         = optional(string)
+    dns_name        = string
+    name            = optional(string)
+    description     = optional(string)
+    ttl             = optional(number, 60)
+    create_wildcard = optional(bool, false)
+    wildcard_tll    = optional(number, 300)
+  }))
+  default = []
+}

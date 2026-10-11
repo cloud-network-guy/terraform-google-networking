@@ -97,6 +97,7 @@ variable "vpns" {
     })), [])
     enable_bfd     = optional(bool)
     bfd_multiplier = optional(number)
+    flip_ips       = optional(bool, false)
     tunnels = list(object({
       create                        = optional(bool)
       name                          = optional(string)
@@ -107,7 +108,7 @@ variable "vpns" {
       shared_secret                 = optional(string)
       ip_range                      = optional(string)
       cloud_router_ip               = optional(string)
-      flip_ips                      = optional(bool, false)
+      flip_ips                      = optional(bool)
       peer_bgp_name                 = optional(string)
       peer_bgp_ip                   = optional(string)
       peer_bgp_asn                  = optional(number)
@@ -119,7 +120,21 @@ variable "vpns" {
       enable_bfd                    = optional(bool)
       enable_ipv6                   = optional(bool)
     }))
+    route_policies = optional(map(object({
+      type = string
+      name = optional(string)
+      terms = list(object({
+        priority            = number
+        match_expression    = string
+        match_title         = optional(string)
+        match_description   = optional(string)
+        match_location      = optional(string)
+        actions_expression  = string
+        actions_title       = optional(string)
+        actions_description = optional(string)
+        actions_location    = optional(string)
+      }))
+    })))
   }))
   default = {}
 }
-

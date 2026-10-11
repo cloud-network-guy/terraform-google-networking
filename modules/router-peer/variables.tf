@@ -140,3 +140,13 @@ variable "md5_authentication_key" {
   })
   default = null
 }
+variable "import_policies" {
+  type        = list(string)
+  description = "List of Route Import Policy Names to apply to this Peer"
+  default     = []
+}
+variable "export_policies" {
+  type        = list(string)
+  description = "List of Route Export Policy Names to apply to this Peer"
+  default     = []
+}

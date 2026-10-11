@@ -52,10 +52,47 @@ resource "google_network_connectivity_regional_endpoint" "default" {
   description       = local.description
   labels            = local.labels
   target_google_api = local.target_google_api
-  access_type       = local.global_access || local.is_global ? "GLOBAL": "REGIONAL"
+  access_type       = local.global_access || local.is_global ? "GLOBAL" : "REGIONAL"
   network           = local.network
   subnetwork        = local.subnetwork
   address           = local.create_static_ip ? one(google_compute_address.default).id : var.address
   lifecycle {
   }
 }
+
+locals {
+  dns_zones = [
+    for i, v in var.dns_zones :
+    merge(v,
+      {
+        project     = coalesce(v.project, local.project)
+        name        = coalesce(v.name, "private-zone-${local.network}-${i}")
+        dns_name    = endswith(v.dns_name, ".") ? trimsuffix(v.dns_name, ".") : v.dns_name
+      }
+    ) if v.create
+  ]
+}
+module "dns-zones" {
+  source      = "../modules/dns-zone"
+  for_each    = { for k, v in local.dns_zones : v.name => v }
+  project_id  = each.value.project
+  dns_name    = each.value.dns_name
+  name        = each.value.name
+  description = each.value.description
+  networks    = [local.network]
+  records = [for record in [
+    {
+      name    = "${each.value.dns_name}."
+      type    = "A"
+      ttl     = v.ttl
+      rrdatas = [google_network_connectivity_regional_endpoint.default.address]
+    },
+    v.create_wildcard ? {
+      name    = "*.${each.value.dns_name}."
+      type    = "CNAME"
+      ttl     = v.wildcard_ttl
+      rrdatas = ["${each.value.dns_name}."]
+    } : null,
+  ] : record if record != null]
+}
+

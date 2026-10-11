@@ -19,6 +19,8 @@ locals {
   enable_ipv4                        = var.enable_ipv4
   enable_ipv6                        = var.enable_ipv6
   advertised_route_priority          = var.advertised_route_priority
+  import_policies                    = [for _ in var.import_policies : lower(trimspace(_))]
+  export_policies                    = [for _ in var.export_policies : lower(trimspace(_))]
   ip_address                         = var.cloud_router_ip
   peer_bgp_name                      = lower(trimspace(coalesce(var.peer_bgp_name, local.name)))
   peer_ip_address                    = var.peer_ip_address
@@ -67,6 +69,7 @@ resource "google_compute_router_peer" "default" {
   peer_asn                           = local.peer_asn
   peer_ip_address                    = local.peer_ip_address
   peer_ipv6_nexthop_address          = local.peer_ipv6_nexthop_address
+  import_policies                    = local.import_policies
   ip_address                         = local.ip_address
   ipv6_nexthop_address               = local.ipv6_nexthop_address
   enable                             = local.enable

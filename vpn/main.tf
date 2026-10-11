@@ -56,11 +56,13 @@ locals {
       cloud_vpn_gateway = lower(trimspace(coalesce(vpn.cloud_vpn_gateway, local.cloud_vpn_gateway)))
       region            = lower(trimspace(coalesce(vpn.region, local.region)))
       router            = lower(trimspace(coalesce(vpn.router, local.router)))
+      route_policies    = vpn.route_policies
+      vpn_key           = vpn_key
       }
     )
   ]
   vpn_tunnels = flatten(
-    [for vpn_key, vpn in local.vpns :
+    [for vpn_index, vpn in local.vpns :
       [for t, tunnel in vpn.tunnels :
         {
           create                          = coalesce(tunnel.create, vpn.create, local.create)
@@ -86,7 +88,7 @@ locals {
           peer_bgp_name                   = tunnel.peer_bgp_name
           cloud_router_ip                 = tunnel.cloud_router_ip
           peer_bgp_ip                     = tunnel.peer_bgp_ip
-          flip_ips                        = tunnel.flip_ips
+          flip_ips                        = coalesce(tunnel.flip_ips, vpn.flip_ips, false)
           peer_bgp_asn = coalesce(
             tunnel.peer_bgp_asn,
             vpn.peer_bgp_asn,
@@ -99,7 +101,7 @@ locals {
           bfd_multiplier = vpn.bfd_multiplier
           vpn_name       = vpn.name
           interface_name = tunnel.interface_name
-          vpn_key        = vpn_key
+          vpn_key        = vpn.vpn_key
           tunnel_index   = t
           shared_secret  = tunnel.shared_secret
         }
@@ -143,6 +145,7 @@ locals {
       name                          = v.name
       region                        = v.region
       router                        = v.router
+      vpn_key                       = v.vpn_key
       interface_name                = coalesce(v.interface_name, "if-${v.name}")
       interface_ip_range            = coalesce(v.cloud_router_ip, "${cidrhost(v.ip_range, v.flip_ips ? 2 : 1)}/30")
       vpn_tunnel_key                = "${v.region}/${v.name}"
@@ -161,6 +164,68 @@ locals {
       custom_learned_prefixes       = coalesce(v.custom_learned_prefixes, [])
       custom_learned_ip_ranges      = v.custom_learned_ip_ranges
       custom_learned_route_priority = v.custom_learned_route_priority
+    }
+  }
+  _route_policies = [for k, v in local.vpns : {
+    route_policies = v.route_policies
+    region         = v.region
+    router         = v.router
+    vpn_key        = v.vpn_key
+  }]
+  route_policies = flatten([for i, v in local._route_policies : [
+    for route_policy_key, route_policy in v.route_policies :
+    {
+      region  = v.region
+      router  = v.router
+      vpn_key = v.vpn_key
+      name    = lower(trimspace(coalesce(route_policy.name, route_policy_key)))
+      type    = upper(trimspace(route_policy.type))
+      terms = [
+        for term in route_policy.terms :
+        {
+          priority = term.priority
+          match = {
+            expression  = term.match_expression
+            title       = term.match_title
+            description = term.match_description
+            location    = term.match_location
+          }
+          actions = {
+            expression  = term.actions_expression
+            title       = term.actions_title
+            description = term.actions_description
+            location    = term.actions_location
+          }
+        }
+      ]
+    }
+  ]])
+}
+
+# Route import/export policies
+resource "google_compute_router_route_policy" "default" {
+  for_each = { for i, v in local.route_policies : "${v.region}/${v.name}" => v }
+  project  = local.project
+  name     = each.value.name
+  router   = each.value.router
+  region   = each.value.region
+  type     = endswith(each.value.type, "IMPORT") ? "ROUTE_POLICY_TYPE_IMPORT" : null
+  dynamic "terms" {
+    for_each = each.value.terms
+    content {
+      priority = terms.value.priority
+      match {
+        expression  = lookup(terms.value.match, "expression", null)
+        title       = lookup(terms.value.match, "title", null)
+        description = lookup(terms.value.match, "description", null)
+        location    = lookup(terms.value.match, "location", null)
+      }
+      actions {
+        expression  = lookup(terms.value.actions, "expression", null)
+        title       = lookup(terms.value.match, "title", null)
+        description = lookup(terms.value.match, "description", null)
+        location    = lookup(terms.value.match, "location", null)
+      }
     }
   }
 }
@@ -190,6 +255,13 @@ module "router-peers" {
   peer_bgp_asn                  = each.value.peer_bgp_asn
   peer_bgp_name                 = each.value.peer_bgp_name
   bfd                           = each.value.enable_bfd ? {} : null
+  import_policies = [for _ in local.route_policies :
+    _.name if _.vpn_key == each.value.vpn_key && startswith(_.type, "IMPORT")
+  ]
+  export_policies = [for _ in local.route_policies :
+    _.name if _.vpn_key == each.value.vpn_key && startswith(_.type, "EXPORT")
+  ]
+  depends_on = [google_compute_router_route_policy.default]
 }
 
 # Query all relevant Cloud routers for the network to get BGP ASN info

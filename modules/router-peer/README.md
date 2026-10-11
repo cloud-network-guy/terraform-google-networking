@@ -212,6 +212,8 @@ No modules.
 | <a name="input_enable"></a> [enable](#input\_enable) | n/a | `bool` | `true` | no |
 | <a name="input_enable_ipv4"></a> [enable\_ipv4](#input\_enable\_ipv4) | n/a | `bool` | `true` | no |
 | <a name="input_enable_ipv6"></a> [enable\_ipv6](#input\_enable\_ipv6) | n/a | `bool` | `false` | no |
+| <a name="input_export_policies"></a> [export\_policies](#input\_export\_policies) | List of Route Export Policy Names to apply to this Peer | `list(string)` | `[]` | no |
+| <a name="input_import_policies"></a> [import\_policies](#input\_import\_policies) | List of Route Import Policy Names to apply to this Peer | `list(string)` | `[]` | no |
 | <a name="input_interconnect_attachment"></a> [interconnect\_attachment](#input\_interconnect\_attachment) | Name of the Interconnect attachment that uses the interface | `string` | `null` | no |
 | <a name="input_interface_index"></a> [interface\_index](#input\_interface\_index) | Explicit index of the Router Interface | `string` | `null` | no |
 | <a name="input_interface_ip_range"></a> [interface\_ip\_range](#input\_interface\_ip\_range) | IP Range to use on GCP Cloud Router interface | `string` | n/a | yes |
