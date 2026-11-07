@@ -1,5 +1,6 @@
-#FROM alpine:latest
-FROM hashicorp/terraform:latest
+ARG IMAGE=hashicorp/terraform
+ARG IMAGE_TAG="latest"
+FROM ${IMAGE}:${IMAGE_TAG}
 WORKDIR /tmp
 RUN apk add --no-cache bash git make python3 py3-pip openssh-client
 COPY ./pyproject.toml ./
