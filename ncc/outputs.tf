@@ -7,3 +7,6 @@ output "hybrid_spokes" {
 output "spokes" {
   value = module.ncc.spokes
 }
+output "groups" {
+  value = module.ncc.groups
+}

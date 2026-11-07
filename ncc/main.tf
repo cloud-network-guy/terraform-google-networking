@@ -18,7 +18,7 @@ locals {
   hybrid_spokes = {
     for k, v in var.hybrid_spokes :
     k => merge(v, {
-      #labels = local.labels
+      labels = local.labels
       uris = toset(concat(
         tolist(v.uris),
         [for attachment in v.attachments :
@@ -38,5 +38,5 @@ module "ncc" {
   ncc_hub_labels      = local.labels
   ncc_groups          = local.ncc_groups
   spoke_labels        = local.labels
-  hybrid_spokes = local.hybrid_spokes
+  hybrid_spokes       = local.hybrid_spokes
 }
