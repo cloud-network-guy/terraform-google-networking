@@ -16,7 +16,9 @@
 
 ## Modules
 
-No modules.
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_dns-zones"></a> [dns-zones](#module\_dns-zones) | ../modules/dns-zone | n/a |
 
 ## Resources
 
@@ -36,6 +38,7 @@ No modules.
 | <a name="input_create"></a> [create](#input\_create) | n/a | `bool` | `true` | no |
 | <a name="input_create_static_ip"></a> [create\_static\_ip](#input\_create\_static\_ip) | Create and use Static IP address | `bool` | `true` | no |
 | <a name="input_description"></a> [description](#input\_description) | n/a | `string` | `null` | no |
+| <a name="input_dns_zones"></a> [dns\_zones](#input\_dns\_zones) | List of DNS zones | <pre>list(object({<br/>    create          = optional(bool, true)<br/>    project         = optional(string)<br/>    dns_name        = string<br/>    name            = optional(string)<br/>    description     = optional(string)<br/>    ttl             = optional(number, 60)<br/>    create_wildcard = optional(bool, false)<br/>    wildcard_tll    = optional(number, 300)<br/>  }))</pre> | `[]` | no |
 | <a name="input_global_access"></a> [global\_access](#input\_global\_access) | n/a | `bool` | `false` | no |
 | <a name="input_host_project"></a> [host\_project](#input\_host\_project) | n/a | `string` | `null` | no |
 | <a name="input_host_project_id"></a> [host\_project\_id](#input\_host\_project\_id) | n/a | `string` | `null` | no |

@@ -18,8 +18,10 @@ locals {
   address_name        = trimspace(coalesce(var.address_name, local.name))
   description         = trimspace(coalesce(var.description, "${local.is_rep ? "REP" : "PSC"} to ${local.target}"))
   address_description = trimspace(coalesce(var.address_description, local.description))
-  network             = coalesce(var.network, "default")
-  subnetwork          = coalesce(var.subnetwork, "default")
+  #  network             = coalesce(var.network, "default")
+  #  subnetwork          = coalesce(var.subnetwork, "default")
+  network             = "projects/${local.host_project}/global/networks/${var.network}"
+  subnetwork          = "projects/${local.host_project}/regions/${local.region}/subnetworks/${var.subnetwork}"
   set_null_subnetwork = var.set_null_subnetwork
   global_access       = var.global_access
   create_static_ip    = var.create_static_ip
@@ -53,7 +55,10 @@ resource "google_compute_address" "regional_endpoint" {
   description  = local.address_description
   region       = local.region
   subnetwork   = local.subnetwork
+  address      = var.address
+  labels       = var.labels
   address_type = "INTERNAL"
+  purpose      = "GCE_ENDPOINT"
   depends_on   = [null_resource.regional_endpoint]
 }
 
@@ -64,8 +69,9 @@ resource "google_network_connectivity_regional_endpoint" "regional_endpoint" {
   location          = local.is_regional ? local.region : null
   target_google_api = local.target
   access_type       = local.global_access ? "GLOBAL" : "REGIONAL"
-  address           = local.create_static_ip ? one(google_compute_address.regional_endpoint).id : null
+  address           = local.create_static_ip ? one(google_compute_address.regional_endpoint).address : var.address
   network           = local.network
   subnetwork        = local.subnetwork
   description       = local.description
+
 }

@@ -40,6 +40,7 @@
 | <a name="input_global_access"></a> [global\_access](#input\_global\_access) | n/a | `bool` | `false` | no |
 | <a name="input_host_project"></a> [host\_project](#input\_host\_project) | n/a | `string` | `null` | no |
 | <a name="input_host_project_id"></a> [host\_project\_id](#input\_host\_project\_id) | n/a | `string` | `null` | no |
+| <a name="input_labels"></a> [labels](#input\_labels) | Labels applied to the endpoint and the reserved address. | `map(string)` | `{}` | no |
 | <a name="input_name"></a> [name](#input\_name) | n/a | `string` | `null` | no |
 | <a name="input_network"></a> [network](#input\_network) | n/a | `string` | `null` | no |
 | <a name="input_project"></a> [project](#input\_project) | n/a | `string` | `null` | no |

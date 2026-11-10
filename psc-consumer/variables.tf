@@ -89,3 +89,8 @@ variable "global_access" {
   type    = bool
   default = false
 }
+variable "labels" {
+  description = "Labels applied to the endpoint and the reserved address."
+  type        = map(string)
+  default     = {}
+}

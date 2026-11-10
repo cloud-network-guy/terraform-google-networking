@@ -62,7 +62,9 @@ variable "export_psc" {
 variable "vpc_spokes" {
   description = "VPC network that is associated with the spoke. link_producer_vpc_network: Producer VPC network that is peered with vpc network"
   type = map(object({
-    uri                   = string
+    uri                   = optional(string)
+    network               = optional(string)
+    network_project       = optional(string)
     exclude_export_ranges = optional(set(string), [])
     include_export_ranges = optional(set(string), [])
     description           = optional(string)
