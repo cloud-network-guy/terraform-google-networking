@@ -60,6 +60,7 @@ resource "google_network_connectivity_regional_endpoint" "default" {
   }
 }
 
+/* TODO
 locals {
   dns_zones = [
     for i, v in var.dns_zones :
@@ -95,4 +96,4 @@ module "dns-zones" {
     } : null,
   ] : record if record != null]
 }
-
+*/
