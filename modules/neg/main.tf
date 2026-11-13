@@ -24,6 +24,7 @@ locals {
   is_psc       = var.psc_target != null ? true : false
   default_port = try(coalesce(var.default_port, var.port), null)
   ip_address   = var.ip_address != null ? trimspace(var.ip_address) : null
+  instance   = var.instance != null ? trimspace(var.instance) : null
   fqdn         = var.fqdn != null ? trimspace(var.fqdn) : null
   endpoints = [for e in coalesce(var.endpoints, []) :
     merge(e, {
@@ -39,7 +40,8 @@ locals {
   zneg_endpoints = [for i, v in local.endpoints : v if local.is_zonal]
   network_endpoint_type = coalesce(
     local.is_psc ? "PRIVATE_SERVICE_CONNECT" : null,
-    local.is_zonal ? local.default_port == null ? "GCE_VM_IP" : "GCE_VM_IP_PORT" : null,
+    local.is_zonal && local.instance == null ? "NON_GCP_PRIVATE_IP_PORT" : null,
+    local.is_zonal && local.instance != null ? local.default_port == null ? "GCE_VM_IP" : "GCE_VM_IP_PORT" : null,
     local.is_regional ? "SERVERLESS" : null,
     length([for e in local.endpoints : e if e.fqdn != null]) > 0 ? "INTERNET_FQDN_PORT" : null,
     length([for e in local.endpoints : e if e.ip_address != null]) > 0 ? "INTERNET_IP_PORT" : null,
@@ -128,7 +130,7 @@ resource "google_compute_network_endpoint_group" "default" {
   network_endpoint_type = local.network_endpoint_type
   zone                  = local.zone
   network               = local.network
-  subnetwork            = local.subnetwork
+  subnetwork            = startswith(local.network_endpoint_type, "GCE_VM") ? local.subnetwork : null
   default_port          = local.default_port
   depends_on            = [null_resource.znegs]
 }
