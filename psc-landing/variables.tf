@@ -73,6 +73,9 @@ variable "regions" {
         range       = string
         description = optional(string)
     })), [])
+    outbound_ilb_range = optional(string)
+    psc_nat_range      = optional(string)
+    num_psc_nats       = optional(number, 32)
   }))
   default = {}
 }
@@ -136,6 +139,10 @@ variable "proxy_only_subnetwork_name" {
   type    = string
   default = "proxy-only-subnet"
 }
+variable "outbound_ilbs_subnetwork_name" {
+  type    = string
+  default = "outbound-ilbs"
+}
 variable "internal_ip_addresses" {
   description = "List of trusted IP ranges"
   type        = list(string)
@@ -145,4 +152,14 @@ variable "interconnect_mtu" {
   description = "Default MTU Value for Interconnects"
   type        = number
   default     = 1440
+}
+variable "outbound_endpoints" {
+  type = map(object({
+    create       = optional(bool, true)
+    name         = optional(string)
+    dns_names    = optional(list(string))
+    ip_addresses = list(string)
+    port         = optional(number, 443)
+  }))
+  default = {}
 }
