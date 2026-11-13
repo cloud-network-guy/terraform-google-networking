@@ -1,11 +1,12 @@
 locals {
-  create                       = coalesce(var.create, true)
-  environment                  = lower(trimspace(var.environment))
-  project                      = lower(trimspace(var.project))
-  vpc_network_name             = "${local.project}-dmz-vpc"
-  network_project              = lower(trimspace(var.network_project))
-  psc_consumer_subnetwork_name = lower(trimspace(var.psc_consumer_subnetwork_name))
-  proxy_only_subnetwork_name   = lower(trimspace(var.proxy_only_subnetwork_name))
+  create                        = coalesce(var.create, true)
+  environment                   = lower(trimspace(var.environment))
+  project                       = lower(trimspace(var.project))
+  vpc_network_name              = "${local.project}-dmz-vpc"
+  network_project               = lower(trimspace(var.network_project))
+  psc_consumer_subnetwork_name  = lower(trimspace(var.psc_consumer_subnetwork_name))
+  proxy_only_subnetwork_name    = lower(trimspace(var.proxy_only_subnetwork_name))
+  outbound_ilbs_subnetwork_name = lower(trimspace(var.outbound_ilbs_subnetwork_name))
   regions = { for k, v in var.regions :
     k => merge(v, {
       region               = lower(trimspace(k))
@@ -94,13 +95,38 @@ locals {
     [for k, v in local.regions :
       {
         region         = v.region
-        name           = "${v.region}-${local.proxy_only_subnetwork_name}"
+        name           = local.proxy_only_subnetwork_name
         description    = "Proxy only subnet for regional load balancer"
         ip_range       = v.proxy_only_cidr
         purpose        = "REGIONAL_MANAGED_PROXY"
         private_access = false
       } if v.proxy_only_cidr != null
-    ]
+    ],
+    # Outbound ILB subnet for Internal Network Proxy LBs
+    [for k, v in local.regions :
+      {
+        region         = v.region
+        name           = local.outbound_ilbs_subnetwork_name
+        description    = "Subnet for Outbound Network Proxy LBs"
+        ip_range       = v.outbound_ilb_range
+        purpose        = "PRIVATE"
+        private_access = false
+      } if v.outbound_ilb_range != null
+    ],
+    # PSC Nat Subnets
+    flatten([for k, v in local.regions :
+      [
+        for i in range(0, v.num_psc_nats) :
+        {
+          region         = v.region
+          name           = "psc-nat-${format("%02s", i + 1)}"
+          description    = "Private Service Connect NAT Subnet"
+          ip_range       = cidrsubnet(v.psc_nat_range, 29 - split("/", v.psc_nat_range)[1], i)
+          purpose        = "PRIVATE_SERVICE_CONNECT"
+          private_access = false
+        } if v.psc_nat_range != null
+      ]
+    ])
   )
 }
 
@@ -501,7 +527,7 @@ locals {
           {
             range       = subnet.ip_range
             description = null
-          } if subnet.region == v.region && subnet.purpose == "PRIVATE"
+          } if subnet.region == v.region && subnet.name == "psc-consumers"
         ]
       )
     })
@@ -539,4 +565,101 @@ module "router-peers" {
   bfd                           = each.value.bfd
 }
 
-# Outbound PSC w/ Hybrid Negs
+# Outbound ILB w/ Hybrid Negs Backend
+data "google_compute_zones" "available" {
+  for_each = toset(keys(local.regions))
+  project  = local.project
+  region   = each.value
+}
+locals {
+  outbound_negs = flatten([
+    for k, v in var.outbound_endpoints : [
+      for region in keys(local.regions) : [
+        {
+          create       = v.create
+          name         = coalesce(v.name, k)
+          region       = region
+          ip_addresses = v.ip_addresses
+          port         = v.port
+        }
+      ]
+    ]
+  ])
+}
+module "hybrid-negs" {
+  source   = "../modules/neg"
+  for_each = { for _ in local.outbound_negs : "${_.region}/${_.name}" => _ }
+  project  = local.project
+  create   = each.value.create
+  name     = each.value.name
+  zone     = data.google_compute_zones.available[each.value.region].names[1]
+  network  = module.vpc-network.self_link
+  subnetwork = one(
+    [for subnet in module.vpc-network.subnets :
+      subnet.id if subnet.region == each.value.region && subnet.name == local.outbound_ilbs_subnetwork_name
+    ]
+  )
+  endpoints    = [for _ in each.value.ip_addresses : { ip_address = _ }]
+  default_port = each.value.port
+}
+
+# Healthcheck to test Hybrid NEGs
+locals {
+  outbound_ilbs = flatten([
+    for k, v in var.outbound_endpoints : [
+      for region in keys(local.regions) :
+      {
+        create = v.create
+        name   = coalesce(v.name, k)
+        region = region
+        port   = v.port
+      }
+    ]
+  ])
+}
+module "outbound-ilb-healthchecks" {
+  source   = "../modules/healthcheck"
+  for_each = { for _ in local.outbound_ilbs : "${_.region}/${_.name}" => _ }
+  project  = local.project
+  create   = each.value.create
+  name     = "${each.value.name}-${each.value.region}"
+  protocol = "TCP"
+  port     = each.value.port
+}
+
+# Outbound ILB Backend
+module "outbound-ilb-backends" {
+  source                       = "../modules/lb-backend"
+  for_each                     = { for _ in local.outbound_ilbs : "${_.region}/${_.name}" => _ }
+  project                      = local.project
+  create                       = each.value.create
+  name                         = "${each.value.name}-${each.value.region}"
+  type                         = "INTERNAL"
+  proxy                        = true
+  groups                       = [module.hybrid-negs["${each.value.region}/${each.value.name}"].id]
+  health_check                 = module.outbound-ilb-healthchecks["${each.value.region}/${each.value.name}"].id
+  max_connections_per_endpoint = 1000
+}
+
+# Outbound LB Frontend
+resource "google_compute_target_tcp_proxy" "default" {
+  for_each              = { for _ in local.outbound_ilbs : "${_.region}/${_.name}" => _ }
+  name                  = "${each.value.name}-${each.value.region}"
+  backend_service       = module.outbound-ilb-backends["${each.value.region}/${each.value.name}"].id
+}
+module "outbound-ilb-frontends" {
+  source     = "../modules/forwarding-rule"
+  for_each   = { for _ in local.outbound_ilbs : "${_.region}/${_.name}" => _ }
+  project    = local.project
+  create     = each.value.create
+  name       = "${each.value.name}-${each.value.region}"
+  port_range = each.value.port
+  type       = "INTERNAL"
+  proxy      = true
+  network    = module.vpc-network.self_link
+  subnetwork = one(
+    [for subnet in module.vpc-network.subnets :
+      subnet.id if subnet.region == each.value.region && subnet.name == local.outbound_ilbs_subnetwork_name
+    ]
+  )
+}
