@@ -42,6 +42,10 @@ variable "protocol" {
   type    = string
   default = null
 }
+variable "instance" {
+  type    = string
+  default = null
+}
 variable "ip_address" {
   type    = string
   default = null
