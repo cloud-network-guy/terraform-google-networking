@@ -62,7 +62,7 @@ locals {
   use_utilization_balancing   = local.alb_balancing_mode != null && local.alb_balancing_mode == "UTILIZATION" ? true : false
   ip_address_selection_policy = var.ip_address_selection_policy != null ? upper(trimspace(var.ip_address_selection_policy)) : null
   backend = {
-    capacity_scaler              = local.is_tcp ? 0 : local.is_managed ? coalesce(var.capacity_scaler, 1.0) : null
+    capacity_scaler              = local.is_managed ? coalesce(var.capacity_scaler, 1.0) : local.is_tcp ? 0 : null
     balancing_mode               = local.use_connection_balancing ? "CONNECTION" : local.alb_balancing_mode
     max_connections              = local.use_connection_balancing && local.is_internal ? 0 : null
     max_connections_per_endpoint = local.use_connection_balancing ? coalesce(var.max_connections_per_endpoint, 0) : null
@@ -79,7 +79,7 @@ locals {
   is_bucket                       = local.bucket != null ? true : false
   create_bucket                   = local.bucket != null ? lookup(local.bucket, "create", false) : false
   is_service                      = !local.is_bucket ? true : false
-  load_balancing_scheme           = local.is_application && !local.is_classic ? "${local.type}_MANAGED" : local.type
+  load_balancing_scheme           = local.is_application && !local.is_classic || local.is_proxy ? "${local.type}_MANAGED" : local.type
   is_managed                      = endswith(local.load_balancing_scheme, "_MANAGED")
   locality_lb_policy              = local.is_application && !local.is_classic ? upper(coalesce(var.locality_lb_policy, "ROUND_ROBIN")) : ""
   minimum_ring_size               = local.locality_lb_policy == "RING_HASH" ? var.minimum_ring_size : null
