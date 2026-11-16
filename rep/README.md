@@ -16,9 +16,7 @@
 
 ## Modules
 
-| Name | Source | Version |
-|------|--------|---------|
-| <a name="module_dns-zones"></a> [dns-zones](#module\_dns-zones) | ../modules/dns-zone | n/a |
+No modules.
 
 ## Resources
 
