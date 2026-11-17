@@ -61,6 +61,10 @@ variable "bfd" {
   description = "Enable BFD"
   default     = false
 }
+variable "bfd_mode" {
+  type    = string
+  default = "ACTIVE"
+}
 variable "enable_ipv4" {
   type    = bool
   default = true
@@ -75,6 +79,8 @@ variable "attachments" {
     name                      = optional(string)
     description               = optional(string)
     mtu                       = optional(number)
+    interconnect              = optional(string)
+    vlan_tag8021q             = optional(number)
     interface_index           = optional(number)
     interface_name            = optional(string)
     ip_range                  = optional(string) # IP and prefix to use on GCP Cloud Router side
@@ -88,6 +94,7 @@ variable "attachments" {
     advertised_ip_ranges      = optional(list(string))
     ipsec_internal_addresses  = optional(list(string))
     bfd                       = optional(bool)
+    bfd_mode                  = optional(string)
   }))
   default = []
 }
