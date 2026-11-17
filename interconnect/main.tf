@@ -16,7 +16,7 @@ locals {
       peer_is_gcp               = false
       name                      = coalesce(v.name, "attachment-${i}")
       description               = v.description
-      interconnect              = null
+      interconnect              = v.interconnect
       interface_name            = v.interface_name
       ipsec_internal_addresses  = coalesce(v.ipsec_internal_addresses, [])
       peer_asn                  = coalesce(v.peer_asn, var.peer_asn)
@@ -30,9 +30,11 @@ locals {
       admin_enabled             = true # TODO
       encryption                = upper(trimspace(var.encryption))
       enable_bfd                = coalesce(v.bfd, var.bfd)
+      bfd_mode                  = upper(trimspace(coalesce(v.bfd_mode, var.bfd_mode)))
       enable_ipv4               = coalesce(v.enable_ipv4, var.enable_ipv4)
       enable_ipv6               = coalesce(v.enable_ipv6, var.enable_ipv6)
       stack_type                = "IPV4_ONLY" # TODO
+      vlan_tag8021q             = v.vlan_tag8021q
     }
   ]
 }
@@ -50,6 +52,7 @@ resource "google_compute_interconnect_attachment" "default" {
   type                     = local.type
   interconnect             = each.value.interconnect
   stack_type               = each.value.stack_type
+  vlan_tag8021q            = each.value.vlan_tag8021q
   timeouts {
     create = null
     delete = null
@@ -117,7 +120,7 @@ locals {
       router_appliance_instance          = null # TODO
       zero_custom_learned_route_priority = null # TODO
       bfd = {
-        session_initialization_mode = v.enable_bfd ? "ACTIVE" : "DISABLED"
+        session_initialization_mode = v.enable_bfd ? v.bfd_mode : "DISABLED"
         min_transmit_interval       = 1000 # TODO
         min_receive_interval        = 1000 # TODO
         multiplier                  = 5    # TODO
