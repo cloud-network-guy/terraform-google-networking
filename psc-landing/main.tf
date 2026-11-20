@@ -3,24 +3,29 @@ locals {
   environment                   = lower(trimspace(var.environment))
   project                       = lower(trimspace(var.project))
   vpc_network_name              = "${local.project}-dmz-vpc"
-  network_project               = lower(trimspace(var.network_project))
+  network_project               = lower(trimspace(coalesce(var.network_project, local.project)))
   psc_consumer_subnetwork_name  = lower(trimspace(var.psc_consumer_subnetwork_name))
   proxy_only_subnetwork_name    = lower(trimspace(var.proxy_only_subnetwork_name))
   outbound_ilbs_subnetwork_name = lower(trimspace(var.outbound_ilbs_subnetwork_name))
   regions = { for k, v in var.regions :
     k => merge(v, {
-      region               = lower(trimspace(k))
-      bgp_asn              = coalesce(v.cloud_router_bgp_asn, var.cloud_router_bgp_asn)
-      psc_consumers        = coalesce(v.psc_consumers, [])
-      vpns                 = coalesce(v.vpns, [])
-      interconnects        = coalesce(v.interconnects, [])
-      advertised_ip_ranges = coalesce(v.advertised_ip_ranges, [])
+      region                   = lower(trimspace(k))
+      bgp_asn                  = coalesce(v.cloud_router_bgp_asn, var.cloud_router_bgp_asn)
+      psc_consumers            = coalesce(v.psc_consumers, [])
+      vpns                     = coalesce(v.vpns, [])
+      interconnects            = coalesce(v.interconnects, [])
+      advertised_ip_ranges     = coalesce(v.advertised_ip_ranges, [])
+      outbound_network         = lower(trimspace(coalesce(v.outbound_network, var.outbound_network)))
+      outbound_subnetwork      = lower(trimspace(coalesce(v.outbound_subnetwork, var.outbound_subnetwork)))
+      outbound_network_project = lower(trimspace(coalesce(v.outbound_network_project, var.outbound_network_project, local.network_project)))
     })
   }
   global_routing = length(local.regions) > 1 ? true : false
   create_cloud_vpn_gateways = coalesce(
     var.create_cloud_vpn_gateways,
-    anytrue([for region in local.regions : length(region.vpns) > 0 ? true : false]),
+    anytrue([
+      for region in local.regions : length(region.vpns) > 0
+    ]),
   )
   vpn_ike_version = 2
 }
@@ -89,6 +94,7 @@ locals {
         ip_range       = v.psc_consumers_cidr
         purpose        = "PRIVATE"
         private_access = false
+        flow_logs      = var.enable_flow_logs
       } if v.psc_consumers_cidr != null
     ],
     # Proxy-only subnet
@@ -96,10 +102,11 @@ locals {
       {
         region         = v.region
         name           = local.proxy_only_subnetwork_name
-        description    = "Proxy only subnet for regional load balancer"
+        description    = "Source NAT subnet for global managed load balancers"
         ip_range       = v.proxy_only_cidr
-        purpose        = "REGIONAL_MANAGED_PROXY"
+        purpose        = "GLOBAL_MANAGED_PROXY"
         private_access = false
+        flow_logs      = var.enable_flow_logs
       } if v.proxy_only_cidr != null
     ],
     # Outbound ILB subnet for Internal Network Proxy LBs
@@ -111,6 +118,7 @@ locals {
         ip_range       = v.outbound_ilb_range
         purpose        = "PRIVATE"
         private_access = false
+        flow_logs      = var.enable_flow_logs
       } if v.outbound_ilb_range != null
     ],
     # PSC Nat Subnets
@@ -124,6 +132,7 @@ locals {
           ip_range       = cidrsubnet(v.psc_nat_range, 29 - split("/", v.psc_nat_range)[1], i)
           purpose        = "PRIVATE_SERVICE_CONNECT"
           private_access = false
+          flow_logs      = var.enable_flow_logs
         } if v.psc_nat_range != null
       ]
     ])
@@ -527,7 +536,7 @@ locals {
           {
             range       = subnet.ip_range
             description = null
-          } if subnet.region == v.region && subnet.name == "psc-consumers"
+          } if subnet.region == v.region && contains(["psc-consumers", "proxy-only"], subnet.name)
         ]
       )
     })
@@ -609,19 +618,19 @@ locals {
     for k, v in var.outbound_endpoints : [
       for region in keys(local.regions) :
       {
-        create = v.create
-        name   = coalesce(v.name, k)
-        region = region
-        port   = v.port
+        create        = v.create
+        name          = coalesce(v.name, k)
+        region        = region
+        port          = v.port
+        psc_nat_index = coalesce(v.psc_nat_index, 0)
       }
     ]
   ])
 }
 module "outbound-ilb-healthchecks" {
   source   = "../modules/healthcheck"
-  for_each = { for _ in local.outbound_ilbs : "${_.region}/${_.name}" => _ }
+  for_each = { for _ in local.outbound_ilbs : "${_.region}/${_.name}" => _ if _.create }
   project  = local.project
-  create   = each.value.create
   name     = "${each.value.name}-${each.value.region}"
   protocol = "TCP"
   port     = each.value.port
@@ -630,9 +639,8 @@ module "outbound-ilb-healthchecks" {
 # Outbound ILB Backend
 module "outbound-ilb-backends" {
   source                       = "../modules/lb-backend"
-  for_each                     = { for _ in local.outbound_ilbs : "${_.region}/${_.name}" => _ }
+  for_each                     = { for _ in local.outbound_ilbs : "${_.region}/${_.name}" => _ if _.create }
   project                      = local.project
-  create                       = each.value.create
   name                         = "${each.value.name}-${each.value.region}"
   type                         = "INTERNAL"
   proxy                        = true
@@ -641,25 +649,64 @@ module "outbound-ilb-backends" {
   max_connections_per_endpoint = 1000
 }
 
-# Outbound LB Frontend
+# Using raw resources for now; should move this to a module when able
 resource "google_compute_target_tcp_proxy" "default" {
-  for_each              = { for _ in local.outbound_ilbs : "${_.region}/${_.name}" => _ }
-  name                  = "${each.value.name}-${each.value.region}"
-  backend_service       = module.outbound-ilb-backends["${each.value.region}/${each.value.name}"].id
+  for_each        = { for _ in local.outbound_ilbs : "${_.region}/${_.name}" => _ if _.create }
+  project         = local.project
+  name            = "${each.value.name}-${each.value.region}"
+  backend_service = module.outbound-ilb-backends["${each.value.region}/${each.value.name}"].id
 }
-module "outbound-ilb-frontends" {
-  source     = "../modules/forwarding-rule"
-  for_each   = { for _ in local.outbound_ilbs : "${_.region}/${_.name}" => _ }
-  project    = local.project
-  create     = each.value.create
-  name       = "${each.value.name}-${each.value.region}"
-  port_range = each.value.port
-  type       = "INTERNAL"
-  proxy      = true
-  network    = module.vpc-network.self_link
+resource "google_compute_global_forwarding_rule" "outbound-ilbs" {
+  for_each              = { for _ in local.outbound_ilbs : "${_.region}/${_.name}" => _ if _.create }
+  project               = local.project
+  name                  = "${each.value.name}-${each.value.region}"
+  ip_address            = null
+  load_balancing_scheme = "INTERNAL_MANAGED"
+  network               = module.vpc-network.self_link
   subnetwork = one(
-    [for subnet in module.vpc-network.subnets :
+    [
+      for subnet in module.vpc-network.subnets :
       subnet.id if subnet.region == each.value.region && subnet.name == local.outbound_ilbs_subnetwork_name
     ]
   )
+  port_range = each.value.port
+  target     = google_compute_target_tcp_proxy.default["${each.value.region}/${each.value.name}"].id
+}
+resource "google_compute_service_attachment" "outbound-ilbs" {
+  for_each = { for _ in local.outbound_ilbs : "${_.region}/${_.name}" => _ if _.create }
+  project  = local.project
+  name     = "${each.value.name}-${each.value.region}"
+  region   = each.value.region
+  nat_subnets = [
+    for subnet in module.vpc-network.subnets :
+    subnet.id
+    if subnet.region == each.value.region && subnet.name == "psc-nat-${format("%02s", each.value.psc_nat_index + 1)}"
+  ]
+  target_service        = google_compute_global_forwarding_rule.outbound-ilbs["${each.value.region}/${each.value.name}"].self_link
+  enable_proxy_protocol = false
+  connection_preference = "ACCEPT_MANUAL"
+  consumer_accept_lists {
+    project_id_or_num = local.project # Allow our own project to connect
+    connection_limit  = 2             # Allow at least two connections
+  }
+  consumer_reject_lists = []
+  domain_names          = []
+  reconcile_connections = true
+}
+module "outbound-ilb-psc-consumers" {
+  source              = "../modules/forwarding-rule"
+  for_each            = { for _ in local.outbound_ilbs : "${_.region}/${_.name}" => _ if _.create }
+  project             = local.project
+  region              = each.value.region
+  name                = each.value.name
+  type                = "INTERNAL"
+  address_name        = "${each.value.name}-psc-consumer"
+  address_description = ""
+  description         = ""
+  target              = google_compute_service_attachment.outbound-ilbs["${each.value.region}/${each.value.name}"].self_link
+  network             = local.regions[each.value.region].outbound_network
+  subnetwork          = local.regions[each.value.region].outbound_subnetwork
+  host_project        = local.regions[each.value.region].outbound_network_project
+  set_null_subnetwork = var.set_null_subnetwork_for_psc_consumers
+  global_access       = true
 }

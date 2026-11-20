@@ -57,6 +57,7 @@ locals {
       contains(v.apis, "compute.googleapis.com") ? "${v.number}@cloudservices.gserviceaccount.com" : null,
       contains(v.apis, "compute.googleapis.com") ? "${v.number}-compute@developer.gserviceaccount.com" : null,
       contains(v.apis, "container.googleapis.com") ? "service-${v.number}@container-engine-robot.iam.gserviceaccount.com" : null,
+      contains(v.apis, "run.googleapis.com") ? "service-${v.number}@serverless-robot-prod.iam.gserviceaccount.com" : null,
     ])
   }
   service_accounts = { for k, v in local._service_accounts : k => [for a in v : "serviceAccount:${a}"] }

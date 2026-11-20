@@ -47,6 +47,7 @@ No modules.
 | <a name="input_fqdn"></a> [fqdn](#input\_fqdn) | n/a | `string` | `null` | no |
 | <a name="input_host_project"></a> [host\_project](#input\_host\_project) | n/a | `string` | `null` | no |
 | <a name="input_host_project_id"></a> [host\_project\_id](#input\_host\_project\_id) | n/a | `string` | `null` | no |
+| <a name="input_instance"></a> [instance](#input\_instance) | n/a | `string` | `null` | no |
 | <a name="input_ip_address"></a> [ip\_address](#input\_ip\_address) | n/a | `string` | `null` | no |
 | <a name="input_name"></a> [name](#input\_name) | n/a | `string` | `null` | no |
 | <a name="input_network"></a> [network](#input\_network) | n/a | `string` | `null` | no |

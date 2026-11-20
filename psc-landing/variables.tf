@@ -7,14 +7,13 @@ variable "project" {
   description = "GCP Project ID"
   type        = string
 }
+variable "network_project" {
+  type    = string
+  default = null
+}
 variable "environment" {
   description = "Environment"
   type        = string
-}
-variable "network_project" {
-  description = "Project ID of the shared DMZ network"
-  type        = string
-  default     = null
 }
 variable "cloud_router_bgp_asn" {
   description = "BGP ASN to use for Cloud Routers on our side"
@@ -73,9 +72,12 @@ variable "regions" {
         range       = string
         description = optional(string)
     })), [])
-    outbound_ilb_range = optional(string)
-    psc_nat_range      = optional(string)
-    num_psc_nats       = optional(number, 32)
+    outbound_ilb_range       = optional(string)
+    psc_nat_range            = optional(string)
+    num_psc_nats             = optional(number, 32)
+    outbound_network         = optional(string)
+    outbound_subnetwork      = optional(string)
+    outbound_network_project = optional(string)
   }))
   default = {}
 }
@@ -137,7 +139,7 @@ variable "set_null_subnetwork_for_psc_consumers" {
 }
 variable "proxy_only_subnetwork_name" {
   type    = string
-  default = "proxy-only-subnet"
+  default = "proxy-only"
 }
 variable "outbound_ilbs_subnetwork_name" {
   type    = string
@@ -155,11 +157,31 @@ variable "interconnect_mtu" {
 }
 variable "outbound_endpoints" {
   type = map(object({
-    create       = optional(bool, true)
-    name         = optional(string)
-    dns_names    = optional(list(string))
-    ip_addresses = list(string)
-    port         = optional(number, 443)
+    create        = optional(bool, true)
+    name          = optional(string)
+    dns_names     = optional(list(string))
+    ip_addresses  = list(string)
+    port          = optional(number, 443)
+    psc_nat_index = optional(number)
   }))
   default = {}
+}
+variable "outbound_network_project" {
+  description = "If outbound PSC consumers are using shared VPC, Project ID for host network project"
+  type        = string
+  default     = null
+}
+variable "outbound_network" {
+  description = "Name of the Network to build outbound PSC consumers on"
+  type        = string
+  default     = "default"
+}
+variable "outbound_subnetwork" {
+  description = "Name of the Subnet to build outbound PSC consumers on"
+  type        = string
+  default     = "default"
+}
+variable "enable_flow_logs" {
+  type    = bool
+  default = false
 }
